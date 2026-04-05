@@ -86,7 +86,10 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> toggleDiscoverability() async {
-    await hidController.setDiscoverable(300);
+    if (await Permission.bluetoothAdvertise.request().isGranted &&
+        await Permission.bluetoothConnect.request().isGranted) {
+      await hidController.setDiscoverable(300);
+    }
   }
 
   // --- Bluetooth Operations ---

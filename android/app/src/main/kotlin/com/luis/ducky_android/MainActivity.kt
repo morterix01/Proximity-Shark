@@ -125,12 +125,22 @@ class MainActivity : FlutterActivity() {
         bluetoothHidDevice?.registerApp(sdpSettings, null, null, { it.run() }, object : BluetoothHidDevice.Callback() {
             override fun onAppStatusChanged(pluggedDevice: BluetoothDevice?, registered: Boolean) {
                 Log.d("HID", "App registered: $registered")
+                runOnUiThread {
+                    if (registered) {
+                        android.widget.Toast.makeText(this@MainActivity, "HID Profile Ready", android.widget.Toast.LENGTH_SHORT).show()
+                    } else {
+                        android.widget.Toast.makeText(this@MainActivity, "HID Registration Failed!", android.widget.Toast.LENGTH_LONG).show()
+                    }
+                }
             }
 
             override fun onConnectionStateChanged(device: BluetoothDevice, state: Int) {
                 Log.d("HID", "Connection state: $state")
                 if (state == BluetoothProfile.STATE_CONNECTED) {
                     targetDevice = device
+                    runOnUiThread {
+                        android.widget.Toast.makeText(this@MainActivity, "PC Connected", android.widget.Toast.LENGTH_SHORT).show()
+                    }
                 } else if (state == BluetoothProfile.STATE_DISCONNECTED) {
                     targetDevice = null
                 }
