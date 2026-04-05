@@ -173,7 +173,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
-                  onSubmitted: (val) => appState.updateBleName(val),
+                  onSubmitted: (val) {
+                    FocusManager.instance.primaryFocus?.unfocus();
+                    appState.updateBleName(val);
+                  },
+                  onTapOutside: (event) {
+                    FocusManager.instance.primaryFocus?.unfocus();
+                    if (_nameController.text != appState.bleName) {
+                      appState.updateBleName(_nameController.text);
+                    }
+                  },
                 ),
               ),
               const SizedBox(width: 10),
@@ -208,15 +217,20 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(width: 12),
               ElevatedButton.icon(
-                onPressed: () {
+                onPressed: () async {
+                  if (_nameController.text != appState.bleName && _nameController.text.isNotEmpty) {
+                    await appState.updateBleName(_nameController.text);
+                  }
                   appState.toggleDiscoverability();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Accept the system dialog → then search Bluetooth on your PC"),
-                      backgroundColor: Color(0xFF1A1A2E),
-                      duration: Duration(seconds: 4),
-                    ),
-                  );
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Accept the system dialog → then search Bluetooth on your PC"),
+                        backgroundColor: Color(0xFF1A1A2E),
+                        duration: Duration(seconds: 4),
+                      ),
+                    );
+                  }
                 },
                 icon: const Icon(Icons.wifi_tethering_rounded, size: 16),
                 label: const Text("GO VISIBLE", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
