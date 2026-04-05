@@ -41,7 +41,19 @@ class AppState extends ChangeNotifier {
   Future<void> _init() async {
     await _loadSettings();
     await _loadScripts();
+    await _requestInitialPermissions();
     _checkConnection();
+  }
+
+  Future<void> _requestInitialPermissions() async {
+    if (Platform.isAndroid) {
+      await [
+        Permission.bluetoothScan,
+        Permission.bluetoothConnect,
+        Permission.bluetoothAdvertise,
+        Permission.location,
+      ].request();
+    }
   }
 
   // --- Getters ---
