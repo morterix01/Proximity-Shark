@@ -24,8 +24,10 @@ class AppState extends ChangeNotifier {
   bool _isExecuting = false;
   int _connectionStatus = 0;
   String _bleName = "Proximity Shark";
-  List<File> _savedScripts = [];
+  List<FileSystemEntity> _savedScripts = [];
   int _executionCount = 0;
+  Directory? _rootDir;
+  Directory? _currentDir;
 
   // Navigation
   int _currentNavIndex = 0;
@@ -126,7 +128,9 @@ class AppState extends ChangeNotifier {
   bool get isExecuting => _isExecuting;
   int get connectionStatus => _connectionStatus;
   String get bleName => _bleName;
-  List<File> get savedScripts => _savedScripts;
+  List<FileSystemEntity> get savedScripts => _savedScripts;
+  Directory? get currentDirectory => _currentDir;
+  bool get isRootDirectory => _currentDir?.path == _rootDir?.path;
   int get currentNavIndex => _currentNavIndex;
   List<ClassicDevice> get classicDevices => _classicDevices;
   List<ClassicDevice> get bondedDevices => _bondedDevices;
@@ -250,18 +254,51 @@ class AppState extends ChangeNotifier {
 
   // --- Script Library ---
   Future<void> _loadScripts() async {
-    final directory = await getApplicationDocumentsDirectory();
-    final scriptsDir = Directory('${directory.path}/scripts');
-    if (!await scriptsDir.exists()) {
-      await scriptsDir.create(recursive: true);
+    if (_rootDir == null) {
+      final directory = await getApplicationDocumentsDirectory();
+      _rootDir = Directory('${directory.path}/scripts');
+      if (!await _rootDir!.exists()) {
+        await _rootDir!.create(recursive: true);
+      }
+      _currentDir = _rootDir;
     }
-    _savedScripts = scriptsDir.listSync().whereType<File>().toList();
+    _savedScripts = _currentDir!.listSync().toList();
+    // Sort so folders appear first
+    _savedScripts.sort((a, b) {
+      if (a is Directory && b is File) return -1;
+      if (a is File && b is Directory) return 1;
+      return a.path.compareTo(b.path);
+    });
     notifyListeners();
   }
 
+  Future<void> navigateIntoFolder(Directory dir) async {
+    if (await dir.exists()) {
+      _currentDir = dir;
+      await _loadScripts();
+    }
+  }
+
+  Future<void> navigateUp() async {
+    if (_currentDir != null && _currentDir!.path != _rootDir!.path) {
+      _currentDir = _currentDir!.parent;
+      await _loadScripts();
+    }
+  }
+
+  Future<void> createFolder(String name) async {
+    if (_currentDir != null && name.isNotEmpty) {
+      final dir = Directory('${_currentDir!.path}/$name');
+      if (!await dir.exists()) {
+        await dir.create();
+        await _loadScripts();
+      }
+    }
+  }
+
   Future<void> saveCurrentScript(String name) async {
-    final directory = await getApplicationDocumentsDirectory();
-    final file = File('${directory.path}/scripts/$name.txt');
+    if (_currentDir == null) return;
+    final file = File('${_currentDir!.path}/$name.txt');
     await file.writeAsString(_script);
     await _loadScripts();
   }
@@ -280,8 +317,10 @@ class AppState extends ChangeNotifier {
   }
 
   void loadScriptFromFile(File file) async {
-    _script = await file.readAsString();
-    notifyListeners();
+    if (await file.exists()) {
+      _script = await file.readAsString();
+      notifyListeners();
+    }
   }
 
   Future<void> importScript() async {
@@ -296,7 +335,7 @@ class AppState extends ChangeNotifier {
       String name = result.files.single.name.replaceAll('.txt', '');
       _script = content;
       await saveCurrentScript(name);
-      notifyListeners();
+      // Removed manual notifyListeners since saveCurrentScript calls _loadScripts which calls it
     }
   }
 

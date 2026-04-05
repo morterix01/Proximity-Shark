@@ -13,6 +13,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _nameController = TextEditingController();
+  final FocusNode _nameFocus = FocusNode();
 
   @override
   void initState() {
@@ -24,12 +25,17 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _nameFocus.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
+
+    if (!_nameFocus.hasFocus && _nameController.text != appState.bleName) {
+      _nameController.text = appState.bleName;
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A12),
@@ -162,6 +168,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Expanded(
                 child: TextField(
                   controller: _nameController,
+                  focusNode: _nameFocus,
                   style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
                   decoration: InputDecoration(
                     hintText: "Device name shown to PC...",

@@ -240,14 +240,14 @@ class MainActivity : FlutterActivity() {
         }
 
         val sdp = BluetoothHidDeviceAppSdpSettings(
-            "Shark Board",
+            name,
             "Android HID Keyboard",
-            "Shark",
+            name,
             BluetoothHidDevice.SUBCLASS1_KEYBOARD,
             HID_DESCRIPTOR
         )
 
-        // Wait 800ms for system to finalize unregistration before registering again
+        // Wait 1500ms for system to finalize unregistration before registering again
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
             Log.d("HID", "Invoking registerApp after delay...")
             bluetoothHidDevice?.registerApp(sdp, null, null, { it.run() }, object : BluetoothHidDevice.Callback() {
@@ -294,7 +294,7 @@ class MainActivity : FlutterActivity() {
                 }
             }
         })
-        }, 800)
+        }, 1500)
     }
 
     private fun startClassicScan() {
