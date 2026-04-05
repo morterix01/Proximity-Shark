@@ -260,10 +260,10 @@ class MainActivity : FlutterActivity() {
                         } else {
                             if (retryCount < 1) {
                                 retryCount++
-                                android.widget.Toast.makeText(this@MainActivity, "Retry registration in 2s...", android.widget.Toast.LENGTH_SHORT).show()
+                                Log.d("HID", "Retry registration in 2s...")
                                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ doRegister(name) }, 2000)
                             } else {
-                                android.widget.Toast.makeText(this@MainActivity, "HID Registration Failed (System Rejected)", android.widget.Toast.LENGTH_LONG).show()
+                                Log.e("HID", "HID Registration Failed (System Rejected)")
                             }
                         }
                     }
