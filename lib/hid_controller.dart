@@ -37,6 +37,17 @@ class HidController {
     }
   }
 
+  /// Returns all bonded (paired) Bluetooth devices from Android system
+  Future<List<Map<dynamic, dynamic>>> getBondedDevices() async {
+    try {
+      final List result = await _channel.invokeMethod('getBondedDevices');
+      return result.cast<Map<dynamic, dynamic>>();
+    } on PlatformException catch (e) {
+      print("Failed to get bonded devices: ${e.message}");
+      return [];
+    }
+  }
+
   /// Sends a raw HID keyboard report to the connected device
   Future<bool> sendReport(List<int> report) async {
     try {

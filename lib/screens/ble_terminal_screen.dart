@@ -22,6 +22,8 @@ class BleTerminalScreen extends StatelessWidget {
               children: [
                 _buildHeader(),
                 _buildInfoBanner(),
+                if (appState.lastDevice != null)
+                  _buildQuickReconnect(context, appState),
                 _buildScannerControl(appState),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 8),
@@ -97,6 +99,101 @@ class BleTerminalScreen extends StatelessWidget {
         ),
       ),
     ).animate().fadeIn(delay: 300.ms);
+  }
+
+  Widget _buildQuickReconnect(BuildContext context, AppState appState) {
+    final device = appState.lastDevice!;
+    final isConnected = appState.connectionStatus == 1;
+    final isConnecting = appState.connectingAddress == device.address;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+      child: _buildNeonContainer(
+        color: isConnected ? Colors.greenAccent : Colors.cyanAccent,
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: (isConnected ? Colors.greenAccent : Colors.cyanAccent).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                isConnected ? Icons.link_rounded : Icons.link_off_rounded,
+                color: isConnected ? Colors.greenAccent : Colors.cyanAccent, size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isConnected ? "CONNECTED" : "LAST DEVICE",
+                    style: TextStyle(
+                      color: isConnected ? Colors.greenAccent : Colors.white38,
+                      fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1.2,
+                    ),
+                  ),
+                  Text(
+                    device.name.toUpperCase(),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13),
+                  ),
+                  Text(device.address, style: const TextStyle(color: Colors.white24, fontSize: 9)),
+                ],
+              ),
+            ),
+            if (isConnected)
+              const Icon(Icons.check_circle_rounded, color: Colors.greenAccent, size: 24)
+            else if (isConnecting)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.amberAccent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.amberAccent.withValues(alpha: 0.4)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(width: 10, height: 10, child: CircularProgressIndicator(strokeWidth: 1.5, color: Colors.amberAccent)),
+                    SizedBox(width: 6),
+                    Text("LINKING", style: TextStyle(color: Colors.amberAccent, fontSize: 10, fontWeight: FontWeight.w900)),
+                  ],
+                ),
+              )
+            else
+              ElevatedButton(
+                onPressed: appState.isConnecting ? null : () {
+                  appState.connectToDevice(device);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Reconnecting to ${device.name}..."),
+                      backgroundColor: const Color(0xFF1A1A2E),
+                      duration: const Duration(seconds: 4),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.cyanAccent.withValues(alpha: 0.15),
+                  foregroundColor: Colors.cyanAccent,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  side: const BorderSide(color: Colors.cyanAccent, width: 1),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.flash_on_rounded, size: 14),
+                    SizedBox(width: 4),
+                    Text("RECONNECT", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1);
   }
 
   Widget _buildScannerControl(AppState appState) {

@@ -123,6 +123,13 @@ class MainActivity : FlutterActivity() {
                         result.error("INVALID_ADDRESS", "Address is null", null)
                     }
                 }
+                "getBondedDevices" -> {
+                    val adapter = BluetoothAdapter.getDefaultAdapter()
+                    val bonded = adapter?.bondedDevices?.map {
+                        mapOf("name" to (it.name ?: "Unknown"), "address" to it.address)
+                    } ?: emptyList()
+                    result.success(bonded)
+                }
                 "sendReport" -> {
                     val report = call.argument<ByteArray>("report")
                     if (report != null && bluetoothHidDevice != null && targetDevice != null) {

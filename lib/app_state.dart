@@ -34,8 +34,9 @@ class AppState extends ChangeNotifier {
   List<ClassicDevice> _classicDevices = [];
   bool _isScanning = false;
   bool _isConnecting = false;
-  String? _connectingAddress; // The address currently being connected to
+  String? _connectingAddress;
   String? _connectedAddress;
+  ClassicDevice? _lastDevice; // Last successfully connected device (persisted)
 
   AppState() {
     parser = DuckyParserIt(hidController);
@@ -48,6 +49,8 @@ class AppState extends ChangeNotifier {
     await _requestInitialPermissions();
     _startDeviceStream();
     _checkConnection();
+    // Try to silently reconnect to last device after HID profile registers
+    Future.delayed(const Duration(seconds: 3), _autoReconnect);
   }
 
   Future<void> _requestInitialPermissions() async {
@@ -68,9 +71,15 @@ class AppState extends ChangeNotifier {
         final state = event['connection_state'] as String;
         if (state == 'connected') {
           _connectionStatus = 1;
-          _connectedAddress = event['address'] as String?;
+          final address = event['address'] as String?;
+          final name = event['name'] as String? ?? 'Unknown';
+          _connectedAddress = address;
           _connectingAddress = null;
           _isConnecting = false;
+          // Persist so we can auto-reconnect next time
+          if (address != null) {
+            _saveLastDevice(ClassicDevice(name: name, address: address, rssi: 0));
+          }
           notifyListeners();
         } else if (state == 'disconnected') {
           _connectionStatus = 0;
@@ -115,6 +124,7 @@ class AppState extends ChangeNotifier {
   bool get isConnecting => _isConnecting;
   String? get connectingAddress => _connectingAddress;
   String? get connectedAddress => _connectedAddress;
+  ClassicDevice? get lastDevice => _lastDevice;
   int get executionCount => _executionCount;
 
   // --- Setters ---
@@ -133,7 +143,26 @@ class AppState extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _bleName = prefs.getString('ble_name') ?? "Proximity Shark";
     _executionCount = prefs.getInt('execution_count') ?? 0;
+    // Load last connected device
+    final lastAddr = prefs.getString('last_device_address');
+    final lastName = prefs.getString('last_device_name');
+    if (lastAddr != null && lastName != null) {
+      _lastDevice = ClassicDevice(name: lastName, address: lastAddr, rssi: 0);
+    }
     notifyListeners();
+  }
+
+  Future<void> _saveLastDevice(ClassicDevice device) async {
+    _lastDevice = device;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('last_device_address', device.address);
+    await prefs.setString('last_device_name', device.name);
+  }
+
+  Future<void> _autoReconnect() async {
+    if (_lastDevice == null || _connectionStatus == 1) return;
+    debugPrint("Auto-reconnecting to ${_lastDevice!.name}...");
+    await connectToDevice(_lastDevice!);
   }
 
   Future<void> updateBleName(String newName) async {
