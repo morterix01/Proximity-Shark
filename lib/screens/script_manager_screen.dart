@@ -129,13 +129,13 @@ class ScriptManagerScreen extends StatelessWidget {
         final name = file.path.split('/').last.replaceAll('.txt', '');
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
-          child: _buildScriptItem(name, file, appState),
+          child: _buildScriptItem(context, name, file, appState),
         );
       },
     );
   }
 
-  Widget _buildScriptItem(String name, File file, AppState appState) {
+  Widget _buildScriptItem(BuildContext context, String name, File file, AppState appState) {
     return _buildNeonContainer(
       color: Colors.white12,
       padding: const EdgeInsets.all(16),
@@ -151,6 +151,18 @@ class ScriptManagerScreen extends StatelessWidget {
                 Text("${file.lengthSync()} BYTES", style: const TextStyle(color: Colors.white24, fontSize: 8, fontWeight: FontWeight.bold)),
               ],
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.flash_on_rounded, color: Colors.amberAccent, size: 20),
+            onPressed: () {
+              if (appState.connectionStatus == 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("ERRORE: Non connesso!")),
+                );
+                return;
+              }
+              appState.deployScript(file);
+            },
           ),
           IconButton(
             icon: const Icon(Icons.file_open_rounded, color: Colors.cyanAccent, size: 18),

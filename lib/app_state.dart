@@ -18,6 +18,12 @@ class AppState extends ChangeNotifier {
   String _bleName = "Proximity Shark";
   List<File> _savedScripts = [];
   int _executionCount = 0;
+
+  Future<void> fastDeploy(File file) async {
+    _script = await file.readAsString();
+    notifyListeners();
+    await runScript();
+  }
   
   // Navigation
   int _currentNavIndex = 0;
@@ -157,6 +163,12 @@ class AppState extends ChangeNotifier {
       await file.delete();
       await _loadScripts();
     }
+  }
+
+  Future<void> deployScript(File file) async {
+    _script = await file.readAsString();
+    notifyListeners();
+    await runScript();
   }
 
   void loadScriptFromFile(File file) async {
