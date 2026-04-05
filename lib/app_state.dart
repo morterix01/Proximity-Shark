@@ -60,6 +60,7 @@ class AppState extends ChangeNotifier {
         Permission.bluetoothConnect,
         Permission.bluetoothAdvertise,
         Permission.location,
+        Permission.notification,
       ].request();
     }
   }

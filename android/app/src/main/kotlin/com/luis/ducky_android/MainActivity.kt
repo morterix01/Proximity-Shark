@@ -208,6 +208,7 @@ class MainActivity : FlutterActivity() {
                 when (state) {
                     BluetoothProfile.STATE_CONNECTED -> {
                         targetDevice = device
+                        startHidService()
                         runOnUiThread {
                             eventSink?.success(mapOf(
                                 "connection_state" to "connected",
@@ -219,6 +220,7 @@ class MainActivity : FlutterActivity() {
                     }
                     BluetoothProfile.STATE_DISCONNECTED -> {
                         targetDevice = null
+                        stopHidService()
                         runOnUiThread {
                             eventSink?.success(mapOf("connection_state" to "disconnected"))
                         }
@@ -258,9 +260,31 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun setDiscoverable(duration: Int) {
+        startHidService() // Keep alive during discovery too
         val intent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
             putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, duration)
         }
         startActivity(intent)
+    }
+
+    private fun startHidService() {
+        val serviceIntent = Intent(this, HidService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent)
+        } else {
+            startService(serviceIntent)
+        }
+    }
+
+    private fun stopHidService() {
+        val serviceIntent = Intent(this, HidService::class.java)
+        stopService(serviceIntent)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopHidService()
+        unregisterReceiver(discoveryReceiver)
+        stopClassicScan()
     }
 }
