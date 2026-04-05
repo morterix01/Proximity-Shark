@@ -294,6 +294,7 @@ class MainActivity : FlutterActivity() {
                 }
             }
         })
+        }, 800)
     }
 
     private fun startClassicScan() {
