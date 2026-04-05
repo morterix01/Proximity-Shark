@@ -48,17 +48,20 @@ class AppState extends ChangeNotifier {
     await _loadScripts();
     await _requestInitialPermissions();
     
-    // Apply the saved Bluetooth name to the system
-    Future.delayed(const Duration(milliseconds: 1000), () {
-      hidController.setDeviceName(_bleName);
-    });
-
+    // Applying settings and checking states
     _startDeviceStream();
     _checkConnection();
     await fetchBondedDevices();
+
+    // Give HID Profile some time to bind if it failed initially
+    // (Native side tries once on proxy connection, we retry once here)
+    Future.delayed(const Duration(seconds: 2), () {
+      hidController.setDeviceName(_bleName); // This also triggers a refresh in some cases
+    });
+
     // Try to silently reconnect to the most recent device if available
     if (_bondedDevices.isNotEmpty) {
-      Future.delayed(const Duration(seconds: 3), () => _autoReconnect(_bondedDevices.first));
+      Future.delayed(const Duration(seconds: 4), () => _autoReconnect(_bondedDevices.first));
     }
   }
 

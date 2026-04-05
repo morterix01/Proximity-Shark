@@ -189,6 +189,7 @@ class MainActivity : FlutterActivity() {
             override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
                 if (profile == BluetoothProfile.HID_DEVICE) {
                     bluetoothHidDevice = proxy as BluetoothHidDevice
+                    Log.d("HID", "HID Profile proxy connected. Initializing registration...")
                     registerApp()
                 }
             }
@@ -202,12 +203,38 @@ class MainActivity : FlutterActivity() {
 
 
     private fun registerApp() {
+        val adapter = BluetoothAdapter.getDefaultAdapter()
+        if (adapter == null || !adapter.isEnabled) {
+            Log.e("HID", "Cannot register HID: Bluetooth is OFF or null")
+            runOnUiThread {
+                android.widget.Toast.makeText(this@MainActivity, "⚠️ TURN BLUETOOTH ON FIRST!", android.widget.Toast.LENGTH_LONG).show()
+            }
+            return
+        }
+
+        if (bluetoothHidDevice == null) {
+            Log.e("HID", "Cannot register HID: Proxy was null")
+            return
+        }
+
+        Log.d("HID", "Starting clean registration cycle...")
+        try {
+            // Unregister first to clear any stale state from previous app runs
+            bluetoothHidDevice?.unregisterApp()
+        } catch (e: Exception) {
+            Log.w("HID", "Unregister failed (not an error): ${e.message}")
+        }
+
         bluetoothHidDevice?.registerApp(sdpSettings, null, null, { it.run() }, object : BluetoothHidDevice.Callback() {
             override fun onAppStatusChanged(pluggedDevice: BluetoothDevice?, registered: Boolean) {
-                Log.d("HID", "App registered: $registered")
+                Log.d("HID", "HID App Registration Status: $registered")
                 runOnUiThread {
-                    val msg = if (registered) "HID Profile Ready ✓" else "HID Registration Failed!"
+                    val msg = if (registered) "HID Profile Ready ✓" else "HID Registration Failed! (System Rejected)"
                     android.widget.Toast.makeText(this@MainActivity, msg, android.widget.Toast.LENGTH_SHORT).show()
+                    
+                    if (!registered) {
+                        Log.e("HID", "Registration rejected. Check if another app is using HIDD or if the device supports it.")
+                    }
                 }
             }
 
