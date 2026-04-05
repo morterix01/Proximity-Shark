@@ -215,12 +215,16 @@ class AppState extends ChangeNotifier {
   // --- HID Control ---
   void _checkConnection() async {
     while (true) {
-      int status = await hidController.getConnectionStatus();
+      final status = await hidController.getConnectionStatus();
       if (status != _connectionStatus) {
         _connectionStatus = status;
+        // When native reports disconnected, clear address so UI resets
+        if (status == 0) {
+          _connectedAddress = null;
+        }
         notifyListeners();
       }
-      await Future.delayed(const Duration(seconds: 2));
+      await Future.delayed(const Duration(seconds: 1));
     }
   }
 

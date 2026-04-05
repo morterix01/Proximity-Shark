@@ -14,12 +14,28 @@ class QuickEditorScreen extends StatefulWidget {
 
 class _QuickEditorScreenState extends State<QuickEditorScreen> {
   late TextEditingController _scriptController;
+  String _lastKnownScript = '';
 
   @override
   void initState() {
     super.initState();
     final appState = Provider.of<AppState>(context, listen: false);
+    _lastKnownScript = appState.script;
     _scriptController = TextEditingController(text: appState.script);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Sync editor when AppState.script changes externally (e.g. loaded from Library)
+    final appState = Provider.of<AppState>(context, listen: false);
+    if (appState.script != _lastKnownScript && appState.script != _scriptController.text) {
+      _lastKnownScript = appState.script;
+      _scriptController.value = TextEditingValue(
+        text: appState.script,
+        selection: TextSelection.collapsed(offset: appState.script.length),
+      );
+    }
   }
 
   @override

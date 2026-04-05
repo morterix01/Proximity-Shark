@@ -166,9 +166,10 @@ class ScriptManagerScreen extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.file_open_rounded, color: Colors.cyanAccent, size: 18),
-            onPressed: () {
-              appState.loadScriptFromFile(file);
-              appState.currentNavIndex = 2; // Go to Editor
+            onPressed: () async {
+              // Navigate to editor first, then update script on next frame
+              appState.currentNavIndex = 2;
+              await Future.microtask(() => appState.loadScriptFromFile(file));
             },
           ),
           IconButton(
