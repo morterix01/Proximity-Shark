@@ -188,24 +188,33 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          // Visibility button
+          // Visibility section with step guide
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("VISIBILITY", style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
-                  Text("Make discoverable to nearby PCs", style: TextStyle(color: Colors.white38, fontSize: 10)),
-                ],
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("VISIBILITY", style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                    SizedBox(height: 4),
+                    Text("1. Press GO VISIBLE", style: TextStyle(color: Colors.white38, fontSize: 9)),
+                    Text("2. Accept the system dialog", style: TextStyle(color: Colors.white38, fontSize: 9)),
+                    Text("3. Search Bluetooth on your PC", style: TextStyle(color: Colors.white38, fontSize: 9)),
+                    Text("4. Select 'Proximity Shark' on PC", style: TextStyle(color: Colors.white38, fontSize: 9)),
+                  ],
+                ),
               ),
+              const SizedBox(width: 12),
               ElevatedButton.icon(
                 onPressed: () {
                   appState.toggleDiscoverability();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text("Visibility enabled — go pair from your PC's Bluetooth menu"),
+                      content: Text("Accept the system dialog → then search Bluetooth on your PC"),
                       backgroundColor: Color(0xFF1A1A2E),
+                      duration: Duration(seconds: 4),
                     ),
                   );
                 },

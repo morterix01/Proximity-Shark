@@ -207,9 +207,9 @@ class BleTerminalScreen extends StatelessWidget {
           ),
           Text("${device.rssi} dBm", style: const TextStyle(color: Colors.white24, fontSize: 9, fontWeight: FontWeight.bold)),
           const SizedBox(width: 8),
-          // Connection button: LINK / LINKING... / HALT
           Builder(builder: (context) {
-            final isThisConnecting = appState.isConnecting && appState.connectedAddress == null;
+            // Show LINKING only for the specific device being connected
+            final isThisConnecting = appState.connectingAddress == device.address;
             if (isConnected) {
               return TextButton(
                 onPressed: () => appState.disconnectDevice(),
@@ -222,9 +222,8 @@ class BleTerminalScreen extends StatelessWidget {
                 child: const Text("HALT", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
               );
             } else if (isThisConnecting) {
-              // Waiting for PC to accept pairing
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.amberAccent.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
@@ -241,13 +240,13 @@ class BleTerminalScreen extends StatelessWidget {
               );
             } else {
               return TextButton(
-                onPressed: () {
+                onPressed: appState.isConnecting ? null : () {
                   appState.connectToDevice(device);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text("Connecting to ${device.name}...\nAccept the pairing request on your PC."),
+                      content: Text("Connecting to ${device.name}... Accept the pairing on your PC."),
                       backgroundColor: const Color(0xFF1A1A2E),
-                      duration: const Duration(seconds: 5),
+                      duration: const Duration(seconds: 6),
                     ),
                   );
                 },

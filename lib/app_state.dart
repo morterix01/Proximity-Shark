@@ -33,7 +33,8 @@ class AppState extends ChangeNotifier {
   // Classic BT scan
   List<ClassicDevice> _classicDevices = [];
   bool _isScanning = false;
-  bool _isConnecting = false; // True while waiting for PC to accept pairing
+  bool _isConnecting = false;
+  String? _connectingAddress; // The address currently being connected to
   String? _connectedAddress;
 
   AppState() {
@@ -68,11 +69,13 @@ class AppState extends ChangeNotifier {
         if (state == 'connected') {
           _connectionStatus = 1;
           _connectedAddress = event['address'] as String?;
+          _connectingAddress = null;
           _isConnecting = false;
           notifyListeners();
         } else if (state == 'disconnected') {
           _connectionStatus = 0;
           _connectedAddress = null;
+          _connectingAddress = null;
           _isConnecting = false;
           notifyListeners();
         }
@@ -110,6 +113,7 @@ class AppState extends ChangeNotifier {
   List<ClassicDevice> get classicDevices => _classicDevices;
   bool get isScanning => _isScanning;
   bool get isConnecting => _isConnecting;
+  String? get connectingAddress => _connectingAddress;
   String? get connectedAddress => _connectedAddress;
   int get executionCount => _executionCount;
 
@@ -143,6 +147,8 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> toggleDiscoverability() async {
+    // Stop any active scan first — startDiscovery cancels discoverability on Android
+    if (_isScanning) await stopScan();
     if (await Permission.bluetoothAdvertise.request().isGranted &&
         await Permission.bluetoothConnect.request().isGranted) {
       await hidController.setDiscoverable(300);
@@ -165,14 +171,15 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> connectToDevice(ClassicDevice device) async {
-    // Only send the connect request — don't set status optimistically.
-    // The EventChannel will fire 'connection_state=connected' when PC accepts.
+    if (_isConnecting) return; // Prevent double-tap
     _isConnecting = true;
+    _connectingAddress = device.address;
     notifyListeners();
     try {
       await hidController.connectHid(device.address);
     } catch (e) {
       _isConnecting = false;
+      _connectingAddress = null;
       notifyListeners();
       debugPrint("Connection error: $e");
     }
@@ -182,6 +189,7 @@ class AppState extends ChangeNotifier {
     _connectedAddress = null;
     _connectionStatus = 0;
     _isConnecting = false;
+    _connectingAddress = null;
     notifyListeners();
   }
 
