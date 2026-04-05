@@ -63,7 +63,13 @@ class AppState extends ChangeNotifier {
 
     // Try to silently reconnect to the most recent device if available
     if (_bondedDevices.isNotEmpty) {
-      Future.delayed(const Duration(seconds: 4), () => _autoReconnect(_bondedDevices.first));
+      final target = _bondedDevices.first;
+      Future.delayed(const Duration(seconds: 4), () {
+        // Double check it wasn't unpaired in those 4 seconds
+        if (_bondedDevices.any((d) => d.address == target.address)) {
+          _autoReconnect(target);
+        }
+      });
     }
   }
 
@@ -233,12 +239,20 @@ class AppState extends ChangeNotifier {
 
   Future<void> unpairDevice(ClassicDevice device) async {
     // If currently connected, disconnect first
-    if (_connectedAddress == device.address) {
+    if (_connectedAddress == device.address || _connectingAddress == device.address) {
       await disconnectDevice();
     }
     
+    // Eagerly remove from UI to prevent lag perception
+    _bondedDevices.removeWhere((d) => d.address == device.address);
+    notifyListeners();
+
     final success = await hidController.unpairDevice(device.address);
     if (success) {
+      // Delay fetch to let Android process the removeBond async task natively
+      await Future.delayed(const Duration(milliseconds: 1500));
+      await fetchBondedDevices();
+    } else {
       await fetchBondedDevices();
     }
   }
