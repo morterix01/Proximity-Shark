@@ -47,6 +47,12 @@ class AppState extends ChangeNotifier {
     await _loadSettings();
     await _loadScripts();
     await _requestInitialPermissions();
+    
+    // Apply the saved Bluetooth name to the system
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      hidController.setDeviceName(_bleName);
+    });
+
     _startDeviceStream();
     _checkConnection();
     await fetchBondedDevices();
