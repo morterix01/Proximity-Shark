@@ -22,8 +22,8 @@ class BleTerminalScreen extends StatelessWidget {
               children: [
                 _buildHeader(),
                 _buildInfoBanner(),
-                if (appState.lastDevice != null)
-                  _buildQuickReconnect(context, appState),
+                if (appState.bondedDevices.isNotEmpty)
+                  _buildPairedDevices(context, appState),
                 _buildScannerControl(appState),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 8),
@@ -101,98 +101,85 @@ class BleTerminalScreen extends StatelessWidget {
     ).animate().fadeIn(delay: 300.ms);
   }
 
-  Widget _buildQuickReconnect(BuildContext context, AppState appState) {
-    final device = appState.lastDevice!;
-    final isConnected = appState.connectionStatus == 1;
-    final isConnecting = appState.connectingAddress == device.address;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-      child: _buildNeonContainer(
-        color: isConnected ? Colors.greenAccent : Colors.cyanAccent,
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: (isConnected ? Colors.greenAccent : Colors.cyanAccent).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                isConnected ? Icons.link_rounded : Icons.link_off_rounded,
-                color: isConnected ? Colors.greenAccent : Colors.cyanAccent, size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isConnected ? "CONNECTED" : "LAST DEVICE",
-                    style: TextStyle(
-                      color: isConnected ? Colors.greenAccent : Colors.white38,
-                      fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1.2,
-                    ),
-                  ),
-                  Text(
-                    device.name.toUpperCase(),
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13),
-                  ),
-                  Text(device.address, style: const TextStyle(color: Colors.white24, fontSize: 9)),
-                ],
-              ),
-            ),
-            if (isConnected)
-              const Icon(Icons.check_circle_rounded, color: Colors.greenAccent, size: 24)
-            else if (isConnecting)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.amberAccent.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.amberAccent.withValues(alpha: 0.4)),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(width: 10, height: 10, child: CircularProgressIndicator(strokeWidth: 1.5, color: Colors.amberAccent)),
-                    SizedBox(width: 6),
-                    Text("LINKING", style: TextStyle(color: Colors.amberAccent, fontSize: 10, fontWeight: FontWeight.w900)),
-                  ],
-                ),
-              )
-            else
-              ElevatedButton(
-                onPressed: appState.isConnecting ? null : () {
-                  appState.connectToDevice(device);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("Reconnecting to ${device.name}..."),
-                      backgroundColor: const Color(0xFF1A1A2E),
-                      duration: const Duration(seconds: 4),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.cyanAccent.withValues(alpha: 0.15),
-                  foregroundColor: Colors.cyanAccent,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  side: const BorderSide(color: Colors.cyanAccent, width: 1),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.flash_on_rounded, size: 14),
-                    SizedBox(width: 4),
-                    Text("RECONNECT", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
-                  ],
-                ),
-              ),
-          ],
+  Widget _buildPairedDevices(BuildContext context, AppState appState) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("PAIRED DEVICES",
+                  style: TextStyle(color: Colors.white30, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.5)),
+              Text("${appState.bondedDevices.length} SAVED",
+                  style: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 8)),
+            ],
+          ),
         ),
-      ),
+        SizedBox(
+          height: 100,
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            scrollDirection: Axis.horizontal,
+            itemCount: appState.bondedDevices.length,
+            itemBuilder: (context, index) {
+              final device = appState.bondedDevices[index];
+              final isConnected = appState.connectedAddress == device.address;
+              final isConnecting = appState.connectingAddress == device.address;
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: GestureDetector(
+                  onTap: isConnected || isConnecting ? null : () => appState.connectToDevice(device),
+                  child: _buildNeonContainer(
+                    color: isConnected ? Colors.greenAccent : (isConnecting ? Colors.amberAccent : Colors.white12),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              isConnected ? Icons.link_rounded : Icons.computer_rounded,
+                              color: isConnected ? Colors.greenAccent : Colors.white54,
+                              size: 16,
+                            ),
+                            if (isConnecting)
+                              const Padding(
+                                padding: EdgeInsets.only(left: 8.0),
+                                child: SizedBox(width: 10, height: 10, child: CircularProgressIndicator(strokeWidth: 1.5, color: Colors.amberAccent)),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          device.name.toUpperCase(),
+                          style: TextStyle(
+                            color: isConnected ? Colors.greenAccent : Colors.white,
+                            fontWeight: FontWeight.w900, fontSize: 12,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          isConnected ? "ACTIVE" : (isConnecting ? "LINKING..." : "TAP TO CONNECT"),
+                          style: TextStyle(
+                            color: isConnected ? Colors.greenAccent.withValues(alpha: 0.5) : Colors.white24,
+                            fontSize: 8, fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 12),
+      ],
     ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1);
   }
 
