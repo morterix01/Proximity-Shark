@@ -21,10 +21,16 @@ class DuckyAndroidApp extends StatelessWidget {
         title: 'Proximity Shark',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
+          useMaterial3: true,
           brightness: Brightness.dark,
           primaryColor: Colors.cyanAccent,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.cyanAccent,
+            brightness: Brightness.dark,
+            surface: const Color(0xFF0F0F1A),
+          ),
           scaffoldBackgroundColor: const Color(0xFF0F0F1A),
-          textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
+          textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
         ),
         home: const HomeScreen(),
       ),

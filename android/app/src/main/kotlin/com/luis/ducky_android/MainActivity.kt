@@ -83,6 +83,15 @@ class MainActivity : FlutterActivity() {
                 "getConnectionStatus" -> {
                     result.success(if (targetDevice != null) 1 else 0)
                 }
+                "setDeviceName" -> {
+                    val name = call.argument<String>("name")
+                    if (name != null) {
+                        val success = setBluetoothName(name)
+                        result.success(success)
+                    } else {
+                        result.error("INVALID_NAME", "Name is null", null)
+                    }
+                }
                 else -> result.notImplemented()
             }
         }
@@ -127,5 +136,13 @@ class MainActivity : FlutterActivity() {
     private fun connectToDevice(address: String) {
         val device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address)
         bluetoothHidDevice?.connect(device)
+    }
+
+    private fun setBluetoothName(name: String): Boolean {
+        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+        if (bluetoothAdapter != null && bluetoothAdapter.isEnabled) {
+            return bluetoothAdapter.setName(name)
+        }
+        return false
     }
 }

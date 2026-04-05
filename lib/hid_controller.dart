@@ -46,4 +46,15 @@ class HidController {
     Uint8List releaseReport = Uint8List(8);
     await sendReport(releaseReport);
   }
+
+  /// Sets the local Bluetooth device name
+  Future<bool> setDeviceName(String name) async {
+    try {
+      final bool success = await _channel.invokeMethod('setDeviceName', {'name': name});
+      return success;
+    } on PlatformException catch (e) {
+      print("Failed to set name: ${e.message}");
+      return false;
+    }
+  }
 }
