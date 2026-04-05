@@ -57,13 +57,7 @@ class MainActivity : FlutterActivity() {
         0xC0.toByte()
     )
 
-    private val sdpSettings = BluetoothHidDeviceAppSdpSettings(
-        "Proximity Shark",
-        "Android HID Keyboard",
-        "DuckyScript",
-        BluetoothHidDevice.SUBCLASS1_KEYBOARD,
-        HID_DESCRIPTOR
-    )
+    private var pendingDeviceName: String? = null
 
     // BroadcastReceiver for Classic Bluetooth Discovery
     private val discoveryReceiver = object : BroadcastReceiver() {
@@ -168,6 +162,11 @@ class MainActivity : FlutterActivity() {
                     disconnectHid()
                     result.success(true)
                 }
+                "initHidProfile" -> {
+                    val deviceName = call.argument<String>("deviceName") ?: "SharkHID"
+                    initHidProfile(deviceName)
+                    result.success(true)
+                }
                 else -> result.notImplemented()
             }
         }
@@ -189,8 +188,10 @@ class MainActivity : FlutterActivity() {
             override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
                 if (profile == BluetoothProfile.HID_DEVICE) {
                     bluetoothHidDevice = proxy as BluetoothHidDevice
-                    Log.d("HID", "HID Profile proxy connected. Initializing registration...")
-                    registerApp()
+                    Log.d("HID", "HID Profile proxy connected. Waiting for initHidProfile from Dart...")
+                    pendingDeviceName?.let { name ->
+                        doRegister(name)
+                    }
                 }
             }
             override fun onServiceDisconnected(profile: Int) {
@@ -202,7 +203,20 @@ class MainActivity : FlutterActivity() {
     }
 
 
-    private fun registerApp() {
+    private var retryCount = 0
+
+    private fun initHidProfile(deviceName: String) {
+        setBluetoothName(deviceName)
+        pendingDeviceName = deviceName
+
+        if (bluetoothHidDevice != null) {
+            doRegister(deviceName)
+        } else {
+            Log.d("HID", "Proxy not ready yet, waiting for onServiceConnected...")
+        }
+    }
+
+    private fun doRegister(name: String) {
         val adapter = BluetoothAdapter.getDefaultAdapter()
         if (adapter == null || !adapter.isEnabled) {
             Log.e("HID", "Cannot register HID: Bluetooth is OFF or null")
@@ -217,26 +231,43 @@ class MainActivity : FlutterActivity() {
             return
         }
 
-        Log.d("HID", "Starting clean registration cycle...")
+        Log.d("HID", "Starting clean registration cycle with delay...")
         try {
-            // Unregister first to clear any stale state from previous app runs
+            // Unregister first to clear any stale state
             bluetoothHidDevice?.unregisterApp()
         } catch (e: Exception) {
-            Log.w("HID", "Unregister failed (not an error): ${e.message}")
+            Log.w("HID", "Unregister failed (normal): ${e.message}")
         }
 
-        bluetoothHidDevice?.registerApp(sdpSettings, null, null, { it.run() }, object : BluetoothHidDevice.Callback() {
-            override fun onAppStatusChanged(pluggedDevice: BluetoothDevice?, registered: Boolean) {
-                Log.d("HID", "HID App Registration Status: $registered")
-                runOnUiThread {
-                    val msg = if (registered) "HID Profile Ready ✓" else "HID Registration Failed! (System Rejected)"
-                    android.widget.Toast.makeText(this@MainActivity, msg, android.widget.Toast.LENGTH_SHORT).show()
-                    
-                    if (!registered) {
-                        Log.e("HID", "Registration rejected. Check if another app is using HIDD or if the device supports it.")
+        val sdp = BluetoothHidDeviceAppSdpSettings(
+            "Shark Board",
+            "Android HID Keyboard",
+            "Shark",
+            BluetoothHidDevice.SUBCLASS1_KEYBOARD,
+            HID_DESCRIPTOR
+        )
+
+        // Wait 800ms for system to finalize unregistration before registering again
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            Log.d("HID", "Invoking registerApp after delay...")
+            bluetoothHidDevice?.registerApp(sdp, null, null, { it.run() }, object : BluetoothHidDevice.Callback() {
+                override fun onAppStatusChanged(pluggedDevice: BluetoothDevice?, registered: Boolean) {
+                    Log.d("HID", "HID Registration Callback: $registered")
+                    runOnUiThread {
+                        if (registered) {
+                            retryCount = 0 // Reset on success
+                            android.widget.Toast.makeText(this@MainActivity, "HID Profile Ready ✓", android.widget.Toast.LENGTH_SHORT).show()
+                        } else {
+                            if (retryCount < 1) {
+                                retryCount++
+                                android.widget.Toast.makeText(this@MainActivity, "Retry registration in 2s...", android.widget.Toast.LENGTH_SHORT).show()
+                                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ doRegister(name) }, 2000)
+                            } else {
+                                android.widget.Toast.makeText(this@MainActivity, "HID Registration Failed (System Rejected)", android.widget.Toast.LENGTH_LONG).show()
+                            }
+                        }
                     }
                 }
-            }
 
             override fun onConnectionStateChanged(device: BluetoothDevice, state: Int) {
                 Log.d("HID", "HID state changed: $state for ${device.name}")

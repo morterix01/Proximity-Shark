@@ -102,13 +102,13 @@ class HidController {
     }
   }
 
-  /// Sets the local Bluetooth device name
-  Future<bool> setDeviceName(String name) async {
+  /// Sets the local Bluetooth device name and initializes the HID Profile with that name
+  Future<bool> initHidProfile(String name) async {
     try {
-      final bool success = await _channel.invokeMethod('setDeviceName', {'name': name});
+      final bool success = await _channel.invokeMethod('initHidProfile', {'deviceName': name});
       return success;
     } on PlatformException catch (e) {
-      print("Failed to set name: ${e.message}");
+      print("Failed to init HID profile: ${e.message}");
       return false;
     }
   }

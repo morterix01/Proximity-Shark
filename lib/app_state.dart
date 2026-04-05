@@ -56,7 +56,7 @@ class AppState extends ChangeNotifier {
     // Give HID Profile some time to bind if it failed initially
     // (Native side tries once on proxy connection, we retry once here)
     Future.delayed(const Duration(seconds: 2), () {
-      hidController.setDeviceName(_bleName); // This also triggers a refresh in some cases
+      hidController.initHidProfile(_bleName); // This also triggers a refresh in some cases
     });
 
     // Try to silently reconnect to the most recent device if available
@@ -172,7 +172,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> updateBleName(String newName) async {
-    final success = await hidController.setDeviceName(newName);
+    final success = await hidController.initHidProfile(newName);
     if (success) {
       _bleName = newName;
       final prefs = await SharedPreferences.getInstance();
