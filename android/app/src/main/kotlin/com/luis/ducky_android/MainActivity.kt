@@ -79,19 +79,6 @@ class MainActivity : FlutterActivity() {
                 BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
                     runOnUiThread { eventSink?.success(mapOf("scan_complete" to "true")) }
                 }
-                BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
-                    val device: BluetoothDevice? = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
-                    val state = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR)
-                    val prevState = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, BluetoothDevice.ERROR)
-                    Log.d("HID", "Bond state changed: $prevState -> $state for ${device?.name}")
-                    
-                    if (state == BluetoothDevice.BOND_BONDED && device != null) {
-                        Log.d("HID", "Device bonded! Proactively initiating HID connection...")
-                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                            connectHid(device.address)
-                        }, 500)
-                    }
-                }
             }
         }
     }
@@ -192,7 +179,6 @@ class MainActivity : FlutterActivity() {
         val filter = IntentFilter().apply {
             addAction(BluetoothDevice.ACTION_FOUND)
             addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
-            addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
         }
         registerReceiver(discoveryReceiver, filter)
 
