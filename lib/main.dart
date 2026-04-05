@@ -18,7 +18,7 @@ class DuckyAndroidApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AppState()),
       ],
       child: MaterialApp(
-        title: 'DeepLink',
+        title: 'Proximity Shark',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           brightness: Brightness.dark,

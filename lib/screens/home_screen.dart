@@ -93,7 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "DeepLink",
+              "Proximity Shark",
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
