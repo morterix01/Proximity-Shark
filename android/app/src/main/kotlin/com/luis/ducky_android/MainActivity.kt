@@ -164,6 +164,10 @@ class MainActivity : FlutterActivity() {
                         result.error("INVALID_ADDRESS", "Address is null", null)
                     }
                 }
+                "disconnectHid" -> {
+                    disconnectHid()
+                    result.success(true)
+                }
                 else -> result.notImplemented()
             }
         }
@@ -273,6 +277,14 @@ class MainActivity : FlutterActivity() {
         } catch (e: Exception) {
             Log.e("BT", "Unpair failed: ${e.message}")
             false
+        }
+    }
+
+    private fun disconnectHid() {
+        if (bluetoothHidDevice != null && targetDevice != null) {
+            Log.d("HID", "Explicitly disconnecting ${targetDevice?.name}")
+            bluetoothHidDevice?.disconnect(targetDevice!!)
+            targetDevice = null
         }
     }
 

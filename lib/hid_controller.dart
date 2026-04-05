@@ -59,6 +59,15 @@ class HidController {
     }
   }
 
+  /// Disconnects the current HID session
+  Future<void> disconnectHid() async {
+    try {
+      await _channel.invokeMethod('disconnectHid');
+    } on PlatformException catch (e) {
+      print("Failed to disconnect HID: ${e.message}");
+    }
+  }
+
   /// Sends a raw HID keyboard report to the connected device
   Future<bool> sendReport(List<int> report) async {
     try {

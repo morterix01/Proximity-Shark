@@ -231,6 +231,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> disconnectDevice() async {
+    await hidController.disconnectHid();
     _connectedAddress = null;
     _connectionStatus = 0;
     _isConnecting = false;
