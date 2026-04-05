@@ -112,8 +112,8 @@ class MainActivity : FlutterActivity() {
                 "connectHid" -> {
                     val address = call.argument<String>("address")
                     if (address != null) {
-                        connectHid(address)
-                        result.success(true)
+                        val result_bool = connectHid(address)
+                        result.success(result_bool)
                     } else {
                         result.error("INVALID_ADDRESS", "Address is null", null)
                     }
@@ -309,13 +309,19 @@ class MainActivity : FlutterActivity() {
         BluetoothAdapter.getDefaultAdapter()?.cancelDiscovery()
     }
 
-    private fun connectHid(address: String) {
-        try {
+    private fun connectHid(address: String): Boolean {
+        return try {
             val device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address)
             Log.d("HID", "Connecting HID to ${device.name} ($address)")
-            bluetoothHidDevice?.connect(device)
+            if (bluetoothHidDevice == null) {
+                Log.e("HID", "bluetoothHidDevice is null, not registered!")
+                false
+            } else {
+                bluetoothHidDevice!!.connect(device)
+            }
         } catch (e: Exception) {
             Log.e("HID", "Connect failed: ${e.message}")
+            false
         }
     }
 

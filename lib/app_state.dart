@@ -228,7 +228,24 @@ class AppState extends ChangeNotifier {
     _connectingAddress = device.address;
     notifyListeners();
     try {
-      await hidController.connectHid(device.address);
+      final success = await hidController.connectHid(device.address);
+      if (!success) {
+        _isConnecting = false;
+        _connectingAddress = null;
+        notifyListeners();
+        debugPrint("Native connectHid returned false");
+        return;
+      }
+      
+      // Safety timeout in case Android Bluetooth gets stuck
+      Future.delayed(const Duration(seconds: 15), () {
+        if (_isConnecting && _connectingAddress == device.address) {
+          _isConnecting = false;
+          _connectingAddress = null;
+          notifyListeners();
+          debugPrint("Connection timeout: Android BT stack stalled");
+        }
+      });
     } catch (e) {
       _isConnecting = false;
       _connectingAddress = null;
