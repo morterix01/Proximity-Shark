@@ -216,7 +216,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> connectToDevice(ClassicDevice device) async {
-    if (_isConnecting) return; // Prevent double-tap
+    if (_isConnecting && _connectingAddress == device.address) return; // Prevent double-tap
     
     // Explicitly disconnect if already connected to something else
     if (_connectionStatus == 1 && _connectedAddress != device.address) {

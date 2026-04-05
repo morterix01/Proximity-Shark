@@ -358,7 +358,7 @@ class BleTerminalScreen extends StatelessWidget {
               );
             } else {
               return TextButton(
-                onPressed: appState.isConnecting ? null : () {
+                onPressed: (appState.isConnecting && isThisConnecting) ? null : () {
                   appState.connectToDevice(device);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
