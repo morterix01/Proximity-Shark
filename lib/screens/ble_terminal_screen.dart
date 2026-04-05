@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../app_state.dart';
 
 class BleTerminalScreen extends StatelessWidget {
@@ -21,9 +20,14 @@ class BleTerminalScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(appState),
+                _buildHeader(),
+                _buildInfoBanner(),
                 _buildScannerControl(appState),
-                Expanded(child: _buildDeviceList(appState)),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 8),
+                  child: Text("DISCOVERED DEVICES", style: TextStyle(color: Colors.white30, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.5)),
+                ),
+                Expanded(child: _buildDeviceList(context, appState)),
               ],
             ),
           ),
@@ -41,32 +45,58 @@ class BleTerminalScreen extends StatelessWidget {
             width: 300, height: 300,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.blueAccent.withValues(alpha: 0.1),
+              color: Colors.blueAccent.withValues(alpha: 0.08),
             ),
-          ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+          ).animate(onPlay: (c) => c.repeat(reverse: true))
            .blur(begin: const Offset(40, 40), end: const Offset(80, 80), duration: 10.seconds),
         ),
       ],
     );
   }
 
-  Widget _buildHeader(AppState appState) {
+  Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            "BLE TERMINAL",
+            "HID TERMINAL",
             style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 2.0),
           ).animate().fadeIn().slideX(begin: -0.2),
           Text(
-            "SECURE DEVICE DISCOVERY SYSTEM",
+            "CLASSIC BLUETOOTH DEVICE SCANNER",
             style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blueAccent.withValues(alpha: 0.7), letterSpacing: 1.5),
           ).animate().fadeIn(delay: 200.ms),
         ],
       ),
     );
+  }
+
+  Widget _buildInfoBanner() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.cyanAccent.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.2)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.info_outline_rounded, color: Colors.cyanAccent, size: 16),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                "Scansione Bluetooth Classic. Clicca LINK, poi accetta l'abbinamento sul PC. Una volta connesso, usa QUICK ACTION per inviare script.",
+                style: TextStyle(color: Colors.white54, fontSize: 10),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(delay: 300.ms);
   }
 
   Widget _buildScannerControl(AppState appState) {
@@ -81,16 +111,29 @@ class BleTerminalScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text("SCANNER STATUS", style: TextStyle(color: Colors.white38, fontSize: 10, fontWeight: FontWeight.bold)),
-                Text(appState.isScanning ? "ADVERTISING SCAN IN PROGRESS..." : "SCANNER STANDBY", 
-                  style: TextStyle(color: appState.isScanning ? Colors.blueAccent : Colors.white70, fontSize: 12, fontWeight: FontWeight.w900)),
+                Text(
+                  appState.isScanning ? "SCANNING FOR DEVICES..." : "SCANNER STANDBY",
+                  style: TextStyle(
+                    color: appState.isScanning ? Colors.blueAccent : Colors.white70,
+                    fontSize: 12, fontWeight: FontWeight.w900,
+                  ),
+                ),
               ],
             ),
             const Spacer(),
+            if (appState.isScanning)
+              const SizedBox(
+                width: 20, height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.blueAccent),
+              ),
+            const SizedBox(width: 12),
             IconButton.filled(
               onPressed: appState.isScanning ? appState.stopScan : appState.startScan,
               icon: Icon(appState.isScanning ? Icons.stop_rounded : Icons.search_rounded),
               style: IconButton.styleFrom(
-                backgroundColor: appState.isScanning ? Colors.redAccent.withValues(alpha: 0.2) : Colors.blueAccent.withValues(alpha: 0.2),
+                backgroundColor: appState.isScanning
+                    ? Colors.redAccent.withValues(alpha: 0.2)
+                    : Colors.blueAccent.withValues(alpha: 0.2),
                 foregroundColor: appState.isScanning ? Colors.redAccent : Colors.blueAccent,
               ),
             ),
@@ -100,74 +143,89 @@ class BleTerminalScreen extends StatelessWidget {
     ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2);
   }
 
-  Widget _buildDeviceList(AppState appState) {
-    final results = appState.scanResults;
-    
-    if (results.isEmpty && !appState.isScanning) {
+  Widget _buildDeviceList(BuildContext context, AppState appState) {
+    final devices = appState.classicDevices;
+
+    if (devices.isEmpty && !appState.isScanning) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.bluetooth_audio_rounded, size: 64, color: Colors.white.withValues(alpha: 0.05)),
             const SizedBox(height: 16),
-            const Text("NO DEVICES DETECTED", style: TextStyle(color: Colors.white24, fontWeight: FontWeight.w900, letterSpacing: 2)),
+            const Text("NO DEVICES FOUND", style: TextStyle(color: Colors.white24, fontWeight: FontWeight.w900, letterSpacing: 2)),
+            const SizedBox(height: 8),
+            const Text("Press the search button to scan", style: TextStyle(color: Colors.white12, fontSize: 10)),
           ],
         ),
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(24),
-      itemCount: results.length,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      itemCount: devices.length,
       itemBuilder: (context, index) {
-        final r = results[index];
-        final name = r.advertisementData.localName.isNotEmpty ? r.advertisementData.localName : "UNKNOWN DEVICE";
-        final isConnected = appState.connectedDevice?.remoteId == r.device.remoteId;
-
+        final device = devices[index];
+        final isConnected = appState.connectedAddress == device.address;
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
-          child: _buildDeviceItem(name, r, isConnected, appState),
+          child: _buildDeviceItem(context, device, isConnected, appState),
         );
       },
     );
   }
 
-  Widget _buildDeviceItem(String name, ScanResult r, bool isConnected, AppState appState) {
+  Widget _buildDeviceItem(BuildContext context, ClassicDevice device, bool isConnected, AppState appState) {
+    final color = isConnected ? Colors.greenAccent : Colors.blueAccent;
     return _buildNeonContainer(
-      color: isConnected ? Colors.cyanAccent : Colors.white12,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      color: isConnected ? Colors.greenAccent : Colors.white12,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: (isConnected ? Colors.cyanAccent : Colors.blueAccent).withValues(alpha: 0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(isConnected ? Icons.bluetooth_connected_rounded : Icons.bluetooth_rounded, 
-              color: isConnected ? Colors.cyanAccent : Colors.blueAccent, size: 20),
+            child: Icon(
+              isConnected ? Icons.bluetooth_connected_rounded : Icons.computer_rounded,
+              color: color, size: 20,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name.toUpperCase(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13)),
-                Text(r.device.remoteId.str, style: const TextStyle(color: Colors.white38, fontSize: 9)),
+                Text(device.name.toUpperCase(),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13),
+                    overflow: TextOverflow.ellipsis),
+                Text(device.address, style: const TextStyle(color: Colors.white38, fontSize: 9)),
               ],
             ),
           ),
-          Text("${r.rssi} dBm", style: const TextStyle(color: Colors.white24, fontSize: 10, fontWeight: FontWeight.bold)),
-          const SizedBox(width: 12),
+          Text("${device.rssi} dBm", style: const TextStyle(color: Colors.white24, fontSize: 9, fontWeight: FontWeight.bold)),
+          const SizedBox(width: 8),
           TextButton(
-            onPressed: isConnected ? appState.disconnectDevice : () => appState.connectToDevice(r.device),
+            onPressed: () {
+              if (isConnected) {
+                appState.disconnectDevice();
+              } else {
+                appState.connectToDevice(device);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Connecting to ${device.name}... Accept the pairing on your PC.")),
+                );
+              }
+            },
             style: TextButton.styleFrom(
-              backgroundColor: (isConnected ? Colors.redAccent : Colors.blueAccent).withValues(alpha: 0.1),
+              backgroundColor: (isConnected ? Colors.redAccent : Colors.blueAccent).withValues(alpha: 0.15),
               foregroundColor: isConnected ? Colors.redAccent : Colors.cyanAccent,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: Text(isConnected ? "HALT" : "LINK", style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
+            child: Text(isConnected ? "HALT" : "LINK",
+                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
           ),
         ],
       ),

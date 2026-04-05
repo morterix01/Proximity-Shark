@@ -1,37 +1,39 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'hid_controller.dart';
-import 'ducky_parser_it.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:file_picker/file_picker.dart';
+import 'hid_controller.dart';
+import 'ducky_parser_it.dart';
+
+class ClassicDevice {
+  final String name;
+  final String address;
+  final int rssi;
+  ClassicDevice({required this.name, required this.address, required this.rssi});
+}
 
 class AppState extends ChangeNotifier {
   final HidController hidController = HidController();
   late final DuckyParserIt parser;
-  
-  String _script = "GUI r\nDELAY 500\nSTRING notepad.exe\nENTER\nDELAY 1000\nSTRING Ciao mondo da Proximity Shark!\nENTER";
+  StreamSubscription? _deviceStreamSub;
+
+  String _script = "GUI r\nDELAY 500\nSTRING notepad.exe\nENTER\nDELAY 1000\nSTRING Ciao da Proximity Shark!\nENTER";
   bool _isExecuting = false;
-  int _connectionStatus = 0; // 0: Disconnected, 1: Connected
+  int _connectionStatus = 0;
   String _bleName = "Proximity Shark";
   List<File> _savedScripts = [];
   int _executionCount = 0;
 
-  Future<void> fastDeploy(File file) async {
-    _script = await file.readAsString();
-    notifyListeners();
-    await runScript();
-  }
-  
   // Navigation
   int _currentNavIndex = 0;
 
-  // Bluetooth
-  List<ScanResult> _scanResults = [];
+  // Classic BT scan
+  List<ClassicDevice> _classicDevices = [];
   bool _isScanning = false;
-  BluetoothDevice? _connectedDevice;
+  String? _connectedAddress;
 
   AppState() {
     parser = DuckyParserIt(hidController);
@@ -42,6 +44,7 @@ class AppState extends ChangeNotifier {
     await _loadSettings();
     await _loadScripts();
     await _requestInitialPermissions();
+    _startDeviceStream();
     _checkConnection();
   }
 
@@ -56,6 +59,27 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  void _startDeviceStream() {
+    _deviceStreamSub = hidController.deviceStream.listen((event) {
+      if (event.containsKey('scan_complete')) {
+        _isScanning = false;
+        notifyListeners();
+        return;
+      }
+      final name = event['name'] as String? ?? 'Unknown';
+      final address = event['address'] as String? ?? '';
+      final rssi = int.tryParse(event['rssi']?.toString() ?? '0') ?? 0;
+      if (address.isNotEmpty && !_classicDevices.any((d) => d.address == address)) {
+        _classicDevices.add(ClassicDevice(name: name, address: address, rssi: rssi));
+        notifyListeners();
+      }
+    }, onError: (e) {
+      debugPrint("Device stream error: $e");
+      _isScanning = false;
+      notifyListeners();
+    });
+  }
+
   // --- Getters ---
   String get script => _script;
   bool get isExecuting => _isExecuting;
@@ -63,9 +87,9 @@ class AppState extends ChangeNotifier {
   String get bleName => _bleName;
   List<File> get savedScripts => _savedScripts;
   int get currentNavIndex => _currentNavIndex;
-  List<ScanResult> get scanResults => _scanResults;
+  List<ClassicDevice> get classicDevices => _classicDevices;
   bool get isScanning => _isScanning;
-  BluetoothDevice? get connectedDevice => _connectedDevice;
+  String? get connectedAddress => _connectedAddress;
   int get executionCount => _executionCount;
 
   // --- Setters ---
@@ -104,41 +128,25 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // --- Bluetooth Operations ---
+  // --- Classic BT Scan ---
   Future<void> startScan() async {
-    if (await Permission.bluetoothScan.request().isGranted &&
-        await Permission.bluetoothConnect.request().isGranted &&
-        await Permission.location.request().isGranted) {
-      
-      _scanResults.clear();
-      _isScanning = true;
-      notifyListeners();
-
-      FlutterBluePlus.scanResults.listen((results) {
-        _scanResults = results;
-        notifyListeners();
-      });
-
-      await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
-      _isScanning = false;
-      notifyListeners();
-    }
+    if (_isScanning) return;
+    _classicDevices.clear();
+    _isScanning = true;
+    notifyListeners();
+    await hidController.startClassicScan();
   }
 
   Future<void> stopScan() async {
-    await FlutterBluePlus.stopScan();
+    await hidController.stopClassicScan();
     _isScanning = false;
     notifyListeners();
   }
 
-  Future<void> connectToDevice(BluetoothDevice device) async {
+  Future<void> connectToDevice(ClassicDevice device) async {
     try {
-      await device.connect();
-      _connectedDevice = device;
-      
-      // Also notify the native side through HidController
-      await hidController.connect(device.remoteId.str);
-      
+      await hidController.connectHid(device.address);
+      _connectedAddress = device.address;
       _connectionStatus = 1;
       notifyListeners();
     } catch (e) {
@@ -147,12 +155,9 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> disconnectDevice() async {
-    if (_connectedDevice != null) {
-      await _connectedDevice!.disconnect();
-      _connectedDevice = null;
-      _connectionStatus = 0;
-      notifyListeners();
-    }
+    _connectedAddress = null;
+    _connectionStatus = 0;
+    notifyListeners();
   }
 
   // --- Script Library ---
@@ -201,8 +206,6 @@ class AppState extends ChangeNotifier {
       File file = File(result.files.single.path!);
       String content = await file.readAsString();
       String name = result.files.single.name.replaceAll('.txt', '');
-      
-      // Save to local library
       _script = content;
       await saveCurrentScript(name);
       notifyListeners();
@@ -238,5 +241,11 @@ class AppState extends ChangeNotifier {
       _isExecuting = false;
       notifyListeners();
     }
+  }
+
+  @override
+  void dispose() {
+    _deviceStreamSub?.cancel();
+    super.dispose();
   }
 }
