@@ -48,6 +48,17 @@ class HidController {
     }
   }
 
+  /// Unpairs (unbonds) a device from physical system Bluetooth list
+  Future<bool> unpairDevice(String address) async {
+    try {
+      final bool success = await _channel.invokeMethod('unpairDevice', {'address': address});
+      return success;
+    } on PlatformException catch (e) {
+      print("Failed to unpair device: ${e.message}");
+      return false;
+    }
+  }
+
   /// Sends a raw HID keyboard report to the connected device
   Future<bool> sendReport(List<int> report) async {
     try {

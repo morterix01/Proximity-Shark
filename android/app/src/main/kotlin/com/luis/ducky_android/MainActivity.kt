@@ -156,6 +156,14 @@ class MainActivity : FlutterActivity() {
                     setDiscoverable(duration)
                     result.success(true)
                 }
+                "unpairDevice" -> {
+                    val address = call.argument<String>("address")
+                    if (address != null) {
+                        result.success(unpairDevice(address))
+                    } else {
+                        result.error("INVALID_ADDRESS", "Address is null", null)
+                    }
+                }
                 else -> result.notImplemented()
             }
         }
@@ -253,6 +261,19 @@ class MainActivity : FlutterActivity() {
         return if (bluetoothAdapter != null && bluetoothAdapter.isEnabled) {
             bluetoothAdapter.setName(name)
         } else false
+    }
+
+    private fun unpairDevice(address: String): Boolean {
+        return try {
+            val device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address)
+            val method = device.javaClass.getMethod("removeBond")
+            val success = method.invoke(device) as Boolean
+            Log.d("BT", "Unpair device $address: $success")
+            success
+        } catch (e: Exception) {
+            Log.e("BT", "Unpair failed: ${e.message}")
+            false
+        }
     }
 
     private fun setDiscoverable(duration: Int) {

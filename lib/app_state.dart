@@ -218,6 +218,18 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  Future<void> unpairDevice(ClassicDevice device) async {
+    // If currently connected, disconnect first
+    if (_connectedAddress == device.address) {
+      await disconnectDevice();
+    }
+    
+    final success = await hidController.unpairDevice(device.address);
+    if (success) {
+      await fetchBondedDevices();
+    }
+  }
+
   Future<void> disconnectDevice() async {
     _connectedAddress = null;
     _connectionStatus = 0;

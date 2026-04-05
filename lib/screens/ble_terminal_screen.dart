@@ -132,6 +132,7 @@ class BleTerminalScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: GestureDetector(
                   onTap: isConnected || isConnecting ? null : () => appState.connectToDevice(device),
+                  onLongPress: () => _showUnpairDialog(context, appState, device),
                   child: _buildNeonContainer(
                     color: isConnected ? Colors.greenAccent : (isConnecting ? Colors.amberAccent : Colors.white12),
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -164,7 +165,7 @@ class BleTerminalScreen extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
-                          isConnected ? "ACTIVE" : (isConnecting ? "LINKING..." : "TAP TO CONNECT"),
+                          isConnected ? "ACTIVE" : (isConnecting ? "LINKING..." : "HOLD TO UNPAIR"),
                           style: TextStyle(
                             color: isConnected ? Colors.greenAccent.withValues(alpha: 0.5) : Colors.white24,
                             fontSize: 8, fontWeight: FontWeight.bold,
@@ -181,6 +182,39 @@ class BleTerminalScreen extends StatelessWidget {
         const SizedBox(height: 12),
       ],
     ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1);
+  }
+
+  void _showUnpairDialog(BuildContext context, AppState appState, ClassicDevice device) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: Colors.redAccent, width: 0.5)),
+        title: Text("UNPAIR ${device.name}?", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16)),
+        content: const Text("This will completely forget the device from your system's Bluetooth list.", style: TextStyle(color: Colors.white54, fontSize: 13)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("CANCEL", style: TextStyle(color: Colors.white30, fontSize: 11, fontWeight: FontWeight.bold)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              appState.unpairDevice(device);
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("${device.name} forgotten"), backgroundColor: Colors.redAccent.withValues(alpha: 0.8)),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent.withValues(alpha: 0.2),
+              foregroundColor: Colors.redAccent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text("UNPAIR", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildScannerControl(AppState appState) {
