@@ -4,8 +4,22 @@ import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../app_state.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final TextEditingController _nameController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final appState = Provider.of<AppState>(context, listen: false);
+    _nameController.text = appState.bleName;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +39,8 @@ class HomeScreen extends StatelessWidget {
                   _buildHeader(appState),
                   const SizedBox(height: 32),
                   _buildStatusCard(appState),
+                  const SizedBox(height: 24),
+                  _buildIdentityConfig(appState),
                   const SizedBox(height: 24),
                   _buildQuickActionCard(context, appState),
                   const SizedBox(height: 24),
@@ -87,11 +103,11 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("SYSTEM STATUS", style: TextStyle(color: Colors.white38, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                const Text("SYSTEM STATUS", style: TextStyle(color: Colors.white38, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
                 Text(isConnected ? "CONNECTED TO PERIPHERAL" : "WAITING FOR CONNECTION...", 
-                  style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900)),
+                  style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900)),
                 if (isConnected && appState.connectedDevice != null)
-                  Text("ID: ${appState.connectedDevice!.remoteId.str.toUpperCase()}", style: TextStyle(color: Colors.white38, fontSize: 9)),
+                  Text("ID: ${appState.connectedDevice!.remoteId.str.toUpperCase()}", style: const TextStyle(color: Colors.white38, fontSize: 9)),
               ],
             ),
           ),
@@ -114,26 +130,91 @@ class HomeScreen extends StatelessWidget {
     ).animate(onPlay: (c) => isConnected ? c.repeat(reverse: true) : c.stop()).scale(begin: const Offset(0.9, 0.9), end: const Offset(1.1, 1.1), duration: 1.seconds);
   }
 
+  Widget _buildIdentityConfig(AppState appState) {
+    return _buildNeonContainer(
+      color: Colors.white24,
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("DEVICE IDENTITY", style: TextStyle(color: Colors.white38, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _nameController,
+                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                  decoration: InputDecoration(
+                    hintText: "Nome dispositivo...",
+                    hintStyle: const TextStyle(color: Colors.white24),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.05),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  onSubmitted: (val) => appState.updateBleName(val),
+                ),
+              ),
+              const SizedBox(width: 12),
+              IconButton.filled(
+                onPressed: () => appState.updateBleName(_nameController.text),
+                icon: const Icon(Icons.check_rounded),
+                style: IconButton.styleFrom(backgroundColor: Colors.cyanAccent.withValues(alpha: 0.2), foregroundColor: Colors.cyanAccent),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("VISIBILITY", style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                  Text("Allow PCs to discover you", style: TextStyle(color: Colors.white38, fontSize: 10)),
+                ],
+              ),
+              Switch(
+                value: false, // Discoverability is transient on Android
+                onChanged: (val) {
+                  if (val) appState.toggleDiscoverability();
+                },
+                activeColor: Colors.cyanAccent,
+              ),
+            ],
+          ),
+        ],
+      ),
+    ).animate().fadeIn(delay: 450.ms).slideY(begin: 0.2);
+  }
+
   Widget _buildQuickActionCard(BuildContext context, AppState appState) {
     return InkWell(
-      onTap: () => appState.currentNavIndex = 2, // Go to Editor
+      onTap: appState.isExecuting ? null : () => appState.runScript(),
+      borderRadius: BorderRadius.circular(24),
       child: _buildNeonContainer(
         color: Colors.cyanAccent,
         padding: const EdgeInsets.all(24),
         child: Row(
           children: [
-            const Icon(Icons.bolt_rounded, color: Colors.cyanAccent, size: 32),
+            Icon(appState.isExecuting ? Icons.hourglass_top_rounded : Icons.bolt_rounded, 
+              color: Colors.cyanAccent, size: 32),
             const SizedBox(width: 20),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("QUICK START", style: TextStyle(color: Colors.cyanAccent, fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
-                  Text("LAUNCH ACTIVE PAYLOAD", style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold)),
+                  const Text("QUICK ACTION", style: TextStyle(color: Colors.cyanAccent, fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
+                  Text(appState.isExecuting ? "EXECUTING PAYLOAD..." : "LAUNCH ACTIVE PAYLOAD", 
+                    style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios_rounded, color: Colors.cyanAccent.withValues(alpha: 0.3), size: 16),
+            if (appState.isExecuting)
+              const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.cyanAccent))
+            else
+              Icon(Icons.play_arrow_rounded, color: Colors.cyanAccent.withValues(alpha: 0.3), size: 16),
           ],
         ),
       ),
@@ -149,7 +230,7 @@ class HomeScreen extends StatelessWidget {
       mainAxisSpacing: 16,
       children: [
         _buildInfoTile("STORED SCRIPTS", "${appState.savedScripts.length}", Icons.folder_rounded, Colors.amberAccent),
-        _buildInfoTile("ENGINE UPTIME", "99.9%", Icons.speed_rounded, Colors.blueAccent),
+        _buildInfoTile("TOTAL DEPLOYS", "${appState.executionCount}", Icons.rocket_launch_rounded, Colors.purpleAccent),
       ],
     ).animate().fadeIn(delay: 600.ms);
   }

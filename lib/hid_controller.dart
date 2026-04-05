@@ -56,4 +56,15 @@ class HidController {
       return false;
     }
   }
+
+  /// Sets the device in discoverable mode
+  Future<bool> setDiscoverable(int duration) async {
+    try {
+      final bool success = await _channel.invokeMethod('setDiscoverable', {'duration': duration});
+      return success;
+    } on PlatformException catch (e) {
+      print("Failed to set discoverable: ${e.message}");
+      return false;
+    }
+  }
 }

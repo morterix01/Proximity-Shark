@@ -173,7 +173,15 @@ class _QuickEditorScreenState extends State<QuickEditorScreen> {
         children: [
           Expanded(
             child: _buildNeonButton(
-              onTap: appState.isExecuting ? null : () => appState.runScript(),
+              onTap: appState.isExecuting ? null : () {
+                if (appState.connectionStatus == 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("ERRORE: Dispositivo non connesso!")),
+                  );
+                  return;
+                }
+                appState.runScript();
+              },
               color: Colors.cyanAccent,
               icon: Icons.bolt_rounded,
               text: "EXECUTE",

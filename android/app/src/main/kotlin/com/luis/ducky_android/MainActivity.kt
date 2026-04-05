@@ -92,6 +92,11 @@ class MainActivity : FlutterActivity() {
                         result.error("INVALID_NAME", "Name is null", null)
                     }
                 }
+                "setDiscoverable" -> {
+                    val duration = call.argument<Int>("duration") ?: 300
+                    setDiscoverable(duration)
+                    result.success(true)
+                }
                 else -> result.notImplemented()
             }
         }
@@ -144,5 +149,15 @@ class MainActivity : FlutterActivity() {
             return bluetoothAdapter.setName(name)
         }
         return false
+    }
+
+    private fun setDiscoverable(duration: Int) {
+        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+        if (bluetoothAdapter != null) {
+            val intent = android.content.Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
+                putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, duration)
+            }
+            startActivity(intent)
+        }
     }
 }

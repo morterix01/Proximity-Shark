@@ -17,6 +17,7 @@ class AppState extends ChangeNotifier {
   int _connectionStatus = 0; // 0: Disconnected, 1: Connected
   String _bleName = "Proximity Shark";
   List<File> _savedScripts = [];
+  int _executionCount = 0;
   
   // Navigation
   int _currentNavIndex = 0;
@@ -47,6 +48,7 @@ class AppState extends ChangeNotifier {
   List<ScanResult> get scanResults => _scanResults;
   bool get isScanning => _isScanning;
   BluetoothDevice? get connectedDevice => _connectedDevice;
+  int get executionCount => _executionCount;
 
   // --- Setters ---
   set script(String value) {
@@ -63,6 +65,7 @@ class AppState extends ChangeNotifier {
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     _bleName = prefs.getString('ble_name') ?? "Proximity Shark";
+    _executionCount = prefs.getInt('execution_count') ?? 0;
     notifyListeners();
   }
 
@@ -74,6 +77,10 @@ class AppState extends ChangeNotifier {
       await prefs.setString('ble_name', newName);
       notifyListeners();
     }
+  }
+
+  Future<void> toggleDiscoverability() async {
+    await hidController.setDiscoverable(300);
   }
 
   // --- Bluetooth Operations ---
@@ -194,6 +201,10 @@ class AppState extends ChangeNotifier {
 
     try {
       await parser.executeScript(_script);
+      _executionCount++;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('execution_count', _executionCount);
+      notifyListeners();
     } catch (e) {
       debugPrint("Execution error: $e");
     } finally {
