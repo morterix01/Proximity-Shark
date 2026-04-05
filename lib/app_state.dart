@@ -33,6 +33,7 @@ class AppState extends ChangeNotifier {
   // Classic BT scan
   List<ClassicDevice> _classicDevices = [];
   bool _isScanning = false;
+  bool _isConnecting = false; // True while waiting for PC to accept pairing
   String? _connectedAddress;
 
   AppState() {
@@ -61,11 +62,29 @@ class AppState extends ChangeNotifier {
 
   void _startDeviceStream() {
     _deviceStreamSub = hidController.deviceStream.listen((event) {
+      // Handle connection state events from native HID callbacks
+      if (event.containsKey('connection_state')) {
+        final state = event['connection_state'] as String;
+        if (state == 'connected') {
+          _connectionStatus = 1;
+          _connectedAddress = event['address'] as String?;
+          _isConnecting = false;
+          notifyListeners();
+        } else if (state == 'disconnected') {
+          _connectionStatus = 0;
+          _connectedAddress = null;
+          _isConnecting = false;
+          notifyListeners();
+        }
+        return;
+      }
+      // Handle scan_complete
       if (event.containsKey('scan_complete')) {
         _isScanning = false;
         notifyListeners();
         return;
       }
+      // Handle discovered device
       final name = event['name'] as String? ?? 'Unknown';
       final address = event['address'] as String? ?? '';
       final rssi = int.tryParse(event['rssi']?.toString() ?? '0') ?? 0;
@@ -76,6 +95,7 @@ class AppState extends ChangeNotifier {
     }, onError: (e) {
       debugPrint("Device stream error: $e");
       _isScanning = false;
+      _isConnecting = false;
       notifyListeners();
     });
   }
@@ -89,6 +109,7 @@ class AppState extends ChangeNotifier {
   int get currentNavIndex => _currentNavIndex;
   List<ClassicDevice> get classicDevices => _classicDevices;
   bool get isScanning => _isScanning;
+  bool get isConnecting => _isConnecting;
   String? get connectedAddress => _connectedAddress;
   int get executionCount => _executionCount;
 
@@ -144,12 +165,15 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> connectToDevice(ClassicDevice device) async {
+    // Only send the connect request — don't set status optimistically.
+    // The EventChannel will fire 'connection_state=connected' when PC accepts.
+    _isConnecting = true;
+    notifyListeners();
     try {
       await hidController.connectHid(device.address);
-      _connectedAddress = device.address;
-      _connectionStatus = 1;
-      notifyListeners();
     } catch (e) {
+      _isConnecting = false;
+      notifyListeners();
       debugPrint("Connection error: $e");
     }
   }
@@ -157,6 +181,7 @@ class AppState extends ChangeNotifier {
   Future<void> disconnectDevice() async {
     _connectedAddress = null;
     _connectionStatus = 0;
+    _isConnecting = false;
     notifyListeners();
   }
 
@@ -215,14 +240,15 @@ class AppState extends ChangeNotifier {
   // --- HID Control ---
   void _checkConnection() async {
     while (true) {
-      final status = await hidController.getConnectionStatus();
-      if (status != _connectionStatus) {
-        _connectionStatus = status;
-        // When native reports disconnected, clear address so UI resets
-        if (status == 0) {
-          _connectedAddress = null;
+      // Only poll to detect unexpected disconnects (1→0).
+      // Connection (0→1) is driven by EventChannel events from native.
+      if (!_isConnecting) {
+        final status = await hidController.getConnectionStatus();
+        if (status != _connectionStatus) {
+          _connectionStatus = status;
+          if (status == 0) _connectedAddress = null;
+          notifyListeners();
         }
-        notifyListeners();
       }
       await Future.delayed(const Duration(seconds: 1));
     }

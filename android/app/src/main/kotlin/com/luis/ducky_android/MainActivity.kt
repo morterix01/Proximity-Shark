@@ -202,11 +202,19 @@ class MainActivity : FlutterActivity() {
                     BluetoothProfile.STATE_CONNECTED -> {
                         targetDevice = device
                         runOnUiThread {
+                            eventSink?.success(mapOf(
+                                "connection_state" to "connected",
+                                "address" to device.address,
+                                "name" to (device.name ?: "Unknown")
+                            ))
                             android.widget.Toast.makeText(this@MainActivity, "✓ ${device.name} connected as keyboard!", android.widget.Toast.LENGTH_LONG).show()
                         }
                     }
                     BluetoothProfile.STATE_DISCONNECTED -> {
                         targetDevice = null
+                        runOnUiThread {
+                            eventSink?.success(mapOf("connection_state" to "disconnected"))
+                        }
                     }
                 }
             }

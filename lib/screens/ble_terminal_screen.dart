@@ -207,26 +207,60 @@ class BleTerminalScreen extends StatelessWidget {
           ),
           Text("${device.rssi} dBm", style: const TextStyle(color: Colors.white24, fontSize: 9, fontWeight: FontWeight.bold)),
           const SizedBox(width: 8),
-          TextButton(
-            onPressed: () {
-              if (isConnected) {
-                appState.disconnectDevice();
-              } else {
-                appState.connectToDevice(device);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Connecting to ${device.name}... Accept the pairing on your PC.")),
-                );
-              }
-            },
-            style: TextButton.styleFrom(
-              backgroundColor: (isConnected ? Colors.redAccent : Colors.blueAccent).withValues(alpha: 0.15),
-              foregroundColor: isConnected ? Colors.redAccent : Colors.cyanAccent,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: Text(isConnected ? "HALT" : "LINK",
-                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
-          ),
+          // Connection button: LINK / LINKING... / HALT
+          Builder(builder: (context) {
+            final isThisConnecting = appState.isConnecting && appState.connectedAddress == null;
+            if (isConnected) {
+              return TextButton(
+                onPressed: () => appState.disconnectDevice(),
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.redAccent.withValues(alpha: 0.15),
+                  foregroundColor: Colors.redAccent,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                child: const Text("HALT", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
+              );
+            } else if (isThisConnecting) {
+              // Waiting for PC to accept pairing
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.amberAccent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.amberAccent.withValues(alpha: 0.4)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(width: 10, height: 10, child: CircularProgressIndicator(strokeWidth: 1.5, color: Colors.amberAccent)),
+                    SizedBox(width: 8),
+                    Text("LINKING", style: TextStyle(color: Colors.amberAccent, fontSize: 10, fontWeight: FontWeight.w900)),
+                  ],
+                ),
+              );
+            } else {
+              return TextButton(
+                onPressed: () {
+                  appState.connectToDevice(device);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Connecting to ${device.name}...\nAccept the pairing request on your PC."),
+                      backgroundColor: const Color(0xFF1A1A2E),
+                      duration: const Duration(seconds: 5),
+                    ),
+                  );
+                },
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.blueAccent.withValues(alpha: 0.15),
+                  foregroundColor: Colors.cyanAccent,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                child: const Text("LINK", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
+              );
+            }
+          }),
         ],
       ),
     ).animate().fadeIn(delay: 100.ms).slideX(begin: 0.1);
