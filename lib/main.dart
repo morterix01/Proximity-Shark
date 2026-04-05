@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'app_state.dart';
-import 'screens/home_screen.dart';
+import 'nav_hub.dart';
 
 void main() {
   runApp(const DuckyAndroidApp());
@@ -32,7 +32,7 @@ class DuckyAndroidApp extends StatelessWidget {
           scaffoldBackgroundColor: const Color(0xFF0F0F1A),
           textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
         ),
-        home: const HomeScreen(),
+        home: const NavHub(),
       ),
     );
   }
