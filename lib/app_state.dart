@@ -37,6 +37,7 @@ class AppState extends ChangeNotifier {
   List<ClassicDevice> _bondedDevices = []; // List of all paired devices from Android system
   bool _isScanning = false;
   bool _isConnecting = false;
+  bool _isHidReady = false;
   String? _connectingAddress;
   String? _connectedAddress;
 
@@ -55,22 +56,10 @@ class AppState extends ChangeNotifier {
     _checkConnection();
     await fetchBondedDevices();
 
-    // Give HID Profile some time to bind if it failed initially
-    // (Native side tries once on proxy connection, we retry once here)
-    Future.delayed(const Duration(seconds: 2), () {
-      hidController.initHidProfile(_bleName); // This also triggers a refresh in some cases
-    });
-
-    // Try to silently reconnect to the most recent device if available
-    if (_bondedDevices.isNotEmpty) {
-      final target = _bondedDevices.first;
-      Future.delayed(const Duration(seconds: 4), () {
-        // Double check it wasn't unpaired in those 4 seconds
-        if (_bondedDevices.any((d) => d.address == target.address)) {
-          _autoReconnect(target);
-        }
-      });
-    }
+    // Initialize HID Profile
+    await hidController.initHidProfile(_bleName);
+    _isHidReady = await hidController.isHidReady();
+    notifyListeners();
   }
 
   Future<void> _requestInitialPermissions() async {
@@ -105,6 +94,12 @@ class AppState extends ChangeNotifier {
           _isConnecting = false;
           notifyListeners();
         }
+        return;
+      }
+      // Handle HID registration status changes
+      if (event.containsKey('hid_status')) {
+        _isHidReady = event['hid_status'] as bool;
+        notifyListeners();
         return;
       }
       // Handle scan_complete
@@ -142,6 +137,7 @@ class AppState extends ChangeNotifier {
   List<ClassicDevice> get bondedDevices => _bondedDevices;
   bool get isScanning => _isScanning;
   bool get isConnecting => _isConnecting;
+  bool get isHidReady => _isHidReady;
   String? get connectingAddress => _connectingAddress;
   String? get connectedAddress => _connectedAddress;
   int get executionCount => _executionCount;
@@ -173,12 +169,6 @@ class AppState extends ChangeNotifier {
       rssi: 0,
     )).toList();
     notifyListeners();
-  }
-
-  Future<void> _autoReconnect(ClassicDevice device) async {
-    if (_connectionStatus == 1) return;
-    debugPrint("Auto-reconnecting to ${device.name}...");
-    await connectToDevice(device);
   }
 
   Future<void> updateBleName(String newName) async {

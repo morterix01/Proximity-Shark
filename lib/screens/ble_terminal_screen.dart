@@ -131,7 +131,7 @@ class BleTerminalScreen extends StatelessWidget {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: GestureDetector(
-                  onTap: isConnected || isConnecting ? null : () => appState.connectToDevice(device),
+                  onTap: (!appState.isHidReady || isConnected || isConnecting) ? null : () => appState.connectToDevice(device),
                   onLongPress: () => _showUnpairDialog(context, appState, device),
                   child: _buildNeonContainer(
                     color: isConnected ? Colors.greenAccent : (isConnecting ? Colors.amberAccent : Colors.white12),
@@ -165,9 +165,9 @@ class BleTerminalScreen extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
-                          isConnected ? "ACTIVE" : (isConnecting ? "LINKING..." : "HOLD TO UNPAIR"),
+                          !appState.isHidReady ? "WARMING UP..." : (isConnected ? "ACTIVE" : (isConnecting ? "LINKING..." : "PAIRED")),
                           style: TextStyle(
-                            color: isConnected ? Colors.greenAccent.withValues(alpha: 0.5) : Colors.white24,
+                            color: !appState.isHidReady ? Colors.amberAccent : (isConnected ? Colors.greenAccent.withValues(alpha: 0.5) : Colors.white24),
                             fontSize: 8, fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -357,24 +357,28 @@ class BleTerminalScreen extends StatelessWidget {
                 ),
               );
             } else {
+              final isHidReady = appState.isHidReady;
               return TextButton(
-                onPressed: (appState.isConnecting && isThisConnecting) ? null : () {
+                onPressed: (!isHidReady || (appState.isConnecting && isThisConnecting)) ? null : () {
                   appState.connectToDevice(device);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text("Connecting to ${device.name}... Accept the pairing on your PC."),
+                      content: Text(isConnected ? "Repairing Connection..." : "Connecting to ${device.name}..."),
                       backgroundColor: const Color(0xFF1A1A2E),
-                      duration: const Duration(seconds: 6),
+                      duration: const Duration(seconds: 4),
                     ),
                   );
                 },
                 style: TextButton.styleFrom(
-                  backgroundColor: Colors.blueAccent.withValues(alpha: 0.15),
-                  foregroundColor: Colors.cyanAccent,
+                  backgroundColor: isConnected ? Colors.orangeAccent.withValues(alpha: 0.1) : Colors.blueAccent.withValues(alpha: 0.15),
+                  foregroundColor: !isHidReady ? Colors.white24 : (isConnected ? Colors.orangeAccent : Colors.cyanAccent),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                child: const Text("LINK", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
+                child: Text(
+                  !isHidReady ? "WARMING UP" : (isConnected ? "REPAIR" : "LINK"),
+                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.0),
+                ),
               );
             }
           }),

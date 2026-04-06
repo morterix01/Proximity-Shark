@@ -18,6 +18,7 @@ class MainActivity : FlutterActivity() {
     private val EVENT_CHANNEL = "com.luis.ducky_android/devices"
     private var bluetoothHidDevice: BluetoothHidDevice? = null
     private var targetDevice: BluetoothDevice? = null
+    private var isHidRegistered = false
     private val discoveredDevices = mutableListOf<Map<String, String>>()
     private var eventSink: EventChannel.EventSink? = null
 
@@ -167,6 +168,9 @@ class MainActivity : FlutterActivity() {
                     initHidProfile(deviceName)
                     result.success(true)
                 }
+                "isHidReady" -> {
+                    result.success(isHidRegistered)
+                }
                 else -> result.notImplemented()
             }
         }
@@ -253,7 +257,9 @@ class MainActivity : FlutterActivity() {
             bluetoothHidDevice?.registerApp(sdp, null, null, { it.run() }, object : BluetoothHidDevice.Callback() {
                 override fun onAppStatusChanged(pluggedDevice: BluetoothDevice?, registered: Boolean) {
                     Log.d("HID", "HID Registration Callback: $registered")
+                    isHidRegistered = registered
                     runOnUiThread {
+                        eventSink?.success(mapOf("hid_status" to registered))
                         if (registered) {
                             retryCount = 0 // Reset on success
                             android.widget.Toast.makeText(this@MainActivity, "HID Profile Ready ✓", android.widget.Toast.LENGTH_SHORT).show()
@@ -311,14 +317,33 @@ class MainActivity : FlutterActivity() {
 
     private fun connectHid(address: String): Boolean {
         return try {
-            val device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address)
+            val adapter = BluetoothAdapter.getDefaultAdapter()
+            val device = adapter.getRemoteDevice(address)
             Log.d("HID", "Connecting HID to ${device.name} ($address)")
-            if (bluetoothHidDevice == null) {
-                Log.e("HID", "bluetoothHidDevice is null, not registered!")
-                false
-            } else {
-                bluetoothHidDevice!!.connect(device)
+            
+            if (bluetoothHidDevice == null || !isHidRegistered) {
+                Log.e("HID", "bluetoothHidDevice is null or not registered yet!")
+                return false
+            } 
+            
+            // Check current connection state
+            val currentState = bluetoothHidDevice!!.getConnectionState(device)
+            Log.d("HID", "Current HID state for ${device.name} is $currentState")
+            
+            if (currentState != BluetoothProfile.STATE_DISCONNECTED) {
+                Log.d("HID", "Device already has a socket. Forcing disconnect to REPAIR state...")
+                bluetoothHidDevice!!.disconnect(device)
+                // We don't return false here, we proceed to attempt connection after a tiny delay
+                // on a background thread to bypass L2CAP lockups.
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    Log.d("HID", "Triggering REPAIR connect...")
+                    bluetoothHidDevice!!.connect(device)
+                }, 800)
+                return true
             }
+            
+            Log.d("HID", "Invoking connect...")
+            bluetoothHidDevice!!.connect(device)
         } catch (e: Exception) {
             Log.e("HID", "Connect failed: ${e.message}")
             false

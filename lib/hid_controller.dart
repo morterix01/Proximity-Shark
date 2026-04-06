@@ -123,4 +123,14 @@ class HidController {
       return false;
     }
   }
+  /// Returns true if the HID service is currently registered on the Android system
+  Future<bool> isHidReady() async {
+    try {
+      final bool ready = await _channel.invokeMethod('isHidReady');
+      return ready;
+    } on PlatformException catch (e) {
+      print("Failed to check HID ready: ${e.message}");
+      return false;
+    }
+  }
 }
