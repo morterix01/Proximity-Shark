@@ -131,7 +131,7 @@ class BleTerminalScreen extends StatelessWidget {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: GestureDetector(
-                  onTap: (!appState.isHidReady || isConnected || isConnecting) ? null : () => appState.connectToDevice(device),
+                  onTap: (isConnected || isConnecting) ? null : () => appState.connectToDevice(device),
                   onLongPress: () => _showUnpairDialog(context, appState, device),
                   child: _buildNeonContainer(
                     color: isConnected ? Colors.greenAccent : (isConnecting ? Colors.amberAccent : Colors.white12),
@@ -164,13 +164,13 @@ class BleTerminalScreen extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        Text(
-                          !appState.isHidReady ? "WARMING UP..." : (isConnected ? "ACTIVE" : (isConnecting ? "LINKING..." : "PAIRED")),
-                          style: TextStyle(
-                            color: !appState.isHidReady ? Colors.amberAccent : (isConnected ? Colors.greenAccent.withValues(alpha: 0.5) : Colors.white24),
-                            fontSize: 8, fontWeight: FontWeight.bold,
+                          Text(
+                            isConnected ? "ACTIVE" : (isConnecting ? "LINKING..." : "PAIRED"),
+                            style: TextStyle(
+                              color: isConnected ? Colors.greenAccent.withValues(alpha: 0.5) : Colors.white24,
+                              fontSize: 8, fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -357,9 +357,8 @@ class BleTerminalScreen extends StatelessWidget {
                 ),
               );
             } else {
-              final isHidReady = appState.isHidReady;
               return TextButton(
-                onPressed: (!isHidReady || (appState.isConnecting && isThisConnecting)) ? null : () {
+                onPressed: (appState.isConnecting && isThisConnecting) ? null : () {
                   appState.connectToDevice(device);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -371,12 +370,12 @@ class BleTerminalScreen extends StatelessWidget {
                 },
                 style: TextButton.styleFrom(
                   backgroundColor: isConnected ? Colors.orangeAccent.withValues(alpha: 0.1) : Colors.blueAccent.withValues(alpha: 0.15),
-                  foregroundColor: !isHidReady ? Colors.white24 : (isConnected ? Colors.orangeAccent : Colors.cyanAccent),
+                  foregroundColor: (isConnected ? Colors.orangeAccent : Colors.cyanAccent),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 child: Text(
-                  !isHidReady ? "WARMING UP" : (isConnected ? "REPAIR" : "LINK"),
+                  (isConnected ? "REPAIR" : "LINK"),
                   style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.0),
                 ),
               );

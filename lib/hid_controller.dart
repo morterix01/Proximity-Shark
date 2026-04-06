@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+
 
 class HidController {
   static const _channel = MethodChannel('com.luis.ducky_android/hid');
@@ -13,7 +15,7 @@ class HidController {
     try {
       await _channel.invokeMethod('startClassicScan');
     } on PlatformException catch (e) {
-      print("Failed to start scan: ${e.message}");
+      debugPrint("Failed to start scan: ${e.message}");
     }
   }
 
@@ -22,7 +24,7 @@ class HidController {
     try {
       await _channel.invokeMethod('stopClassicScan');
     } on PlatformException catch (e) {
-      print("Failed to stop scan: ${e.message}");
+      debugPrint("Failed to stop scan: ${e.message}");
     }
   }
 
@@ -32,7 +34,7 @@ class HidController {
       final bool success = await _channel.invokeMethod('connectHid', {'address': address});
       return success;
     } on PlatformException catch (e) {
-      print("Failed to connect HID: ${e.message}");
+      debugPrint("Failed to connect HID: ${e.message}");
       return false;
     }
   }
@@ -43,7 +45,7 @@ class HidController {
       final List result = await _channel.invokeMethod('getBondedDevices');
       return result.cast<Map<dynamic, dynamic>>();
     } on PlatformException catch (e) {
-      print("Failed to get bonded devices: ${e.message}");
+      debugPrint("Failed to get bonded devices: ${e.message}");
       return [];
     }
   }
@@ -54,7 +56,7 @@ class HidController {
       final bool success = await _channel.invokeMethod('unpairDevice', {'address': address});
       return success;
     } on PlatformException catch (e) {
-      print("Failed to unpair device: ${e.message}");
+      debugPrint("Failed to unpair device: ${e.message}");
       return false;
     }
   }
@@ -64,7 +66,7 @@ class HidController {
     try {
       await _channel.invokeMethod('disconnectHid');
     } on PlatformException catch (e) {
-      print("Failed to disconnect HID: ${e.message}");
+      debugPrint("Failed to disconnect HID: ${e.message}");
     }
   }
 
@@ -75,7 +77,7 @@ class HidController {
           {'report': Uint8List.fromList(report)});
       return success;
     } on PlatformException catch (e) {
-      print("Failed to send report: ${e.message}");
+      debugPrint("Failed to send report: ${e.message}");
       return false;
     }
   }
@@ -97,7 +99,7 @@ class HidController {
       final int status = await _channel.invokeMethod('getConnectionStatus');
       return status;
     } on PlatformException catch (e) {
-      print("Failed to get status: ${e.message}");
+      debugPrint("Failed to get status: ${e.message}");
       return 0;
     }
   }
@@ -108,7 +110,7 @@ class HidController {
       final bool success = await _channel.invokeMethod('initHidProfile', {'deviceName': name});
       return success;
     } on PlatformException catch (e) {
-      print("Failed to init HID profile: ${e.message}");
+      debugPrint("Failed to init HID profile: ${e.message}");
       return false;
     }
   }
@@ -119,7 +121,7 @@ class HidController {
       final bool success = await _channel.invokeMethod('setDiscoverable', {'duration': duration});
       return success;
     } on PlatformException catch (e) {
-      print("Failed to set discoverable: ${e.message}");
+      debugPrint("Failed to set discoverable: ${e.message}");
       return false;
     }
   }
@@ -129,7 +131,7 @@ class HidController {
       final bool ready = await _channel.invokeMethod('isHidReady');
       return ready;
     } on PlatformException catch (e) {
-      print("Failed to check HID ready: ${e.message}");
+      debugPrint("Failed to check HID ready: ${e.message}");
       return false;
     }
   }

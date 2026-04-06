@@ -7,51 +7,51 @@ class DuckyParserIt {
   DuckyParserIt(this.hidController);
 
   // HID Modifiers
-  static const int MOD_NONE = 0;
-  static const int MOD_LCTRL = 0x01;
-  static const int MOD_LSHIFT = 0x02;
-  static const int MOD_LALT = 0x04;
-  static const int MOD_LGUI = 0x08;
-  static const int MOD_RCTRL = 0x10;
-  static const int MOD_RSHIFT = 0x20;
-  static const int MOD_RALT = 0x40; // AltGr in IT layout
+  static const int modNone = 0;
+  static const int modLCtrl = 0x01;
+  static const int modLShift = 0x02;
+  static const int modLAlt = 0x04;
+  static const int modLGui = 0x08;
+  static const int modRCtrl = 0x10;
+  static const int modRShift = 0x20;
+  static const int modRAlt = 0x40; // AltGr in IT layout
 
   // Map of characters to [Modifier, Keycode]
   static final Map<String, List<int>> keyMap = {
-    'a': [MOD_NONE, 0x04], 'b': [MOD_NONE, 0x05], 'c': [MOD_NONE, 0x06], 'd': [MOD_NONE, 0x07],
-    'e': [MOD_NONE, 0x08], 'f': [MOD_NONE, 0x09], 'g': [MOD_NONE, 0x0A], 'h': [MOD_NONE, 0x0B],
-    'i': [MOD_NONE, 0x0C], 'j': [MOD_NONE, 0x0D], 'k': [MOD_NONE, 0x0E], 'l': [MOD_NONE, 0x0F],
-    'm': [MOD_NONE, 0x10], 'n': [MOD_NONE, 0x11], 'o': [MOD_NONE, 0x12], 'p': [MOD_NONE, 0x13],
-    'q': [MOD_NONE, 0x14], 'r': [MOD_NONE, 0x15], 's': [MOD_NONE, 0x16], 't': [MOD_NONE, 0x17],
-    'u': [MOD_NONE, 0x18], 'v': [MOD_NONE, 0x19], 'w': [MOD_NONE, 0x1A], 'x': [MOD_NONE, 0x1B],
-    'y': [MOD_NONE, 0x1C], 'z': [MOD_NONE, 0x1D],
+    'a': [modNone, 0x04], 'b': [modNone, 0x05], 'c': [modNone, 0x06], 'd': [modNone, 0x07],
+    'e': [modNone, 0x08], 'f': [modNone, 0x09], 'g': [modNone, 0x0A], 'h': [modNone, 0x0B],
+    'i': [modNone, 0x0C], 'j': [modNone, 0x0D], 'k': [modNone, 0x0E], 'l': [modNone, 0x0F],
+    'm': [modNone, 0x10], 'n': [modNone, 0x11], 'o': [modNone, 0x12], 'p': [modNone, 0x13],
+    'q': [modNone, 0x14], 'r': [modNone, 0x15], 's': [modNone, 0x16], 't': [modNone, 0x17],
+    'u': [modNone, 0x18], 'v': [modNone, 0x19], 'w': [modNone, 0x1A], 'x': [modNone, 0x1B],
+    'y': [modNone, 0x1C], 'z': [modNone, 0x1D],
     
-    'A': [MOD_LSHIFT, 0x04], 'B': [MOD_LSHIFT, 0x05], 'C': [MOD_LSHIFT, 0x06], 'D': [MOD_LSHIFT, 0x07],
-    'E': [MOD_LSHIFT, 0x08], 'F': [MOD_LSHIFT, 0x09], 'G': [MOD_LSHIFT, 0x0A], 'H': [MOD_LSHIFT, 0x0B],
-    'I': [MOD_LSHIFT, 0x0C], 'J': [MOD_LSHIFT, 0x0D], 'K': [MOD_LSHIFT, 0x0E], 'L': [MOD_LSHIFT, 0x0F],
-    'M': [MOD_LSHIFT, 0x10], 'N': [MOD_LSHIFT, 0x11], 'O': [MOD_LSHIFT, 0x12], 'P': [MOD_LSHIFT, 0x13],
-    'Q': [MOD_LSHIFT, 0x14], 'R': [MOD_LSHIFT, 0x15], 'S': [MOD_LSHIFT, 0x16], 'T': [MOD_LSHIFT, 0x17],
-    'U': [MOD_LSHIFT, 0x18], 'V': [MOD_LSHIFT, 0x19], 'W': [MOD_LSHIFT, 0x1A], 'X': [MOD_LSHIFT, 0x1B],
-    'Y': [MOD_LSHIFT, 0x1C], 'Z': [MOD_LSHIFT, 0x1D],
+    'A': [modLShift, 0x04], 'B': [modLShift, 0x05], 'C': [modLShift, 0x06], 'D': [modLShift, 0x07],
+    'E': [modLShift, 0x08], 'F': [modLShift, 0x09], 'G': [modLShift, 0x0A], 'H': [modLShift, 0x0B],
+    'I': [modLShift, 0x0C], 'J': [modLShift, 0x0D], 'K': [modLShift, 0x0E], 'L': [modLShift, 0x0F],
+    'M': [modLShift, 0x10], 'N': [modLShift, 0x11], 'O': [modLShift, 0x12], 'P': [modLShift, 0x13],
+    'Q': [modLShift, 0x14], 'R': [modLShift, 0x15], 'S': [modLShift, 0x16], 'T': [modLShift, 0x17],
+    'U': [modLShift, 0x18], 'V': [modLShift, 0x19], 'W': [modLShift, 0x1A], 'X': [modLShift, 0x1B],
+    'Y': [modLShift, 0x1C], 'Z': [modLShift, 0x1D],
 
-    '1': [MOD_NONE, 0x1E], '2': [MOD_NONE, 0x1F], '3': [MOD_NONE, 0x20], '4': [MOD_NONE, 0x21],
-    '5': [MOD_NONE, 0x22], '6': [MOD_NONE, 0x23], '7': [MOD_NONE, 0x24], '8': [MOD_NONE, 0x25],
-    '9': [MOD_NONE, 0x26], '0': [MOD_NONE, 0x27],
+    '1': [modNone, 0x1E], '2': [modNone, 0x1F], '3': [modNone, 0x20], '4': [modNone, 0x21],
+    '5': [modNone, 0x22], '6': [modNone, 0x23], '7': [modNone, 0x24], '8': [modNone, 0x25],
+    '9': [modNone, 0x26], '0': [modNone, 0x27],
     
-    '!': [MOD_LSHIFT, 0x1E], '"': [MOD_LSHIFT, 0x1F], '\u00A3': [MOD_LSHIFT, 0x20], '\$': [MOD_LSHIFT, 0x21],
-    '%': [MOD_LSHIFT, 0x22], '&': [MOD_LSHIFT, 0x23], '/': [MOD_LSHIFT, 0x24], '(': [MOD_LSHIFT, 0x25],
-    ')': [MOD_LSHIFT, 0x26], '=': [MOD_LSHIFT, 0x27], '?': [MOD_LSHIFT, 0x2D], '^': [MOD_LSHIFT, 0x35],
+    '!': [modLShift, 0x1E], '"': [modLShift, 0x1F], '\u00A3': [modLShift, 0x20], '\$': [modLShift, 0x21],
+    '%': [modLShift, 0x22], '&': [modLShift, 0x23], '/': [modLShift, 0x24], '(': [modLShift, 0x25],
+    ')': [modLShift, 0x26], '=': [modLShift, 0x27], '?': [modLShift, 0x2D], '^': [modLShift, 0x35],
     
-    ' ': [MOD_NONE, 0x2C], '\n': [MOD_NONE, 0x28], '\t': [MOD_NONE, 0x2B],
-    '.': [MOD_NONE, 0x37], ',': [MOD_NONE, 0x36], ':': [MOD_LSHIFT, 0x37], ';': [MOD_LSHIFT, 0x36],
-    '-': [MOD_NONE, 0x38], '_': [MOD_LSHIFT, 0x38], '+': [MOD_NONE, 0x30], '*': [MOD_LSHIFT, 0x30],
+    ' ': [modNone, 0x2C], '\n': [modNone, 0x28], '\t': [modNone, 0x2B],
+    '.': [modNone, 0x37], ',': [modNone, 0x36], ':': [modLShift, 0x37], ';': [modLShift, 0x36],
+    '-': [modNone, 0x38], '_': [modLShift, 0x38], '+': [modNone, 0x30], '*': [modLShift, 0x30],
 
-    '\u00E0': [MOD_NONE, 0x33], '\u00E8': [MOD_NONE, 0x2F], '\u00E9': [MOD_LSHIFT, 0x2F], '\u00EC': [MOD_NONE, 0x2E],
-    '\u00F2': [MOD_NONE, 0x34], '\u00F9': [MOD_NONE, 0x31],
+    '\u00E0': [modNone, 0x33], '\u00E8': [modNone, 0x2F], '\u00E9': [modLShift, 0x2F], '\u00EC': [modNone, 0x2E],
+    '\u00F2': [modNone, 0x34], '\u00F9': [modNone, 0x31],
 
-    '@': [MOD_RALT, 0x34], '#': [MOD_RALT, 0x33], '[': [MOD_RALT, 0x2F], ']': [MOD_RALT, 0x30],
-    '{': [MOD_LSHIFT | MOD_RALT, 0x34], '}': [MOD_LSHIFT | MOD_RALT, 0x33],
-    '|': [MOD_LSHIFT, 0x35], '\\': [MOD_NONE, 0x35], '<': [MOD_NONE, 0x64], '>': [MOD_LSHIFT, 0x64],
+    '@': [modRAlt, 0x34], '#': [modRAlt, 0x33], '[': [modRAlt, 0x2F], ']': [modRAlt, 0x30],
+    '{': [modLShift | modRAlt, 0x34], '}': [modLShift | modRAlt, 0x33],
+    '|': [modLShift, 0x35], '\\': [modNone, 0x35], '<': [modNone, 0x64], '>': [modLShift, 0x64],
   };
 
   static const Map<String, int> specialKeys = {
@@ -86,28 +86,28 @@ class DuckyParserIt {
         break;
       case 'GUI':
       case 'WINDOWS':
-        await sendCombo(MOD_LGUI, argument);
+        await sendCombo(modLGui, argument);
         break;
       case 'CONTROL':
       case 'CTRL':
-        await sendCombo(MOD_LCTRL, argument);
+        await sendCombo(modLCtrl, argument);
         break;
       case 'ALT':
-        await sendCombo(MOD_LALT, argument);
+        await sendCombo(modLAlt, argument);
         break;
       case 'SHIFT':
-        await sendCombo(MOD_LSHIFT, argument);
+        await sendCombo(modLShift, argument);
         break;
       case 'ENTER':
-        await hidController.sendKey(MOD_NONE, 0x28);
+        await hidController.sendKey(modNone, 0x28);
         break;
       case 'TAB':
-        await hidController.sendKey(MOD_NONE, 0x2B);
+        await hidController.sendKey(modNone, 0x2B);
         break;
       default:
         // Try as a special key
         if (specialKeys.containsKey(command)) {
-          await hidController.sendKey(MOD_NONE, specialKeys[command]!);
+          await hidController.sendKey(modNone, specialKeys[command]!);
         } else if (argument.isEmpty && command.length == 1) {
           // Single key command
           await typeString(command);

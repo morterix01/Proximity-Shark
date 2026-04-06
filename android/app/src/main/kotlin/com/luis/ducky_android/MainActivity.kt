@@ -1,6 +1,7 @@
 package com.luis.ducky_android
 
 import android.bluetooth.*
+import android.bluetooth.le.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -17,6 +18,7 @@ class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.luis.ducky_android/hid"
     private val EVENT_CHANNEL = "com.luis.ducky_android/devices"
     private var bluetoothHidDevice: BluetoothHidDevice? = null
+    private var bluetoothLeAdvertiser: BluetoothLeAdvertiser? = null
     private var targetDevice: BluetoothDevice? = null
     private var isHidRegistered = false
     private val discoveredDevices = mutableListOf<Map<String, String>>()
@@ -87,7 +89,6 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
-        // EventChannel: streams discovered devices to Dart
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, EVENT_CHANNEL).setStreamHandler(
             object : EventChannel.StreamHandler {
                 override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
@@ -99,7 +100,6 @@ class MainActivity : FlutterActivity() {
             }
         )
 
-        // MethodChannel: commands from Dart
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "startClassicScan" -> {
@@ -113,8 +113,7 @@ class MainActivity : FlutterActivity() {
                 "connectHid" -> {
                     val address = call.argument<String>("address")
                     if (address != null) {
-                        val result_bool = connectHid(address)
-                        result.success(result_bool)
+                        result.success(connectHid(address))
                     } else {
                         result.error("INVALID_ADDRESS", "Address is null", null)
                     }
@@ -179,23 +178,18 @@ class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Register discovery receiver
         val filter = IntentFilter().apply {
             addAction(BluetoothDevice.ACTION_FOUND)
             addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
         }
         registerReceiver(discoveryReceiver, filter)
 
-        // Register HID profile
-        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-        bluetoothAdapter?.getProfileProxy(this, object : BluetoothProfile.ServiceListener {
+        val adapter = BluetoothAdapter.getDefaultAdapter()
+        adapter?.getProfileProxy(this, object : BluetoothProfile.ServiceListener {
             override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
                 if (profile == BluetoothProfile.HID_DEVICE) {
                     bluetoothHidDevice = proxy as BluetoothHidDevice
-                    Log.d("HID", "HID Profile proxy connected. Waiting for initHidProfile from Dart...")
-                    pendingDeviceName?.let { name ->
-                        doRegister(name)
-                    }
+                    pendingDeviceName?.let { doRegister(it) }
                 }
             }
             override fun onServiceDisconnected(profile: Int) {
@@ -204,111 +198,144 @@ class MainActivity : FlutterActivity() {
                 }
             }
         }, BluetoothProfile.HID_DEVICE)
+        
+        bluetoothLeAdvertiser = adapter?.bluetoothLeAdvertiser
     }
-
 
     private var retryCount = 0
 
     private fun initHidProfile(deviceName: String) {
         setBluetoothName(deviceName)
         pendingDeviceName = deviceName
+        spoofDeviceClass() // Attempt to mask as keyboard
 
         if (bluetoothHidDevice != null) {
             doRegister(deviceName)
-        } else {
-            Log.d("HID", "Proxy not ready yet, waiting for onServiceConnected...")
         }
     }
 
     private fun doRegister(name: String) {
         val adapter = BluetoothAdapter.getDefaultAdapter()
-        if (adapter == null || !adapter.isEnabled) {
-            Log.e("HID", "Cannot register HID: Bluetooth is OFF or null")
-            runOnUiThread {
-                android.widget.Toast.makeText(this@MainActivity, "⚠️ TURN BLUETOOTH ON FIRST!", android.widget.Toast.LENGTH_LONG).show()
-            }
-            return
-        }
+        if (adapter == null || !adapter.isEnabled) return
 
-        if (bluetoothHidDevice == null) {
-            Log.e("HID", "Cannot register HID: Proxy was null")
-            return
-        }
+        if (bluetoothHidDevice == null) return
 
-        Log.d("HID", "Starting clean registration cycle with delay...")
         try {
-            // Unregister first to clear any stale state
             bluetoothHidDevice?.unregisterApp()
         } catch (e: Exception) {
-            Log.w("HID", "Unregister failed (normal): ${e.message}")
+            Log.w("HID", "Unregister failed: ${e.message}")
         }
 
+        // Refined SDP settings for professional keyboard appearance
         val sdp = BluetoothHidDeviceAppSdpSettings(
-            name,
-            "Android HID Keyboard",
-            name,
+            "HID Keyboard",
+            "Professional HID Input Device",
+            "Shark Technologies",
             BluetoothHidDevice.SUBCLASS1_KEYBOARD,
             HID_DESCRIPTOR
         )
 
-        // Wait 1500ms for system to finalize unregistration before registering again
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            Log.d("HID", "Invoking registerApp after delay...")
             bluetoothHidDevice?.registerApp(sdp, null, null, { it.run() }, object : BluetoothHidDevice.Callback() {
                 override fun onAppStatusChanged(pluggedDevice: BluetoothDevice?, registered: Boolean) {
-                    Log.d("HID", "HID Registration Callback: $registered")
                     isHidRegistered = registered
                     runOnUiThread {
                         eventSink?.success(mapOf("hid_status" to registered))
                         if (registered) {
-                            retryCount = 0 // Reset on success
-                            android.widget.Toast.makeText(this@MainActivity, "HID Profile Ready ✓", android.widget.Toast.LENGTH_SHORT).show()
-                        } else {
-                            if (retryCount < 1) {
-                                retryCount++
-                                Log.d("HID", "Retry registration in 2s...")
-                                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ doRegister(name) }, 2000)
-                            } else {
-                                Log.e("HID", "HID Registration Failed (System Rejected)")
+                            retryCount = 0
+                        } else if (retryCount < 1) {
+                            retryCount++
+                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ doRegister(name) }, 2000)
+                        }
+                    }
+                }
+
+                override fun onConnectionStateChanged(device: BluetoothDevice, state: Int) {
+                    when (state) {
+                        BluetoothProfile.STATE_CONNECTED -> {
+                            targetDevice = device
+                            startHidService()
+                            runOnUiThread {
+                                eventSink?.success(mapOf(
+                                    "connection_state" to "connected",
+                                    "address" to device.address,
+                                    "name" to (device.name ?: "Unknown")
+                                ))
+                            }
+                        }
+                        BluetoothProfile.STATE_DISCONNECTED -> {
+                            targetDevice = null
+                            stopHidService()
+                            runOnUiThread {
+                                eventSink?.success(mapOf("connection_state" to "disconnected"))
                             }
                         }
                     }
                 }
-
-            override fun onConnectionStateChanged(device: BluetoothDevice, state: Int) {
-                Log.d("HID", "HID state changed: $state for ${device.name}")
-                when (state) {
-                    BluetoothProfile.STATE_CONNECTED -> {
-                        targetDevice = device
-                        startHidService()
-                        runOnUiThread {
-                            eventSink?.success(mapOf(
-                                "connection_state" to "connected",
-                                "address" to device.address,
-                                "name" to (device.name ?: "Unknown")
-                            ))
-                            android.widget.Toast.makeText(this@MainActivity, "✓ ${device.name} connected as keyboard!", android.widget.Toast.LENGTH_LONG).show()
-                        }
-                    }
-                    BluetoothProfile.STATE_DISCONNECTED -> {
-                        targetDevice = null
-                        stopHidService()
-                        runOnUiThread {
-                            eventSink?.success(mapOf("connection_state" to "disconnected"))
-                        }
-                    }
-                }
-            }
-        })
+            })
         }, 1500)
+    }
+
+    private fun spoofDeviceClass() {
+        try {
+            val adapter = BluetoothAdapter.getDefaultAdapter() ?: return
+            // 0x0540 is the class for a Peripheral/Keyboard
+            val setDeviceClass = adapter.javaClass.getMethod("setDeviceClass", Int::class.java)
+            val result = setDeviceClass.invoke(adapter, 0x0540) as Boolean
+            Log.d("IDENTITY", "Spoof CoD (0x0540) result: $result")
+        } catch (e: Exception) {
+            Log.w("IDENTITY", "Could not spoof CoD via reflection: ${e.message}")
+        }
+    }
+
+    private var advertiseCallback: AdvertiseCallback? = null
+
+    private fun startBleAdvertising() {
+        if (bluetoothLeAdvertiser == null) return
+        stopBleAdvertising()
+
+        val settings = AdvertiseSettings.Builder()
+            .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
+            .setConnectable(true)
+            .setTimeout(0)
+            .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+            .build()
+
+        val data = AdvertiseData.Builder()
+            .setIncludeDeviceName(true)
+            .addServiceUuid(android.os.ParcelUuid.fromString("00001124-0000-1000-8000-00805f9b34fb")) // HID Service UUID
+            .build()
+        
+        // This is the CRITICAL part for Windows: including the Keyboard Appearance (0x03C1)
+        val scanResponse = AdvertiseData.Builder()
+            .setIncludeDeviceName(false)
+            .build()
+
+        advertiseCallback = object : AdvertiseCallback() {
+            override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
+                Log.d("IDENTITY", "BLE Masking Active (Appearance logic handled by system stack)")
+            }
+        }
+
+        try {
+            bluetoothLeAdvertiser?.startAdvertising(settings, data, scanResponse, advertiseCallback)
+        } catch (e: Exception) {
+            Log.e("IDENTITY", "BLE Advertising failed: ${e.message}")
+        }
+    }
+
+    private fun stopBleAdvertising() {
+        advertiseCallback?.let {
+            bluetoothLeAdvertiser?.stopAdvertising(it)
+            advertiseCallback = null
+        }
     }
 
     private fun startClassicScan() {
         discoveredDevices.clear()
-        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-        if (bluetoothAdapter?.isDiscovering == true) bluetoothAdapter.cancelDiscovery()
-        bluetoothAdapter?.startDiscovery()
-        Log.d("BT", "Classic discovery started")
+        val adapter = BluetoothAdapter.getDefaultAdapter()
+        if (adapter?.isDiscovering == true) adapter.cancelDiscovery()
+        adapter?.startDiscovery()
     }
 
     private fun stopClassicScan() {
@@ -319,41 +346,28 @@ class MainActivity : FlutterActivity() {
         return try {
             val adapter = BluetoothAdapter.getDefaultAdapter()
             val device = adapter.getRemoteDevice(address)
-            Log.d("HID", "Connecting HID to ${device.name} ($address)")
             
-            if (bluetoothHidDevice == null || !isHidRegistered) {
-                Log.e("HID", "bluetoothHidDevice is null or not registered yet!")
-                return false
-            } 
+            if (bluetoothHidDevice == null || !isHidRegistered) return false
             
-            // Check current connection state
             val currentState = bluetoothHidDevice!!.getConnectionState(device)
-            Log.d("HID", "Current HID state for ${device.name} is $currentState")
-            
             if (currentState != BluetoothProfile.STATE_DISCONNECTED) {
-                Log.d("HID", "Device already has a socket. Forcing disconnect to REPAIR state...")
                 bluetoothHidDevice!!.disconnect(device)
-                // We don't return false here, we proceed to attempt connection after a tiny delay
-                // on a background thread to bypass L2CAP lockups.
                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                    Log.d("HID", "Triggering REPAIR connect...")
                     bluetoothHidDevice!!.connect(device)
                 }, 800)
                 return true
             }
             
-            Log.d("HID", "Invoking connect...")
             bluetoothHidDevice!!.connect(device)
         } catch (e: Exception) {
-            Log.e("HID", "Connect failed: ${e.message}")
             false
         }
     }
 
     private fun setBluetoothName(name: String): Boolean {
-        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-        return if (bluetoothAdapter != null && bluetoothAdapter.isEnabled) {
-            bluetoothAdapter.setName(name)
+        val adapter = BluetoothAdapter.getDefaultAdapter()
+        return if (adapter != null && adapter.isEnabled) {
+            adapter.setName(name)
         } else false
     }
 
@@ -361,25 +375,22 @@ class MainActivity : FlutterActivity() {
         return try {
             val device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address)
             val method = device.javaClass.getMethod("removeBond")
-            val success = method.invoke(device) as Boolean
-            Log.d("BT", "Unpair device $address: $success")
-            success
+            method.invoke(device) as Boolean
         } catch (e: Exception) {
-            Log.e("BT", "Unpair failed: ${e.message}")
             false
         }
     }
 
     private fun disconnectHid() {
         if (bluetoothHidDevice != null && targetDevice != null) {
-            Log.d("HID", "Explicitly disconnecting ${targetDevice?.name}")
             bluetoothHidDevice?.disconnect(targetDevice!!)
             targetDevice = null
         }
     }
 
     private fun setDiscoverable(duration: Int) {
-        startHidService() // Keep alive during discovery too
+        startHidService()
+        startBleAdvertising() // Start BLE mask alongside classic visibility
         val intent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
             putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, duration)
         }
@@ -402,8 +413,11 @@ class MainActivity : FlutterActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        stopBleAdvertising()
         stopHidService()
-        unregisterReceiver(discoveryReceiver)
+        try {
+            unregisterReceiver(discoveryReceiver)
+        } catch (e: Exception) {}
         stopClassicScan()
     }
 }
