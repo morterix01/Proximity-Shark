@@ -37,7 +37,6 @@ class AppState extends ChangeNotifier {
   List<ClassicDevice> _bondedDevices = []; // List of all paired devices from Android system
   bool _isScanning = false;
   bool _isConnecting = false;
-  bool _isHidReady = false;
   String? _connectingAddress;
   String? _connectedAddress;
 
@@ -56,10 +55,16 @@ class AppState extends ChangeNotifier {
     _checkConnection();
     await fetchBondedDevices();
 
-    // Initialize HID Profile
-    await hidController.initHidProfile(_bleName);
-    _isHidReady = await hidController.isHidReady();
-    notifyListeners();
+    // Give HID Profile some time to bind if it failed initially
+    // (Native side tries once on proxy connection, we retry once here)
+    Future.delayed(const Duration(seconds: 2), () {
+      hidController.initHidProfile(_bleName); // This also triggers a refresh in some cases
+    });
+
+    // Try to reconnect to the most recent device if available with backoff
+    if (_bondedDevices.isNotEmpty) {
+      _startAutoReconnectLoop();
+    }
   }
 
   Future<void> _requestInitialPermissions() async {
@@ -94,12 +99,6 @@ class AppState extends ChangeNotifier {
           _isConnecting = false;
           notifyListeners();
         }
-        return;
-      }
-      // Handle HID registration status changes
-      if (event.containsKey('hid_status')) {
-        _isHidReady = event['hid_status'] as bool;
-        notifyListeners();
         return;
       }
       // Handle scan_complete
@@ -137,7 +136,6 @@ class AppState extends ChangeNotifier {
   List<ClassicDevice> get bondedDevices => _bondedDevices;
   bool get isScanning => _isScanning;
   bool get isConnecting => _isConnecting;
-  bool get isHidReady => _isHidReady;
   String? get connectingAddress => _connectingAddress;
   String? get connectedAddress => _connectedAddress;
   int get executionCount => _executionCount;
@@ -169,6 +167,31 @@ class AppState extends ChangeNotifier {
       rssi: 0,
     )).toList();
     notifyListeners();
+  }
+
+  Future<void> _startAutoReconnectLoop() async {
+    int retrySeconds = 5;
+    while (_connectionStatus == 0) {
+      if (_bondedDevices.isEmpty) break;
+      final target = _bondedDevices.first;
+      debugPrint("Auto-reconnect attempt: ${target.name} (Retrying in ${retrySeconds}s)...");
+      
+      await connectToDevice(target);
+      
+      // Wait for the result or timeout
+      await Future.delayed(Duration(seconds: retrySeconds));
+      
+      if (_connectionStatus == 1) {
+        debugPrint("Auto-reconnect successful!");
+        break;
+      }
+      
+      // Exponential backoff: 5, 10, 20, 40, MAX 60
+      retrySeconds = (retrySeconds * 2).clamp(5, 60);
+      
+      // Safety: if user switched screen or started manual scan, maybe pause? 
+      // For now, keep it simple.
+    }
   }
 
   Future<void> updateBleName(String newName) async {
@@ -218,8 +241,16 @@ class AppState extends ChangeNotifier {
     _connectingAddress = device.address;
     notifyListeners();
     try {
-      await hidController.connectHid(device.address);
+      final success = await hidController.connectHid(device.address);
       
+      if (!success) {
+        debugPrint("Immediate connectHid call failed (Native).");
+        _isConnecting = false;
+        _connectingAddress = null;
+        notifyListeners();
+        return;
+      }
+
       // Safety timeout in case Android Bluetooth gets stuck
       Future.delayed(const Duration(seconds: 15), () {
         if (_isConnecting && _connectingAddress == device.address) {

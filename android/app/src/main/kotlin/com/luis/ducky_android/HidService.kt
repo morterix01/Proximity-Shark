@@ -19,15 +19,16 @@ class HidService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Proximity Shark")
-            .setContentText("HID PERSISTENT CONNECTION ACTIVE")
-            .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth) // System icon for BT
+            .setContentTitle("Shark HID Active")
+            .setContentText("Proximity Shark is ready to send keystrokes")
+            .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setCategory(Notification.CATEGORY_SERVICE)
+            .setOngoing(true)
             .build()
 
         startForeground(NOTIFICATION_ID, notification)
-        Log.d("HidService", "Foreground service started")
+        Log.d("HidService", "Foreground service started with persistent notification")
         
         return START_STICKY
     }

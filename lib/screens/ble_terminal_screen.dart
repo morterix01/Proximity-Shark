@@ -131,7 +131,7 @@ class BleTerminalScreen extends StatelessWidget {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: GestureDetector(
-                  onTap: (isConnected || isConnecting) ? null : () => appState.connectToDevice(device),
+                  onTap: isConnected || isConnecting ? null : () => appState.connectToDevice(device),
                   onLongPress: () => _showUnpairDialog(context, appState, device),
                   child: _buildNeonContainer(
                     color: isConnected ? Colors.greenAccent : (isConnecting ? Colors.amberAccent : Colors.white12),
@@ -164,13 +164,13 @@ class BleTerminalScreen extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                          Text(
-                            isConnected ? "ACTIVE" : (isConnecting ? "LINKING..." : "PAIRED"),
-                            style: TextStyle(
-                              color: isConnected ? Colors.greenAccent.withValues(alpha: 0.5) : Colors.white24,
-                              fontSize: 8, fontWeight: FontWeight.bold,
-                            ),
+                        Text(
+                          isConnected ? "ACTIVE" : (isConnecting ? "LINKING..." : "HOLD TO UNPAIR"),
+                          style: TextStyle(
+                            color: isConnected ? Colors.greenAccent.withValues(alpha: 0.5) : Colors.white24,
+                            fontSize: 8, fontWeight: FontWeight.bold,
                           ),
+                        ),
                       ],
                     ),
                   ),
@@ -362,22 +362,19 @@ class BleTerminalScreen extends StatelessWidget {
                   appState.connectToDevice(device);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(isConnected ? "Repairing Connection..." : "Connecting to ${device.name}..."),
+                      content: Text("Connecting to ${device.name}... Accept the pairing on your PC."),
                       backgroundColor: const Color(0xFF1A1A2E),
-                      duration: const Duration(seconds: 4),
+                      duration: const Duration(seconds: 6),
                     ),
                   );
                 },
                 style: TextButton.styleFrom(
-                  backgroundColor: isConnected ? Colors.orangeAccent.withValues(alpha: 0.1) : Colors.blueAccent.withValues(alpha: 0.15),
-                  foregroundColor: (isConnected ? Colors.orangeAccent : Colors.cyanAccent),
+                  backgroundColor: Colors.blueAccent.withValues(alpha: 0.15),
+                  foregroundColor: Colors.cyanAccent,
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                child: Text(
-                  (isConnected ? "REPAIR" : "LINK"),
-                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.0),
-                ),
+                child: const Text("LINK", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
               );
             }
           }),

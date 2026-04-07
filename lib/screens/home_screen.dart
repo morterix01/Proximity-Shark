@@ -232,7 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text("Masking active! Search BT on PC → Look for Keyboard icon"),
+                        content: Text("Accept the system dialog → then search Bluetooth on your PC"),
                         backgroundColor: Color(0xFF1A1A2E),
                         duration: Duration(seconds: 4),
                       ),
