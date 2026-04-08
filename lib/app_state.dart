@@ -372,15 +372,54 @@ class AppState extends ChangeNotifier {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['txt'],
+      allowMultiple: true,
     );
 
-    if (result != null) {
-      File file = File(result.files.single.path!);
-      String content = await file.readAsString();
-      String name = result.files.single.name.replaceAll('.txt', '');
-      _script = content;
-      await saveCurrentScript(name);
-      // Removed manual notifyListeners since saveCurrentScript calls _loadScripts which calls it
+    if (result != null && _currentDir != null) {
+      for (var pFile in result.files) {
+        if (pFile.path == null) continue;
+        final sourceFile = File(pFile.path!);
+        final destFile = File('${_currentDir!.path}/${pFile.name}');
+        
+        // Skip if already exists to prevent accidental overwrite
+        if (await destFile.exists()) continue;
+        
+        await sourceFile.copy(destFile.path);
+      }
+      await _loadScripts();
+    }
+  }
+
+  Future<void> importFolder() async {
+    if (_currentDir == null) return;
+    
+    String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+    if (selectedDirectory == null) return;
+
+    final sourceDir = Directory(selectedDirectory);
+    final folderName = sourceDir.path.split(Platform.pathSeparator).last;
+    final destDir = Directory('${_currentDir!.path}/$folderName');
+
+    if (!await destDir.exists()) {
+      await destDir.create(recursive: true);
+    }
+
+    await _copyDirectory(sourceDir, destDir);
+    await _loadScripts();
+  }
+
+  Future<void> _copyDirectory(Directory source, Directory destination) async {
+    await for (var entity in source.list(recursive: false)) {
+      if (entity is Directory) {
+        final newDirectory = Directory('${destination.path}/${entity.path.split(Platform.pathSeparator).last}');
+        await newDirectory.create();
+        await _copyDirectory(entity, newDirectory);
+      } else if (entity is File && entity.path.endsWith('.txt')) {
+        final newFile = File('${destination.path}/${entity.path.split(Platform.pathSeparator).last}');
+        if (!await newFile.exists()) {
+          await entity.copy(newFile.path);
+        }
+      }
     }
   }
 

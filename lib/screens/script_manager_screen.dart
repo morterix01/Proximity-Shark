@@ -74,42 +74,64 @@ class ScriptManagerScreen extends StatelessWidget {
   Widget _buildActionButtons(BuildContext context, AppState appState) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: InkWell(
-              onTap: appState.importScript,
-              borderRadius: BorderRadius.circular(18),
-              child: _buildNeonContainer(
-                color: Colors.amberAccent,
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    const Icon(Icons.file_upload_rounded, color: Colors.amberAccent),
-                    const SizedBox(height: 8),
-                    const Text("IMPORT", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
-                  ],
+          Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: appState.importScript,
+                  borderRadius: BorderRadius.circular(18),
+                  child: _buildNeonContainer(
+                    color: Colors.amberAccent,
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.file_copy_rounded, color: Colors.amberAccent, size: 20),
+                        const SizedBox(height: 4),
+                        const Text("FILES", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10)),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: InkWell(
-              onTap: () => _showCreateFolderDialog(context, appState),
-              borderRadius: BorderRadius.circular(18),
-              child: _buildNeonContainer(
-                color: Colors.greenAccent,
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    const Icon(Icons.create_new_folder_rounded, color: Colors.greenAccent),
-                    const SizedBox(height: 8),
-                    const Text("NEW FOLDER", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
-                  ],
+              const SizedBox(width: 8),
+              Expanded(
+                child: InkWell(
+                  onTap: appState.importFolder,
+                  borderRadius: BorderRadius.circular(18),
+                  child: _buildNeonContainer(
+                    color: Colors.cyanAccent,
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.drive_folder_upload_rounded, color: Colors.cyanAccent, size: 20),
+                        const SizedBox(height: 4),
+                        const Text("FOLDER", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10)),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: InkWell(
+                  onTap: () => _showCreateFolderDialog(context, appState),
+                  borderRadius: BorderRadius.circular(18),
+                  child: _buildNeonContainer(
+                    color: Colors.greenAccent,
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.create_new_folder_rounded, color: Colors.greenAccent, size: 20),
+                        const SizedBox(height: 4),
+                        const Text("NEW", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2),
