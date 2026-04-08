@@ -33,12 +33,13 @@ class AppState extends ChangeNotifier {
   int _currentNavIndex = 0;
 
   // Classic BT scan
-  List<ClassicDevice> _classicDevices = [];
+  final List<ClassicDevice> _classicDevices = [];
   List<ClassicDevice> _bondedDevices = []; // List of all paired devices from Android system
   bool _isScanning = false;
   bool _isConnecting = false;
   String? _connectingAddress;
   String? _connectedAddress;
+  bool _isImporting = false;
 
   AppState() {
     parser = DuckyParserIt(hidController);
@@ -139,6 +140,7 @@ class AppState extends ChangeNotifier {
   String? get connectingAddress => _connectingAddress;
   String? get connectedAddress => _connectedAddress;
   int get executionCount => _executionCount;
+  bool get isImporting => _isImporting;
 
   // --- Setters ---
   set script(String value) {
@@ -369,6 +371,8 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> importScript() async {
+    if (_isImporting) return;
+    
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['txt'],
@@ -376,50 +380,100 @@ class AppState extends ChangeNotifier {
     );
 
     if (result != null && _currentDir != null) {
-      for (var pFile in result.files) {
-        if (pFile.path == null) continue;
-        final sourceFile = File(pFile.path!);
-        final destFile = File('${_currentDir!.path}/${pFile.name}');
-        
-        // Skip if already exists to prevent accidental overwrite
-        if (await destFile.exists()) continue;
-        
-        await sourceFile.copy(destFile.path);
+      _isImporting = true;
+      notifyListeners();
+      
+      try {
+        for (var pFile in result.files) {
+          if (pFile.path == null) continue;
+          final sourceFile = File(pFile.path!);
+          final destFile = File('${_currentDir!.path}/${pFile.name}');
+          
+          // Skip if already exists or copy
+          if (!await destFile.exists()) {
+            await sourceFile.copy(destFile.path);
+          }
+        }
+        await _loadScripts();
+      } catch (e) {
+        debugPrint("Import script error: $e");
+      } finally {
+        _isImporting = false;
+        notifyListeners();
       }
-      await _loadScripts();
     }
   }
 
   Future<void> importFolder() async {
-    if (_currentDir == null) return;
+    if (_isImporting || _currentDir == null) return;
     
+    // Request permissions first
+    if (Platform.isAndroid) {
+      if (await Permission.manageExternalStorage.request().isDenied &&
+          await Permission.storage.request().isDenied) {
+        debugPrint("Storage permissions denied");
+        return;
+      }
+    }
+
     String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
     if (selectedDirectory == null) return;
 
-    final sourceDir = Directory(selectedDirectory);
-    final folderName = sourceDir.path.split(Platform.pathSeparator).last;
-    final destDir = Directory('${_currentDir!.path}/$folderName');
+    _isImporting = true;
+    notifyListeners();
 
-    if (!await destDir.exists()) {
-      await destDir.create(recursive: true);
+    try {
+      final sourceDir = Directory(selectedDirectory);
+      
+      // Better folder name extraction (handle trailing slashes)
+      String path = sourceDir.path;
+      if (path.endsWith(Platform.pathSeparator)) {
+        path = path.substring(0, path.length - 1);
+      }
+      final folderName = path.split(Platform.pathSeparator).last;
+      
+      if (folderName.isEmpty) throw Exception("Could not determine folder name");
+
+      final destDir = Directory('${_currentDir!.path}/$folderName');
+
+      if (!await destDir.exists()) {
+        await destDir.create(recursive: true);
+      }
+
+      await _copyDirectory(sourceDir, destDir);
+      await _loadScripts();
+    } catch (e) {
+      debugPrint("Import folder error: $e");
+    } finally {
+      _isImporting = false;
+      notifyListeners();
     }
-
-    await _copyDirectory(sourceDir, destDir);
-    await _loadScripts();
   }
 
   Future<void> _copyDirectory(Directory source, Directory destination) async {
-    await for (var entity in source.list(recursive: false)) {
-      if (entity is Directory) {
-        final newDirectory = Directory('${destination.path}/${entity.path.split(Platform.pathSeparator).last}');
-        await newDirectory.create();
-        await _copyDirectory(entity, newDirectory);
-      } else if (entity is File && entity.path.endsWith('.txt')) {
-        final newFile = File('${destination.path}/${entity.path.split(Platform.pathSeparator).last}');
-        if (!await newFile.exists()) {
-          await entity.copy(newFile.path);
+    try {
+      if (!await source.exists()) return;
+      
+      await for (var entity in source.list(recursive: false)) {
+        final name = entity.path.split(Platform.pathSeparator).last;
+        
+        if (entity is Directory) {
+          final newDirectory = Directory('${destination.path}/$name');
+          if (!await newDirectory.exists()) {
+            await newDirectory.create();
+          }
+          await _copyDirectory(entity, newDirectory);
+        } else if (entity is File && (entity.path.endsWith('.txt') || entity.path.endsWith('.ducky'))) {
+          // Support both .txt and .ducky if relevant
+          final newFile = File('${destination.path}/$name');
+          if (!await newFile.exists()) {
+            await entity.copy(newFile.path);
+          }
         }
       }
+    } catch (e) {
+      debugPrint("Error copying directory ${source.path}: $e");
+      // Continue with other files if one fails
     }
   }
 

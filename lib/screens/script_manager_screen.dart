@@ -24,6 +24,14 @@ class ScriptManagerScreen extends StatelessWidget {
               children: [
                 _buildHeader(appState),
                 _buildActionButtons(context, appState),
+                if (appState.isImporting)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    child: LinearProgressIndicator(
+                      backgroundColor: Colors.white10,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.amberAccent),
+                    ),
+                  ),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 12),
                   child: Text("STORED PAYLOADS", style: TextStyle(color: Colors.white30, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.5)),
@@ -80,14 +88,21 @@ class ScriptManagerScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: InkWell(
-                  onTap: appState.importScript,
+                  onTap: appState.isImporting ? null : () async {
+                    await appState.importScript();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Import completed")),
+                      );
+                    }
+                  },
                   borderRadius: BorderRadius.circular(18),
                   child: _buildNeonContainer(
-                    color: Colors.amberAccent,
+                    color: appState.isImporting ? Colors.white10 : Colors.amberAccent,
                     padding: const EdgeInsets.all(12),
                     child: Column(
                       children: [
-                        const Icon(Icons.file_copy_rounded, color: Colors.amberAccent, size: 20),
+                        Icon(Icons.file_copy_rounded, color: appState.isImporting ? Colors.white24 : Colors.amberAccent, size: 20),
                         const SizedBox(height: 4),
                         const Text("FILES", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10)),
                       ],
@@ -98,14 +113,21 @@ class ScriptManagerScreen extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: InkWell(
-                  onTap: appState.importFolder,
+                  onTap: appState.isImporting ? null : () async {
+                    await appState.importFolder();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Folder import finished")),
+                      );
+                    }
+                  },
                   borderRadius: BorderRadius.circular(18),
                   child: _buildNeonContainer(
-                    color: Colors.cyanAccent,
+                    color: appState.isImporting ? Colors.white10 : Colors.cyanAccent,
                     padding: const EdgeInsets.all(12),
                     child: Column(
                       children: [
-                        const Icon(Icons.drive_folder_upload_rounded, color: Colors.cyanAccent, size: 20),
+                        Icon(Icons.drive_folder_upload_rounded, color: appState.isImporting ? Colors.white24 : Colors.cyanAccent, size: 20),
                         const SizedBox(height: 4),
                         const Text("FOLDER", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10)),
                       ],
