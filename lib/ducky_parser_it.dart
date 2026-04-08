@@ -73,8 +73,10 @@ class DuckyParserIt {
 
   Future<void> parseLine(String line) async {
     List<String> parts = line.split(' ');
-    String command = parts[0].toUpperCase();
-    String argument = parts.length > 1 ? line.substring(command.length + 1) : "";
+    String originalCommand = parts[0];
+    String command = originalCommand.toUpperCase();
+    // Use originalCommand.length to correctly slice the argument from the original line
+    String argument = parts.length > 1 ? line.substring(originalCommand.length + 1) : "";
 
     switch (command) {
       case 'STRING':
@@ -108,9 +110,9 @@ class DuckyParserIt {
         // Try as a special key
         if (specialKeys.containsKey(command)) {
           await hidController.sendKey(MOD_NONE, specialKeys[command]!);
-        } else if (argument.isEmpty && command.length == 1) {
-          // Single key command
-          await typeString(command);
+        } else if (argument.isEmpty && originalCommand.length == 1) {
+          // Single key command — preserve original case!
+          await typeString(originalCommand);
         }
         break;
     }

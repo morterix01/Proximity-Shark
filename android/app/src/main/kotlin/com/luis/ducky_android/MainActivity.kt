@@ -21,6 +21,7 @@ class MainActivity : FlutterActivity() {
     private val discoveredDevices = mutableListOf<Map<String, String>>()
     private var eventSink: EventChannel.EventSink? = null
     private var hidRegistered = false
+    private var pendingConnectAddress: String? = null // address to connect once HID is registered
 
     // Standard HID Keyboard Descriptor
     private val HID_DESCRIPTOR = byteArrayOf(
@@ -255,6 +256,12 @@ class MainActivity : FlutterActivity() {
             return
         }
 
+        // Skip re-registration if already registered — avoids unregisterApp() killing active connections
+        if (hidRegistered) {
+            Log.d("HID", "doRegister: already registered, skipping re-registration")
+            return
+        }
+
         Log.d("HID", "Starting clean registration cycle with delay...")
         try {
             // Unregister first to clear any stale state
@@ -285,6 +292,15 @@ class MainActivity : FlutterActivity() {
                         if (registered) {
                             retryCount = 0 // Reset on success
                             android.widget.Toast.makeText(this@MainActivity, "HID Profile Ready ✓", android.widget.Toast.LENGTH_SHORT).show()
+                            // If a connect was requested before registration completed, fire it now
+                            val addr = pendingConnectAddress
+                            if (addr != null) {
+                                pendingConnectAddress = null
+                                // Small delay to let Windows-side settle after registration
+                                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                    doConnect(addr)
+                                }, 800)
+                            }
                         } else {
                             if (retryCount < 2) {
                                 retryCount++
@@ -339,24 +355,42 @@ class MainActivity : FlutterActivity() {
 
     private fun connectHid(address: String): Boolean {
         return try {
-            val device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address)
-            Log.d("HID", "Connecting HID to ${device.name} ($address)")
-            if (bluetoothHidDevice == null || !hidRegistered) {
-                Log.e("HID", "bluetoothHidDevice is null or not registered! (Ready: $hidRegistered)")
-                // Re-init if not ready
+            if (bluetoothHidDevice == null) {
+                Log.e("HID", "bluetoothHidDevice proxy is null — profile not bound yet")
+                // Queue connect; will fire automatically when proxy is ready
+                pendingConnectAddress = address
                 pendingDeviceName?.let { initHidProfile(it) }
-                false
-            } else {
-                val success = bluetoothHidDevice!!.connect(device)
-                if (!success) {
-                    Log.w("HID", "Initial connect() call failed, triggering discoverability to aid PC discovery")
-                    setDiscoverable(60) // 1 minute discoverability
-                }
-                success
+                return true // Signal caller to wait for the async callback
             }
+
+            if (!hidRegistered) {
+                Log.w("HID", "HID not registered yet — queueing connect for after registration")
+                // Queue the connect and kick off registration (without unregistering again if in progress)
+                pendingConnectAddress = address
+                pendingDeviceName?.let { initHidProfile(it) }
+                return true // Async: connect will happen in onAppStatusChanged callback
+            }
+
+            // HID is registered — connect directly without re-registering
+            doConnect(address)
+            true
         } catch (e: Exception) {
             Log.e("HID", "Connect failed: ${e.message}")
             false
+        }
+    }
+
+    /** Fire the actual HID connect to a remote device address. Assumes hidRegistered == true. */
+    private fun doConnect(address: String) {
+        try {
+            val device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address)
+            Log.d("HID", "doConnect: connecting to ${device.name} ($address)")
+            val success = bluetoothHidDevice!!.connect(device)
+            if (!success) {
+                Log.w("HID", "connect() call returned false for $address")
+            }
+        } catch (e: Exception) {
+            Log.e("HID", "doConnect failed: ${e.message}")
         }
     }
 
