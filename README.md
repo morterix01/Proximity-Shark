@@ -1,4 +1,4 @@
-# 🦈 Proximity Shark `v1.0.2`
+# 🦈 Proximity Shark
 
 > Trasforma il tuo Android in una **tastiera Bluetooth wireless** — esegui payload DuckyScript senza alcun hardware aggiuntivo.
 
@@ -6,7 +6,7 @@
 
 ## 🚀 Cos'è Proximity Shark?
 
-Proximity Shark è un'app Android sviluppata con Flutter che emula una **tastiera HID Bluetooth Classic**. Connettiti a qualsiasi PC Windows, Linux o macOS già accoppiato e inietta sequenze di tasti tramite script DuckyScript — tutto dal tuo telefono.
+Proximity Shark è un'app Android sviluppata con Flutter che emula una **tastiera HID Bluetooth Classic**. Connettiti a qualsiasi PC Windows, Linux o macOS già accoppiato e inietta sequenze di tasti tramite script DuckyScript — tutto dal tuo telefono, senza bisogno di dongle o cavi.
 
 ---
 
@@ -15,11 +15,11 @@ Proximity Shark è un'app Android sviluppata con Flutter che emula una **tastier
 | | |
 |---|---|
 | 🔵 **Emulazione HID** | Il telefono viene riconosciuto come tastiera Bluetooth dal PC host |
-| 📝 **Parser DuckyScript** | Supporto completo per `STRING`, `DELAY`, `GUI`, `CTRL`, `ALT`, `SHIFT`, `ENTER`, `TAB` e combinazioni |
+| 📝 **Parser DuckyScript** | Supporto per `STRING`, `DELAY`, `GUI`, `CTRL`, `ALT`, `SHIFT`, `ENTER`, `TAB` e combinazioni di tasti |
 | 🇮🇹 **Layout Italiano** | Parser ottimizzato per la tastiera italiana |
 | 📂 **Libreria Script** | Importa file o intere cartelle di payload, organizzali e lanciali con un tap |
 | ⚡ **Esecuzione Rapida** | Un tocco per iniettare il payload sul dispositivo connesso |
-| 🔁 **Riconnessione Automatica** | Strategia di backoff esponenziale per un link HID sempre stabile |
+| 🔁 **Riconnessione Automatica** | Riconnessione intelligente per un link HID sempre stabile |
 | 🌙 **UI Dark** | Interfaccia scura e minimalista, pensata per l'uso sul campo |
 
 ---
@@ -27,13 +27,13 @@ Proximity Shark è un'app Android sviluppata con Flutter che emula una **tastier
 ## 📋 Come si usa
 
 **1. Accoppia i dispositivi**
-Vai in *Impostazioni → Bluetooth* sul tuo Android, trova il PC target e completare il pairing.
+Vai in *Impostazioni → Bluetooth* sul tuo Android, individua il PC target e completa il pairing.
 
 **2. Connettiti dall'app**
 Apri Proximity Shark, tocca **Scansione** nella schermata di connessione e seleziona il tuo PC. Attendi lo stato **"Connesso"**.
 
 **3. Importa un payload**
-Vai nella tab **Libreria Script**, tocca **➕ Importa** e seleziona un file `.txt` DuckyScript (o un'intera cartella).
+Vai nella tab **Libreria Script**, tocca **➕ Importa** e seleziona un file `.txt` DuckyScript — o un'intera cartella di script.
 
 **4. Esegui**
 Tocca il tuo script e premi **▶ Esegui** — i tasti vengono iniettati sul PC in tempo reale.
@@ -49,7 +49,7 @@ flutter pub get
 flutter build apk --release
 ```
 
-> Richiede Flutter ≥ 3.x, Android SDK API 28+ e un **dispositivo fisico** (l'emulatore HID non funziona su emulatori Android).
+> Richiede Flutter ≥ 3.x, Android SDK API 28+ e un **dispositivo fisico** (l'emulazione HID non funziona su emulatori Android).
 
 ---
 
