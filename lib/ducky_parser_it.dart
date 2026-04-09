@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'hid_controller.dart';
 import 'enums.dart';
 
@@ -91,6 +92,7 @@ class DuckyParserIt {
 
   Future<void> executeScript(String script, {KeyboardLayout layout = KeyboardLayout.pc}) async {
     _activeLayout = layout;
+    debugPrint("--- ESECUZIONE SCRIPT (LAYOUT: ${_activeLayout.name.toUpperCase()}) ---");
     List<String> lines = script.split('\n');
     for (String line in lines) {
       if (line.trim().isEmpty) continue;
@@ -152,7 +154,7 @@ class DuckyParserIt {
       if (curMap.containsKey(char)) {
         List<int> combo = curMap[char]!;
         await hidController.sendKey(combo[0], combo[1]);
-        await Future.delayed(Duration(milliseconds: 10)); // Tiny delay for reliability
+        await Future.delayed(const Duration(milliseconds: 10)); // Tiny delay for reliability
       }
     }
   }
