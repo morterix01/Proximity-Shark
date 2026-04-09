@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../app_state.dart';
+import '../enums.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -93,9 +94,9 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 3.0),
         ).animate().fadeIn().slideX(begin: -0.2),
         Text(
-          "HYPER-MOBILE HID INJECTION UNIT // REV 4.0 // v1.0.2",
+          "HYPER-MOBILE HID INJECTION UNIT // v1.0.3 // HYBRID KEYBOARD PC/ANDROID",
           style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.cyanAccent.withValues(alpha: 0.7), letterSpacing: 1.5),
-        ).animate().fadeIn(delay: 200.ms),
+        ).animate().fadeIn(delay: 200.ms).shimmer(duration: 2.seconds, color: Colors.cyanAccent.withValues(alpha: 0.2)),
       ],
     );
   }
@@ -161,6 +162,8 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildKeyboardLayoutSelector(appState),
+          const SizedBox(height: 16),
           const Text("DEVICE IDENTITY",
               style: TextStyle(color: Colors.white38, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
           const SizedBox(height: 16),
@@ -512,6 +515,83 @@ class _HomeScreenState extends State<HomeScreen> {
             border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
           ),
           child: child,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildKeyboardLayoutSelector(AppState appState) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Text("LAYOUT TASTIERA TARGET",
+                style: TextStyle(color: Colors.white38, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.cyanAccent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.2)),
+              ),
+              child: const Text("NEW", style: TextStyle(color: Colors.cyanAccent, fontSize: 8, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            _buildLayoutOption(
+              "ITALIANO PC", 
+              appState.activeLayout == KeyboardLayout.pc, 
+              () => appState.updateKeyboardLayout(KeyboardLayout.pc),
+              Icons.computer_rounded,
+            ),
+            const SizedBox(width: 12),
+            _buildLayoutOption(
+              "ITALIANO ANDROID", 
+              appState.activeLayout == KeyboardLayout.android, 
+              () => appState.updateKeyboardLayout(KeyboardLayout.android),
+              Icons.android_rounded,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLayoutOption(String label, bool isSelected, VoidCallback onTap, IconData icon) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.cyanAccent.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.02),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: isSelected ? Colors.cyanAccent.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.05)),
+            boxShadow: isSelected ? [
+              BoxShadow(color: Colors.cyanAccent.withValues(alpha: 0.1), blurRadius: 10, spreadRadius: -2)
+            ] : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: isSelected ? Colors.cyanAccent : Colors.white38, size: 14),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.white38,
+                  fontSize: 10,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
