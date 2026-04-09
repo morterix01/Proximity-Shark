@@ -85,28 +85,43 @@ class DuckyParserIt {
     '5': [MOD_NONE, 0x22], '6': [MOD_NONE, 0x23], '7': [MOD_NONE, 0x24], '8': [MOD_NONE, 0x25],
     '9': [MOD_NONE, 0x26], '0': [MOD_NONE, 0x27],
 
-    // Punctuation mapped to US QWERTY equivalents
+    // Punctuation — ITALIAN layout positions (Italian Android uses Italian HID decoding)
     ' ': [MOD_NONE, 0x2C], '\n': [MOD_NONE, 0x28], '\t': [MOD_NONE, 0x2B],
 
-    '!': [MOD_LSHIFT, 0x1E], '"': [MOD_LSHIFT, 0x34], // US: Shift + 1, Shift + '
-    '\$': [MOD_LSHIFT, 0x21], '%': [MOD_LSHIFT, 0x22], // US: Shift + 4, Shift + 5
-    '&': [MOD_LSHIFT, 0x24], '/': [MOD_NONE, 0x38],    // US: Shift + 7, /
-    '(': [MOD_LSHIFT, 0x26], ')': [MOD_LSHIFT, 0x27], // US: Shift + 9, Shift + 0
-    '=': [MOD_NONE, 0x2E], '?': [MOD_LSHIFT, 0x38],   // US: =, Shift + /
-    '^': [MOD_LSHIFT, 0x23], // US: Shift + 6
-    
-    '.': [MOD_NONE, 0x37], ',': [MOD_NONE, 0x36], 
-    ':': [MOD_LSHIFT, 0x33], ';': [MOD_NONE, 0x33],   // US: Shift + ;, ;
-    '-': [MOD_NONE, 0x2D], '_': [MOD_LSHIFT, 0x2D],   // US: -, Shift + -
-    '+': [MOD_LSHIFT, 0x2E], '*': [MOD_LSHIFT, 0x25],   // US: Shift + =, Shift + 8
-    
-    '@': [MOD_LSHIFT, 0x1F], '#': [MOD_LSHIFT, 0x20], // US: Shift + 2, Shift + 3
-    '[': [MOD_NONE, 0x2F], ']': [MOD_NONE, 0x30],     // US: [, ]
-    '{': [MOD_LSHIFT, 0x2F], '}': [MOD_LSHIFT, 0x30], // US: Shift + [, Shift + ]
-    '|': [MOD_LSHIFT, 0x31], '\\': [MOD_NONE, 0x31],  // US: Shift + \, \
-    '<': [MOD_LSHIFT, 0x36], '>': [MOD_LSHIFT, 0x37], // US: Shift + ,, Shift + .
-    '~': [MOD_LSHIFT, 0x35], '`': [MOD_NONE, 0x35],   // US: Shift + `, `
-    
+    // Number row symbols (Italian): 1! 2" 3£ 4$ 5% 6& 7/ 8( 9) 0= '? ì^
+    '!': [MOD_LSHIFT, 0x1E],             // Shift+1 = !
+    '"': [MOD_LSHIFT, 0x1F],             // Shift+2 = "  (on Italian, not @ like US)
+    '\$': [MOD_LSHIFT, 0x21],            // Shift+4 = $
+    '%': [MOD_LSHIFT, 0x22],             // Shift+5 = %
+    '&': [MOD_LSHIFT, 0x23],             // Shift+6 = &  (on Italian, not ^ like US)
+    '/': [MOD_LSHIFT, 0x24],             // Shift+7 = /  ← KEY FIX (not 0x38 which is '-' on Italian!)
+    '(': [MOD_LSHIFT, 0x25],             // Shift+8 = (  ← KEY FIX (not Shift+9 like US)
+    ')': [MOD_LSHIFT, 0x26],             // Shift+9 = )  ← KEY FIX (not Shift+0 like US)
+    '=': [MOD_NONE, 0x2E],               // = key         (works on Italian hybrid layout)
+    '?': [MOD_LSHIFT, 0x2D],             // Shift+' = ?  ← KEY FIX (not Shift+0x38 which is '_' on Italian!)
+    '^': [MOD_LSHIFT, 0x2E],             // Shift+= = ^
+
+    '.': [MOD_NONE, 0x37], ',': [MOD_NONE, 0x36],
+    ':': [MOD_LSHIFT, 0x33], ';': [MOD_NONE, 0x33],  // Italian hybrid: ';'/':' at 0x33 (same as US)
+    '-': [MOD_NONE, 0x38],               // Physical minus key on Italian = 0x38  ← KEY FIX
+    '_': [MOD_LSHIFT, 0x38],             // Shift+minus = _                        ← KEY FIX
+    '+': [MOD_NONE, 0x30],               // Italian: + key at 0x30 (right of 0x2F)
+    '*': [MOD_LSHIFT, 0x30],             // Italian: Shift++ = *
+
+    // Special symbols via AltGr on Italian keyboard
+    '@': [MOD_RALT, 0x34],               // AltGr+à = @  (Italian standard)
+    '#': [MOD_RALT, 0x33],               // AltGr+ò = #
+    '[': [MOD_RALT, 0x2F],               // AltGr+è = [
+    ']': [MOD_RALT, 0x30],               // AltGr++ = ]
+    '{': [MOD_LSHIFT | MOD_RALT, 0x34], // AltGr+Shift+à = {
+    '}': [MOD_LSHIFT | MOD_RALT, 0x33], // AltGr+Shift+ò = }
+    '|': [MOD_LSHIFT, 0x35],             // Italian: \ key with shift
+    '\\': [MOD_NONE, 0x35],              // Italian backslash
+    '<': [MOD_NONE, 0x64],               // Extra European key </>
+    '>': [MOD_LSHIFT, 0x64],             // Extra European key </> with shift
+    '~': [MOD_RALT, 0x0C],               // AltGr+i (common Italian)
+
+
     // Italian accented chars fallback -> base letter keycodes (target likely US QWERTY)
     '\u00E0': [MOD_NONE, 0x04], '\u00E8': [MOD_NONE, 0x08], '\u00E9': [MOD_NONE, 0x08],
     '\u00EC': [MOD_NONE, 0x0C], '\u00F2': [MOD_NONE, 0x12], '\u00F9': [MOD_NONE, 0x18],

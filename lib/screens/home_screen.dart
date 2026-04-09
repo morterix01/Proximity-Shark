@@ -558,8 +558,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(width: 8),
             _buildLayoutOption(
-              "ANDROID US",
-              "Android con\ndecodifica US",
+              "ANDROID IT",
+              "Android con\ntastiera IT",
               appState.activeLayout == KeyboardLayout.android,
               () => appState.updateKeyboardLayout(KeyboardLayout.android),
               Icons.android_rounded,
@@ -567,8 +567,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(width: 8),
             _buildLayoutOption(
-              "ANDROID IT",
-              "Android con\ntastiera IT",
+              "ANDROID IT 2",
+              "Per tastiera IT\nfisica/alternativa",
               appState.activeLayout == KeyboardLayout.androidIt,
               () => appState.updateKeyboardLayout(KeyboardLayout.androidIt),
               Icons.phone_android_rounded,
