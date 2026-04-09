@@ -540,21 +540,39 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
+        const Text(
+          "Scegli in base al layout HID del dispositivo TARGET",
+          style: TextStyle(color: Colors.white24, fontSize: 9),
+        ),
+        const SizedBox(height: 10),
         Row(
           children: [
             _buildLayoutOption(
-              "ITALIANO PC", 
-              appState.activeLayout == KeyboardLayout.pc, 
+              "PC IT",
+              "Win/Mac\ntastiera IT",
+              appState.activeLayout == KeyboardLayout.pc,
               () => appState.updateKeyboardLayout(KeyboardLayout.pc),
               Icons.computer_rounded,
+              Colors.cyanAccent,
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
             _buildLayoutOption(
-              "ITALIANO ANDROID", 
-              appState.activeLayout == KeyboardLayout.android, 
+              "ANDROID US",
+              "Android con\ndecodifica US",
+              appState.activeLayout == KeyboardLayout.android,
               () => appState.updateKeyboardLayout(KeyboardLayout.android),
               Icons.android_rounded,
+              Colors.greenAccent,
+            ),
+            const SizedBox(width: 8),
+            _buildLayoutOption(
+              "ANDROID IT",
+              "Android con\ntastiera IT",
+              appState.activeLayout == KeyboardLayout.androidIt,
+              () => appState.updateKeyboardLayout(KeyboardLayout.androidIt),
+              Icons.phone_android_rounded,
+              Colors.amberAccent,
             ),
           ],
         ),
@@ -562,32 +580,47 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildLayoutOption(String label, bool isSelected, VoidCallback onTap, IconData icon) {
+  Widget _buildLayoutOption(String label, String subtitle, bool isSelected, VoidCallback onTap, IconData icon, Color accentColor) {
     return Expanded(
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.cyanAccent.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.02),
+            color: isSelected ? accentColor.withValues(alpha: 0.12) : Colors.white.withValues(alpha: 0.02),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: isSelected ? Colors.cyanAccent.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.05)),
+            border: Border.all(
+              color: isSelected ? accentColor.withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.05),
+              width: isSelected ? 1.5 : 1,
+            ),
             boxShadow: isSelected ? [
-              BoxShadow(color: Colors.cyanAccent.withValues(alpha: 0.1), blurRadius: 10, spreadRadius: -2)
+              BoxShadow(color: accentColor.withValues(alpha: 0.15), blurRadius: 10, spreadRadius: -2)
             ] : null,
           ),
-          child: Row(
+          child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: isSelected ? Colors.cyanAccent : Colors.white38, size: 14),
-              const SizedBox(width: 8),
+              Icon(icon, color: isSelected ? accentColor : Colors.white38, size: 18),
+              const SizedBox(height: 5),
               Text(
                 label,
                 style: TextStyle(
                   color: isSelected ? Colors.white : Colors.white38,
                   fontSize: 10,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                subtitle,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: isSelected ? accentColor.withValues(alpha: 0.7) : Colors.white24,
+                  fontSize: 8,
+                  height: 1.3,
                 ),
               ),
             ],

@@ -61,23 +61,62 @@ class DuckyParserIt {
   };
 
   // --- Android/Mobile Layout Map ---
-  // Many Android targets use AltGr+Q for @, AltGr+3 for #, etc.
+  // Many Android targets default strictly to US QWERTY layout when a BT HID connects.
+  // To type Italian payloads correctly, we send the US keycodes for the requested characters.
   static final Map<String, List<int>> _androidKeyMap = {
-    ..._pcKeyMap, // Inheritance-style base
-    '@': [MOD_RALT, 0x14], // AltGr + q
-    '#': [MOD_RALT, 0x20], // AltGr + 3
-    '[': [MOD_RALT, 0x25], // AltGr + 8
-    ']': [MOD_RALT, 0x26], // AltGr + 9
-    '{': [MOD_RALT | MOD_LSHIFT, 0x25], // AltGr + Shift + 8
-    '}': [MOD_RALT | MOD_LSHIFT, 0x26], // AltGr + Shift + 9
-    '~': [MOD_RALT, 0x11], // AltGr + n (sometimes)
-    '\\': [MOD_RALT, 0x35], // Sometimes required on mobile
+    // Letters
+    'a': [MOD_NONE, 0x04], 'b': [MOD_NONE, 0x05], 'c': [MOD_NONE, 0x06], 'd': [MOD_NONE, 0x07],
+    'e': [MOD_NONE, 0x08], 'f': [MOD_NONE, 0x09], 'g': [MOD_NONE, 0x0A], 'h': [MOD_NONE, 0x0B],
+    'i': [MOD_NONE, 0x0C], 'j': [MOD_NONE, 0x0D], 'k': [MOD_NONE, 0x0E], 'l': [MOD_NONE, 0x0F],
+    'm': [MOD_NONE, 0x10], 'n': [MOD_NONE, 0x11], 'o': [MOD_NONE, 0x12], 'p': [MOD_NONE, 0x13],
+    'q': [MOD_NONE, 0x14], 'r': [MOD_NONE, 0x15], 's': [MOD_NONE, 0x16], 't': [MOD_NONE, 0x17],
+    'u': [MOD_NONE, 0x18], 'v': [MOD_NONE, 0x19], 'w': [MOD_NONE, 0x1A], 'x': [MOD_NONE, 0x1B],
+    'y': [MOD_NONE, 0x1C], 'z': [MOD_NONE, 0x1D],
+    
+    'A': [MOD_LSHIFT, 0x04], 'B': [MOD_LSHIFT, 0x05], 'C': [MOD_LSHIFT, 0x06], 'D': [MOD_LSHIFT, 0x07],
+    'E': [MOD_LSHIFT, 0x08], 'F': [MOD_LSHIFT, 0x09], 'G': [MOD_LSHIFT, 0x0A], 'H': [MOD_LSHIFT, 0x0B],
+    'I': [MOD_LSHIFT, 0x0C], 'J': [MOD_LSHIFT, 0x0D], 'K': [MOD_LSHIFT, 0x0E], 'L': [MOD_LSHIFT, 0x0F],
+    'M': [MOD_LSHIFT, 0x10], 'N': [MOD_LSHIFT, 0x11], 'O': [MOD_LSHIFT, 0x12], 'P': [MOD_LSHIFT, 0x13],
+    'Q': [MOD_LSHIFT, 0x14], 'R': [MOD_LSHIFT, 0x15], 'S': [MOD_LSHIFT, 0x16], 'T': [MOD_LSHIFT, 0x17],
+    'U': [MOD_LSHIFT, 0x18], 'V': [MOD_LSHIFT, 0x19], 'W': [MOD_LSHIFT, 0x1A], 'X': [MOD_LSHIFT, 0x1B],
+    'Y': [MOD_LSHIFT, 0x1C], 'Z': [MOD_LSHIFT, 0x1D],
+
+    '1': [MOD_NONE, 0x1E], '2': [MOD_NONE, 0x1F], '3': [MOD_NONE, 0x20], '4': [MOD_NONE, 0x21],
+    '5': [MOD_NONE, 0x22], '6': [MOD_NONE, 0x23], '7': [MOD_NONE, 0x24], '8': [MOD_NONE, 0x25],
+    '9': [MOD_NONE, 0x26], '0': [MOD_NONE, 0x27],
+
+    // Punctuation mapped to US QWERTY equivalents
+    ' ': [MOD_NONE, 0x2C], '\n': [MOD_NONE, 0x28], '\t': [MOD_NONE, 0x2B],
+
+    '!': [MOD_LSHIFT, 0x1E], '"': [MOD_LSHIFT, 0x34], // US: Shift + 1, Shift + '
+    '\$': [MOD_LSHIFT, 0x21], '%': [MOD_LSHIFT, 0x22], // US: Shift + 4, Shift + 5
+    '&': [MOD_LSHIFT, 0x24], '/': [MOD_NONE, 0x38],    // US: Shift + 7, /
+    '(': [MOD_LSHIFT, 0x26], ')': [MOD_LSHIFT, 0x27], // US: Shift + 9, Shift + 0
+    '=': [MOD_NONE, 0x2E], '?': [MOD_LSHIFT, 0x38],   // US: =, Shift + /
+    '^': [MOD_LSHIFT, 0x23], // US: Shift + 6
+    
+    '.': [MOD_NONE, 0x37], ',': [MOD_NONE, 0x36], 
+    ':': [MOD_LSHIFT, 0x33], ';': [MOD_NONE, 0x33],   // US: Shift + ;, ;
+    '-': [MOD_NONE, 0x2D], '_': [MOD_LSHIFT, 0x2D],   // US: -, Shift + -
+    '+': [MOD_LSHIFT, 0x2E], '*': [MOD_LSHIFT, 0x25],   // US: Shift + =, Shift + 8
+    
+    '@': [MOD_LSHIFT, 0x1F], '#': [MOD_LSHIFT, 0x20], // US: Shift + 2, Shift + 3
+    '[': [MOD_NONE, 0x2F], ']': [MOD_NONE, 0x30],     // US: [, ]
+    '{': [MOD_LSHIFT, 0x2F], '}': [MOD_LSHIFT, 0x30], // US: Shift + [, Shift + ]
+    '|': [MOD_LSHIFT, 0x31], '\\': [MOD_NONE, 0x31],  // US: Shift + \, \
+    '<': [MOD_LSHIFT, 0x36], '>': [MOD_LSHIFT, 0x37], // US: Shift + ,, Shift + .
+    '~': [MOD_LSHIFT, 0x35], '`': [MOD_NONE, 0x35],   // US: Shift + `, `
+    
+    // Italian accented chars fallback -> base letter keycodes (target likely US QWERTY)
+    '\u00E0': [MOD_NONE, 0x04], '\u00E8': [MOD_NONE, 0x08], '\u00E9': [MOD_NONE, 0x08],
+    '\u00EC': [MOD_NONE, 0x0C], '\u00F2': [MOD_NONE, 0x12], '\u00F9': [MOD_NONE, 0x18],
   };
 
   Map<String, List<int>> get _currentKeyMap {
     switch (_activeLayout) {
-      case KeyboardLayout.android: return _androidKeyMap;
-      case KeyboardLayout.pc: return _pcKeyMap;
+      case KeyboardLayout.android:   return _androidKeyMap;  // target Android con tastiera US
+      case KeyboardLayout.androidIt: return _pcKeyMap;       // target Android con tastiera italiana
+      case KeyboardLayout.pc:        return _pcKeyMap;       // target Windows/Mac con tastiera italiana
     }
   }
 
