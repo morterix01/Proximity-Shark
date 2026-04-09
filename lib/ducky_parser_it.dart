@@ -192,51 +192,65 @@ class DuckyParserIt {
     '8': [MOD_NONE, 0x25],
     '9': [MOD_NONE, 0x26], '0': [MOD_NONE, 0x27],
 
-    // Punctuation — ITALIAN layout positions (Android IT mapping)
+    // ── Whitespace ──────────────────────────────────────────────────────────
     ' ': [MOD_NONE, 0x2C], '\n': [MOD_NONE, 0x28], '\t': [MOD_NONE, 0x2B],
 
-    // Number row symbols (Italian): 1! 2" 3£ 4$ 5% 6& 7/ 8( 9) 0= '? ì^
-    '!': [MOD_LSHIFT, 0x1E], // Shift+1 = !
-    '"': [MOD_LSHIFT, 0x1F], // Shift+2 = "
-    '\$': [MOD_LSHIFT, 0x21], // Shift+4 = $
-    '%': [MOD_LSHIFT, 0x22], // Shift+5 = %
-    '&': [MOD_LSHIFT, 0x23], // Shift+6 = &
-    '/': [MOD_LSHIFT, 0x24], // Shift+7 = /
-    '(': [MOD_LSHIFT, 0x25], // Shift+8 = (
-    ')': [MOD_LSHIFT, 0x26], // Shift+9 = )
-    '=': [MOD_LSHIFT, 0x27], // Shift+0 = =
-    '?': [MOD_LSHIFT, 0x2D], // Shift+' = ?
-    '^': [MOD_LSHIFT, 0x35], // Shift+ì (posizione fisica) = ^
+    // ── DATI EMPIRICI CONFERMATI DAI TEST ───────────────────────────────────
+    // Il target usa layout IBRIDO: US per i tasti standard, IT per i tasti
+    // fisicamente diversi tra US e IT (0x38 e 0x2D).
 
-    '.': [MOD_NONE, 0x37], // .
-    ',': [MOD_NONE, 0x36], // ,
-    ':': [MOD_LSHIFT, 0x37], // Shift+. = :
-    ';': [MOD_LSHIFT, 0x36], // Shift+, = ;
-    '-': [MOD_NONE, 0x38], // -
-    '_': [MOD_LSHIFT, 0x38], // Shift+- = _
-    '+': [MOD_NONE, 0x30], // +
-    '*': [MOD_LSHIFT, 0x30], // Shift++ = *
+    // Tasti confermati IT (override italiano):
+    '-': [MOD_NONE, 0x38],     // ✅ CONFERMATO: 0x38 no-mod = -
+    '_': [MOD_LSHIFT, 0x38],   // ✅ CONFERMATO: Shift+0x38 = _
+    '?': [MOD_LSHIFT, 0x2D],   // ✅ CONFERMATO: Shift+0x2D = ?
 
-    // Special symbols via AltGr on Italian keyboard
-    '@': [MOD_RALT, 0x34], // AltGr+ò = @
-    '#': [MOD_RALT, 0x33], // AltGr+à = #
-    '[': [MOD_RALT, 0x2F], // AltGr+è = [
-    ']': [MOD_RALT, 0x30], // AltGr++ = ]
-    '{': [MOD_LSHIFT | MOD_RALT, 0x2F], // AltGr+Shift+è = {
-    '}': [MOD_LSHIFT | MOD_RALT, 0x30], // AltGr+Shift++ = }
-    '|': [MOD_LSHIFT, 0x35], // Shift+\ = |
-    '\\': [MOD_NONE, 0x35], // \
-    '<': [MOD_NONE, 0x64], // <
-    '>': [MOD_LSHIFT, 0x64], // >
-    '~': [MOD_RALT, 0x11], // AltGr+n = ~ (Italian standard fallback)
-    '€': [MOD_RALT, 0x08], // AltGr+E = €
-    // Italian accented chars fallback -> base letter keycodes (target likely US QWERTY)
-    '\u00E0': [MOD_NONE, 0x04],
-    '\u00E8': [MOD_NONE, 0x08],
-    '\u00E9': [MOD_NONE, 0x08],
-    '\u00EC': [MOD_NONE, 0x0C],
-    '\u00F2': [MOD_NONE, 0x12],
-    '\u00F9': [MOD_NONE, 0x18],
+    // Tasti confermati US (comportamento americano):
+    ':': [MOD_LSHIFT, 0x33],   // ✅ CONFERMATO: Shift+0x33 = : (tasto punto-e-virgola US)
+    '=': [MOD_NONE, 0x2E],     // ✅ CONFERMATO: 0x2E = = (tasto uguale US)
+    '.': [MOD_NONE, 0x37],     // US: tasto punto
+    ',': [MOD_NONE, 0x36],     // US: tasto virgola
+    ';': [MOD_NONE, 0x33],     // US: 0x33 non-shiftato = ;
+    '\'': [MOD_NONE, 0x2D],    // Italian: 0x2D non-shiftato = ' (apostrofo)
+
+    // ── Simboli fila numerica: il target usa valori SHIFTATI americani ──────
+    // (confermato: Shift+7 → & come su US, non / come su IT standard)
+    '!': [MOD_LSHIFT, 0x1E],   // Shift+1 = ! (uguale su US e IT)
+    '"': [MOD_LSHIFT, 0x34],   // US: Shift+apostrofo = "
+    '\$': [MOD_LSHIFT, 0x21],  // Shift+4 = $ (uguale su US e IT)
+    '%': [MOD_LSHIFT, 0x22],   // Shift+5 = % (uguale)
+    '&': [MOD_LSHIFT, 0x24],   // ✅ CONFERMATO: Shift+7 = & (comportamento US)
+    '(': [MOD_LSHIFT, 0x26],   // US: Shift+9 = (
+    ')': [MOD_LSHIFT, 0x27],   // US: Shift+0 = )
+    '+': [MOD_LSHIFT, 0x2E],   // US: Shift+= = +
+    '*': [MOD_LSHIFT, 0x25],   // US: Shift+8 = *
+    '^': [MOD_LSHIFT, 0x23],   // US: Shift+6 = ^
+
+    // ── SLASH — nessuna via standard funziona su questo target ──────────────
+    // Testati e falliti: Shift+7→&, 0x38→-, Shift+0x38→_, numpad→-, AltGr+7→fiasco
+    // Ultima opzione non testata: AltGr+tasto-slash (0x38)
+    '/': [MOD_RALT, 0x38],     // ⚠️ UNTESTED: AltGr+0x38 — ultima opzione rimasta
+
+    // ── Simboli AltGr (layout IT) ───────────────────────────────────────────
+    '@': [MOD_RALT, 0x34],               // AltGr+à = @
+    '#': [MOD_RALT, 0x33],               // AltGr+ò = #
+    '[': [MOD_RALT, 0x2F],               // AltGr+è = [
+    ']': [MOD_RALT, 0x30],               // AltGr++ = ]
+    '{': [MOD_LSHIFT | MOD_RALT, 0x2F],  // AltGr+Shift+è = {
+    '}': [MOD_LSHIFT | MOD_RALT, 0x30],  // AltGr+Shift++ = }
+    '\\': [MOD_RALT, 0x31],              // AltGr+ù = backslash
+    '|': [MOD_LSHIFT, 0x31],             // Shift+backslash = |
+    '<': [MOD_NONE, 0x64],               // Tasto europeo extra
+    '>': [MOD_LSHIFT, 0x64],             // Tasto europeo extra shiftato
+    '€': [MOD_RALT, 0x08],              // AltGr+E = €
+    '~': [MOD_RALT, 0x0C],              // AltGr+i (fallback IT)
+
+    // ── Caratteri accentati — fallback al tasto base ─────────────────────────
+    '\u00E0': [MOD_NONE, 0x04], // à → a
+    '\u00E8': [MOD_NONE, 0x08], // è → e
+    '\u00E9': [MOD_NONE, 0x08], // é → e
+    '\u00EC': [MOD_NONE, 0x0C], // ì → i
+    '\u00F2': [MOD_NONE, 0x12], // ò → o
+    '\u00F9': [MOD_NONE, 0x18], // ù → u
   };
 
   Map<String, List<int>> get _currentKeyMap {
