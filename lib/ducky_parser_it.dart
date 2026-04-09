@@ -95,7 +95,7 @@ class DuckyParserIt {
     '\$': [MOD_LSHIFT, 0x21],  // Shift+4 = $ (same US & Italian)
     '%': [MOD_LSHIFT, 0x22],   // Shift+5 = % (same US & Italian)
     '&': [MOD_LSHIFT, 0x24],   // Shift+7 = & (US style — confirmed by user: target Shift+7 → &)
-    '/': [MOD_LSHIFT, 0x38],  // Shift+0x38 = / — CONFIRMED BY USER!
+    '/': [MOD_RALT, 0x24],    // AltGr+7 — trying this for / (Italian ANSI variant)
     '(': [MOD_LSHIFT, 0x26],   // Shift+9 = ( (US style — Italian ( is Shift+8 but target is US here)
     ')': [MOD_LSHIFT, 0x27],   // Shift+0 = ) (US style)
     '=': [MOD_NONE, 0x2E],     // = key (US position, confirmed working)
@@ -107,7 +107,7 @@ class DuckyParserIt {
     '.': [MOD_NONE, 0x37], ',': [MOD_NONE, 0x36],
     ':': [MOD_LSHIFT, 0x33], ';': [MOD_NONE, 0x33],  // confirmed working
     '-': [MOD_NONE, 0x38],     // 0x38 no-modifier = -  — confirmed working
-    '_': [MOD_RALT, 0x38],     // AltGr+0x38 — best guess for _ (to test)
+    '_': [MOD_LSHIFT, 0x38],   // Shift+0x38 = _ — Italian standard (Shift+minus)
 
     // Special symbols via AltGr on Italian keyboard
     '@': [MOD_RALT, 0x34],               // AltGr+à = @  (Italian standard)
