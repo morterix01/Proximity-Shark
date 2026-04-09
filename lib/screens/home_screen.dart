@@ -54,6 +54,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 24),
                   _buildIdentityConfig(context, appState),
                   const SizedBox(height: 24),
+                  _buildStealthHub(appState),
+                  const SizedBox(height: 24),
                   _buildQuickAction(context, appState),
                   const SizedBox(height: 24),
                   _buildStatsGrid(appState),
@@ -253,6 +255,165 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     ).animate().fadeIn(delay: 450.ms).slideY(begin: 0.2);
+  }
+
+  // ─── Stealth & Privacy Hub ────────────────────────────────────────────────
+  Widget _buildStealthHub(AppState appState) {
+    final isDanger = appState.isNetworkActive;
+    final networkColor = isDanger ? Colors.redAccent : Colors.lightGreenAccent;
+    
+    // MAC Privacy Logic
+    final sessionDuration = appState.connectionStartTime != null 
+        ? DateTime.now().difference(appState.connectionStartTime!) 
+        : Duration.zero;
+    final isLongSession = sessionDuration.inMinutes >= 5;
+    final macColor = isLongSession ? Colors.orangeAccent : Colors.cyanAccent;
+
+    return _neonBox(
+      color: isDanger ? Colors.redAccent : Colors.cyanAccent,
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("STEALTH & PRIVACY HUB",
+                  style: TextStyle(color: Colors.white38, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+              _buildCleanIdentityButton(appState),
+            ],
+          ),
+          const SizedBox(height: 24),
+          
+          // IP Section
+          _buildHubRow(
+            icon: isDanger ? Icons.cell_wifi_rounded : Icons.airplanemode_active_rounded,
+            color: networkColor,
+            title: isDanger ? "IP RILEVABILE" : "SHIELD IP ATTIVO",
+            subtitle: isDanger 
+                ? "WiFi/Dati ON: IP ${appState.activeIpAddress ?? 'Rilevato'}. Rischio localizzazione." 
+                : "Rete OFF. Nessun indirizzo IP esposto sulla rete locale.",
+          ),
+          
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Divider(color: Colors.white10, height: 1),
+          ),
+          
+          // MAC Section
+          _buildHubRow(
+            icon: Icons.fingerprint_rounded,
+            color: macColor,
+            title: "IDENTITÀ HARDWARE (MAC)",
+            subtitle: isLongSession 
+                ? "Sessione lunga (${sessionDuration.inMinutes}m): Rischio logging del MAC Address fisico." 
+                : "Identità hardware protetta. MAC statico rilevabile ma non ancora loggato.",
+            isWarning: isLongSession,
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // Educational Note
+          _buildInfoNote(
+            "Il MAC Address è un ID hardware fisso e non può essere cambiato senza Root. Spegni WiFi/Dati per l'anonimato IP; il Bluetooth HID è già isolato."
+          ),
+        ],
+      ),
+    ).animate().fadeIn(delay: 480.ms).slideY(begin: 0.2);
+  }
+
+  Widget _buildHubRow({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String subtitle,
+    bool isWarning = false,
+  }) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color.withValues(alpha: 0.1)),
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: const TextStyle(color: Colors.white38, fontSize: 10, height: 1.3),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCleanIdentityButton(AppState appState) {
+    return InkWell(
+      onTap: () async {
+        await appState.resetHidIdentity();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Identità Bluetooth Resettata e Cache Pulita ✓"),
+              backgroundColor: Color(0xFF1A1A2E),
+            ),
+          );
+        }
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.cyanAccent.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: const [
+            Icon(Icons.refresh_rounded, color: Colors.cyanAccent, size: 12),
+            SizedBox(width: 6),
+            Text("CLEAN IDENTITY", style: TextStyle(color: Colors.cyanAccent, fontSize: 8, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoNote(String text) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.02),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline_rounded, color: Colors.cyanAccent, size: 14),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(color: Colors.white38, fontSize: 9, fontStyle: FontStyle.italic),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // ─── Quick Action ─────────────────────────────────────────────────────────

@@ -7,6 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:file_picker/file_picker.dart';
 import 'hid_controller.dart';
 import 'ducky_parser_it.dart';
+import 'enums.dart';
 
 class ClassicDevice {
   final String name;
@@ -41,6 +42,12 @@ class AppState extends ChangeNotifier {
   String? _connectedAddress;
   bool _isImporting = false;
 
+  bool _isNetworkActive = false;
+  String? _activeIpAddress;
+  DateTime? _connectionStartTime;
+
+  KeyboardLayout _activeLayout = KeyboardLayout.pc;
+
   AppState() {
     parser = DuckyParserIt(hidController);
     _init();
@@ -54,6 +61,7 @@ class AppState extends ChangeNotifier {
     // Applying settings and checking states
     _startDeviceStream();
     _checkConnection();
+    _startNetworkMonitor();
     await fetchBondedDevices();
 
     // Give HID Profile some time to bind if it failed initially
@@ -90,6 +98,7 @@ class AppState extends ChangeNotifier {
           _connectedAddress = event['address'] as String?;
           _connectingAddress = null;
           _isConnecting = false;
+          _connectionStartTime = DateTime.now();
           // Refresh bonded list so the new bond shows up
           fetchBondedDevices();
           notifyListeners();
@@ -98,6 +107,7 @@ class AppState extends ChangeNotifier {
           _connectedAddress = null;
           _connectingAddress = null;
           _isConnecting = false;
+          _connectionStartTime = null;
           notifyListeners();
         }
         return;
@@ -141,6 +151,10 @@ class AppState extends ChangeNotifier {
   String? get connectedAddress => _connectedAddress;
   int get executionCount => _executionCount;
   bool get isImporting => _isImporting;
+  bool get isNetworkActive => _isNetworkActive;
+  String? get activeIpAddress => _activeIpAddress;
+  DateTime? get connectionStartTime => _connectionStartTime;
+  KeyboardLayout get activeLayout => _activeLayout;
 
   // --- Setters ---
   set script(String value) {
@@ -158,6 +172,17 @@ class AppState extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _bleName = prefs.getString('ble_name') ?? "Proximity Shark";
     _executionCount = prefs.getInt('execution_count') ?? 0;
+    
+    final layoutIndex = prefs.getInt('keyboard_layout') ?? 0;
+    _activeLayout = KeyboardLayout.values[layoutIndex];
+    
+    notifyListeners();
+  }
+
+  Future<void> updateKeyboardLayout(KeyboardLayout layout) async {
+    _activeLayout = layout;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('keyboard_layout', layout.index);
     notifyListeners();
   }
 
@@ -176,8 +201,6 @@ class AppState extends ChangeNotifier {
     while (_connectionStatus == 0) {
       if (_bondedDevices.isEmpty) break;
       final target = _bondedDevices.first;
-      debugPrint("Auto-reconnect attempt: ${target.name} (Retrying in ${retrySeconds}s)...");
-      
       await connectToDevice(target);
       
       // Wait for the result or timeout
@@ -246,7 +269,6 @@ class AppState extends ChangeNotifier {
       final success = await hidController.connectHid(device.address);
       
       if (!success) {
-        debugPrint("Immediate connectHid call failed (Native).");
         _isConnecting = false;
         _connectingAddress = null;
         notifyListeners();
@@ -255,18 +277,15 @@ class AppState extends ChangeNotifier {
 
       // Safety timeout in case Android Bluetooth gets stuck
       Future.delayed(const Duration(seconds: 15), () {
-        if (_isConnecting && _connectingAddress == device.address) {
           _isConnecting = false;
           _connectingAddress = null;
           notifyListeners();
-          debugPrint("Connection timeout: Android BT stack stalled");
         }
       });
     } catch (e) {
       _isConnecting = false;
       _connectingAddress = null;
       notifyListeners();
-      debugPrint("Connection error: $e");
     }
   }
 
@@ -296,6 +315,15 @@ class AppState extends ChangeNotifier {
     _connectionStatus = 0;
     _isConnecting = false;
     _connectingAddress = null;
+    _connectionStartTime = null;
+    notifyListeners();
+  }
+
+  Future<void> resetHidIdentity() async {
+    // Unregister and re-register HID Profile to force a clean state
+    await hidController.initHidProfile(_bleName);
+    // Short delay to let Android reset
+    await Future.delayed(const Duration(seconds: 1));
     notifyListeners();
   }
 
@@ -350,6 +378,27 @@ class AppState extends ChangeNotifier {
     await _loadScripts();
   }
 
+  /// Salva lo script corrente in una [targetDir] specifica con il [name] dato.
+  Future<void> saveScriptTo(String name, Directory targetDir) async {
+    if (!await targetDir.exists()) {
+      await targetDir.create(recursive: true);
+    }
+    final file = File('${targetDir.path}/$name.txt');
+    await file.writeAsString(_script);
+    await _loadScripts();
+  }
+
+  /// Restituisce tutte le cartelle disponibili nella libreria (root + sottocartelle dirette).
+  Future<List<Directory>> getLibraryFolders() async {
+    if (_rootDir == null) return [];
+    final entities = _rootDir!.listSync();
+    final folders = <Directory>[_rootDir!];
+    for (final e in entities) {
+      if (e is Directory) folders.add(e);
+    }
+    return folders;
+  }
+
   Future<void> deleteScript(File file) async {
     if (await file.exists()) {
       await file.delete();
@@ -395,8 +444,6 @@ class AppState extends ChangeNotifier {
           }
         }
         await _loadScripts();
-      } catch (e) {
-        debugPrint("Import script error: $e");
       } finally {
         _isImporting = false;
         notifyListeners();
@@ -442,8 +489,6 @@ class AppState extends ChangeNotifier {
 
       await _copyDirectory(sourceDir, destDir);
       await _loadScripts();
-    } catch (e) {
-      debugPrint("Import folder error: $e");
     } finally {
       _isImporting = false;
       notifyListeners();
@@ -494,13 +539,45 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // --- Stealth & Privacy Monitor ---
+  void _startNetworkMonitor() async {
+    while (true) {
+      try {
+        final interfaces = await NetworkInterface.list(
+          includeLoopback: false,
+          type: InternetAddressType.any,
+        );
+
+        bool foundActive = false;
+        String? firstIp;
+
+        for (var interface in interfaces) {
+          if (interface.addresses.isNotEmpty) {
+            foundActive = true;
+            firstIp = interface.addresses.first.address;
+            break;
+          }
+        }
+
+        if (_isNetworkActive != foundActive || _activeIpAddress != firstIp) {
+          _isNetworkActive = foundActive;
+          _activeIpAddress = firstIp;
+          notifyListeners();
+        }
+      } catch (e) {
+        debugPrint("Network monitor error: $e");
+      }
+      await Future.delayed(const Duration(seconds: 3));
+    }
+  }
+
   Future<void> runScript() async {
     if (_isExecuting) return;
     _isExecuting = true;
     notifyListeners();
 
     try {
-      await parser.executeScript(_script);
+      await parser.executeScript(_script, layout: _activeLayout);
       _executionCount++;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('execution_count', _executionCount);

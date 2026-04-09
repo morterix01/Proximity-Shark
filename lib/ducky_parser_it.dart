@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'hid_controller.dart';
+import 'enums.dart';
 
 class DuckyParserIt {
   final HidController hidController;
+  KeyboardLayout _activeLayout = KeyboardLayout.pc;
   
   DuckyParserIt(this.hidController);
+
 
   // HID Modifiers
   static const int MOD_NONE = 0;
@@ -16,8 +19,8 @@ class DuckyParserIt {
   static const int MOD_RSHIFT = 0x20;
   static const int MOD_RALT = 0x40; // AltGr in IT layout
 
-  // Map of characters to [Modifier, Keycode]
-  static final Map<String, List<int>> keyMap = {
+  // --- PC Layout Map ---
+  static final Map<String, List<int>> _pcKeyMap = {
     'a': [MOD_NONE, 0x04], 'b': [MOD_NONE, 0x05], 'c': [MOD_NONE, 0x06], 'd': [MOD_NONE, 0x07],
     'e': [MOD_NONE, 0x08], 'f': [MOD_NONE, 0x09], 'g': [MOD_NONE, 0x0A], 'h': [MOD_NONE, 0x0B],
     'i': [MOD_NONE, 0x0C], 'j': [MOD_NONE, 0x0D], 'k': [MOD_NONE, 0x0E], 'l': [MOD_NONE, 0x0F],
@@ -52,7 +55,30 @@ class DuckyParserIt {
     '@': [MOD_RALT, 0x34], '#': [MOD_RALT, 0x33], '[': [MOD_RALT, 0x2F], ']': [MOD_RALT, 0x30],
     '{': [MOD_LSHIFT | MOD_RALT, 0x34], '}': [MOD_LSHIFT | MOD_RALT, 0x33],
     '|': [MOD_LSHIFT, 0x35], '\\': [MOD_NONE, 0x35], '<': [MOD_NONE, 0x64], '>': [MOD_LSHIFT, 0x64],
+    '~': [MOD_RALT, 0x0C], // AltGr + i (common Windows)
+    '` \u0060': [MOD_RALT, 0x2E], // AltGr + ' (common Windows)
   };
+
+  // --- Android/Mobile Layout Map ---
+  // Many Android targets use AltGr+Q for @, AltGr+3 for #, etc.
+  static final Map<String, List<int>> _androidKeyMap = {
+    ..._pcKeyMap, // Inheritance-style base
+    '@': [MOD_RALT, 0x14], // AltGr + q
+    '#': [MOD_RALT, 0x20], // AltGr + 3
+    '[': [MOD_RALT, 0x25], // AltGr + 8
+    ']': [MOD_RALT, 0x26], // AltGr + 9
+    '{': [MOD_RALT | MOD_LSHIFT, 0x25], // AltGr + Shift + 8
+    '}': [MOD_RALT | MOD_LSHIFT, 0x26], // AltGr + Shift + 9
+    '~': [MOD_RALT, 0x11], // AltGr + n (sometimes)
+    '\\': [MOD_RALT, 0x35], // Sometimes required on mobile
+  };
+
+  Map<String, List<int>> get _currentKeyMap {
+    switch (_activeLayout) {
+      case KeyboardLayout.android: return _androidKeyMap;
+      case KeyboardLayout.pc: return _pcKeyMap;
+    }
+  }
 
   static const Map<String, int> specialKeys = {
     'ENTER': 0x28, 'ESCAPE': 0x29, 'BACKSPACE': 0x2A, 'TAB': 0x2B, 'SPACE': 0x2C,
@@ -63,7 +89,8 @@ class DuckyParserIt {
     'RIGHT': 0x4F, 'LEFT': 0x50, 'DOWN': 0x51, 'UP': 0x52,
   };
 
-  Future<void> executeScript(String script) async {
+  Future<void> executeScript(String script, {KeyboardLayout layout = KeyboardLayout.pc}) async {
+    _activeLayout = layout;
     List<String> lines = script.split('\n');
     for (String line in lines) {
       if (line.trim().isEmpty) continue;
@@ -119,10 +146,11 @@ class DuckyParserIt {
   }
 
   Future<void> typeString(String text) async {
+    final curMap = _currentKeyMap;
     for (int i = 0; i < text.length; i++) {
       String char = text[i];
-      if (keyMap.containsKey(char)) {
-        List<int> combo = keyMap[char]!;
+      if (curMap.containsKey(char)) {
+        List<int> combo = curMap[char]!;
         await hidController.sendKey(combo[0], combo[1]);
         await Future.delayed(Duration(milliseconds: 10)); // Tiny delay for reliability
       }
@@ -131,10 +159,11 @@ class DuckyParserIt {
 
   Future<void> sendCombo(int modifier, String key) async {
     int keycode = 0;
+    final curMap = _currentKeyMap;
     if (key.length == 1) {
       String lowKey = key.toLowerCase();
-      if (keyMap.containsKey(lowKey)) {
-        keycode = keyMap[lowKey]![1];
+      if (curMap.containsKey(lowKey)) {
+        keycode = curMap[lowKey]![1];
       }
     } else if (specialKeys.containsKey(key.toUpperCase())) {
       keycode = specialKeys[key.toUpperCase()]!;

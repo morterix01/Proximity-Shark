@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -186,6 +187,16 @@ class _QuickEditorScreenState extends State<QuickEditorScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
       child: Row(
         children: [
+          // SAVE button
+          _buildNeonButton(
+            onTap: () => _showSaveDialog(appState),
+            color: Colors.greenAccent,
+            icon: Icons.save_rounded,
+            text: "SAVE",
+            compact: true,
+          ),
+          const SizedBox(width: 12),
+          // EXECUTE button
           Expanded(
             child: _buildNeonButton(
               onTap: appState.isExecuting ? null : () {
@@ -208,12 +219,140 @@ class _QuickEditorScreenState extends State<QuickEditorScreen> {
     ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.2);
   }
 
+  void _showSaveDialog(AppState appState) {
+    final nameController = TextEditingController();
+    Directory? selectedFolder;
+    List<Directory> folders = [];
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          // Load folders on first render
+          if (folders.isEmpty) {
+            appState.getLibraryFolders().then((result) {
+              setDialogState(() {
+                folders = result;
+                selectedFolder = result.isNotEmpty ? result.first : null;
+              });
+            });
+          }
+
+          return AlertDialog(
+            backgroundColor: const Color(0xFF1A1A2E),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Row(
+              children: const [
+                Icon(Icons.save_rounded, color: Colors.greenAccent, size: 20),
+                SizedBox(width: 8),
+                Text("SAVE TO LIBRARY", style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("SCRIPT NAME", style: TextStyle(color: Colors.white38, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: nameController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: "my_payload",
+                    hintStyle: const TextStyle(color: Colors.white24),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.05),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.greenAccent.withValues(alpha: 0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.greenAccent.withValues(alpha: 0.3)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.greenAccent),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+                if (folders.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  const Text("DESTINATION FOLDER", style: TextStyle(color: Colors.white38, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.3)),
+                    ),
+                    child: DropdownButton<Directory>(
+                      value: selectedFolder,
+                      isExpanded: true,
+                      dropdownColor: const Color(0xFF1A1A2E),
+                      underline: const SizedBox(),
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                      items: folders.map((dir) {
+                        final parts = dir.path.split(Platform.pathSeparator);
+                        final label = parts.last == 'scripts' ? '/ (Root)' : parts.last;
+                        return DropdownMenuItem<Directory>(
+                          value: dir,
+                          child: Text(label, style: const TextStyle(color: Colors.white)),
+                        );
+                      }).toList(),
+                      onChanged: (dir) => setDialogState(() => selectedFolder = dir),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text("CANCEL", style: TextStyle(color: Colors.white38, fontWeight: FontWeight.bold)),
+              ),
+              TextButton(
+                onPressed: () async {
+                  final name = nameController.text.trim();
+                  if (name.isEmpty) return;
+                  final target = selectedFolder;
+                  Navigator.pop(ctx);
+                  await appState.saveScriptTo(name, target ?? appState.currentDirectory!);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Row(
+                          children: [
+                            const Icon(Icons.check_circle_rounded, color: Colors.greenAccent, size: 18),
+                            const SizedBox(width: 8),
+                            Text("'$name' salvato nella libreria!"),
+                          ],
+                        ),
+                        backgroundColor: const Color(0xFF1A1A2E),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    );
+                  }
+                },
+                child: const Text("SAVE", style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.w900)),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildNeonButton({
     required VoidCallback? onTap,
     required Color color,
     required IconData icon,
     required String text,
     bool isLoading = false,
+    bool compact = false,
   }) {
     return Material(
       color: Colors.transparent,
@@ -222,6 +361,7 @@ class _QuickEditorScreenState extends State<QuickEditorScreen> {
         borderRadius: BorderRadius.circular(16),
         child: Container(
           height: 56,
+          padding: compact ? const EdgeInsets.symmetric(horizontal: 20) : null,
           decoration: BoxDecoration(
             gradient: LinearGradient(colors: [color.withValues(alpha: 0.8), color]),
             borderRadius: BorderRadius.circular(16),
