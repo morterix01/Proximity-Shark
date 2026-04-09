@@ -88,25 +88,26 @@ class DuckyParserIt {
     // Punctuation — ITALIAN layout positions (Italian Android uses Italian HID decoding)
     ' ': [MOD_NONE, 0x2C], '\n': [MOD_NONE, 0x28], '\t': [MOD_NONE, 0x2B],
 
-    // Number row symbols (Italian): 1! 2" 3£ 4$ 5% 6& 7/ 8( 9) 0= '? ì^
-    '!': [MOD_LSHIFT, 0x1E],             // Shift+1 = !
-    '"': [MOD_LSHIFT, 0x1F],             // Shift+2 = "  (on Italian, not @ like US)
-    '\$': [MOD_LSHIFT, 0x21],            // Shift+4 = $
-    '%': [MOD_LSHIFT, 0x22],             // Shift+5 = %
-    '&': [MOD_LSHIFT, 0x23],             // Shift+6 = &  (on Italian, not ^ like US)
-    '/': [MOD_LSHIFT, 0x24],             // Shift+7 = /  ← KEY FIX (not 0x38 which is '-' on Italian!)
-    '(': [MOD_LSHIFT, 0x25],             // Shift+8 = (  ← KEY FIX (not Shift+9 like US)
-    ')': [MOD_LSHIFT, 0x26],             // Shift+9 = )  ← KEY FIX (not Shift+0 like US)
-    '=': [MOD_NONE, 0x2E],               // = key         (works on Italian hybrid layout)
-    '?': [MOD_LSHIFT, 0x2D],             // Shift+' = ?  ← KEY FIX (not Shift+0x38 which is '_' on Italian!)
-    '^': [MOD_LSHIFT, 0x2E],             // Shift+= = ^
+    // Number row symbols — target uses US QWERTY shifted values for number row
+    // EXCEPT: 0x38='-', 0x2D='/'? see notes. '/' is only accessible via numpad.
+    '!': [MOD_LSHIFT, 0x1E],   // Shift+1 = ! (same US & Italian)
+    '"': [MOD_LSHIFT, 0x34],   // Shift+' = " (US style — Italian " is at Shift+2 but target gives @ there)
+    '\$': [MOD_LSHIFT, 0x21],  // Shift+4 = $ (same US & Italian)
+    '%': [MOD_LSHIFT, 0x22],   // Shift+5 = % (same US & Italian)
+    '&': [MOD_LSHIFT, 0x24],   // Shift+7 = & (US style — confirmed by user: target Shift+7 → &)
+    '/': [MOD_NONE, 0x54],     // Numpad / — bypasses layout! On both US and Italian layouts, numpad/ = /
+    '(': [MOD_LSHIFT, 0x26],   // Shift+9 = ( (US style — Italian ( is Shift+8 but target is US here)
+    ')': [MOD_LSHIFT, 0x27],   // Shift+0 = ) (US style)
+    '=': [MOD_NONE, 0x2E],     // = key (US position, confirmed working)
+    '?': [MOD_LSHIFT, 0x2D],   // Shift+' = ? (Italian key 0x2D, confirmed working)
+    '^': [MOD_LSHIFT, 0x23],   // Shift+6 = ^ (US style)
+    '*': [MOD_LSHIFT, 0x25],   // Shift+8 = * (US style)
+    '+': [MOD_LSHIFT, 0x2E],   // Shift+= = + (US style)
 
     '.': [MOD_NONE, 0x37], ',': [MOD_NONE, 0x36],
     ':': [MOD_LSHIFT, 0x33], ';': [MOD_NONE, 0x33],  // Italian hybrid: ';'/':' at 0x33 (same as US)
     '-': [MOD_NONE, 0x38],               // Physical minus key on Italian = 0x38  ← KEY FIX
     '_': [MOD_LSHIFT, 0x38],             // Shift+minus = _                        ← KEY FIX
-    '+': [MOD_NONE, 0x30],               // Italian: + key at 0x30 (right of 0x2F)
-    '*': [MOD_LSHIFT, 0x30],             // Italian: Shift++ = *
 
     // Special symbols via AltGr on Italian keyboard
     '@': [MOD_RALT, 0x34],               // AltGr+à = @  (Italian standard)
