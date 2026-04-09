@@ -192,53 +192,44 @@ class DuckyParserIt {
     '8': [MOD_NONE, 0x25],
     '9': [MOD_NONE, 0x26], '0': [MOD_NONE, 0x27],
 
-    // Punctuation — ITALIAN layout positions (Italian Android uses Italian HID decoding)
+    // Punctuation — ITALIAN layout positions (Android IT mapping)
     ' ': [MOD_NONE, 0x2C], '\n': [MOD_NONE, 0x28], '\t': [MOD_NONE, 0x2B],
 
-    // Number row symbols — target uses US QWERTY shifted values for number row
-    // EXCEPT: 0x38='-', 0x2D='/'? see notes. '/' is only accessible via numpad.
-    '!': [MOD_LSHIFT, 0x1E], // Shift+1 = ! (same US & Italian)
-    '"': [
-      MOD_LSHIFT,
-      0x34,
-    ], // Shift+' = " (US style — Italian " is at Shift+2 but target gives @ there)
-    '\$': [MOD_LSHIFT, 0x21], // Shift+4 = $ (same US & Italian)
-    '%': [MOD_LSHIFT, 0x22], // Shift+5 = % (same US & Italian)
-    '&': [
-      MOD_LSHIFT,
-      0x24,
-    ], // Shift+7 = & (US style — confirmed by user: target Shift+7 → &)
-    '/': [MOD_RALT, 0x24], // AltGr+7 — trying this for / (Italian ANSI variant)
-    '(': [
-      MOD_LSHIFT,
-      0x26,
-    ], // Shift+9 = ( (US style — Italian ( is Shift+8 but target is US here)
-    ')': [MOD_LSHIFT, 0x27], // Shift+0 = ) (US style)
-    '=': [MOD_NONE, 0x2E], // = key (US position, confirmed working)
-    '?': [
-      MOD_LSHIFT,
-      0x2D,
-    ], // Shift+' = ? (Italian key 0x2D, confirmed working)
-    '^': [MOD_LSHIFT, 0x23], // Shift+6 = ^ (US style)
-    '*': [MOD_LSHIFT, 0x25], // Shift+8 = * (US style)
-    '+': [MOD_LSHIFT, 0x2E], // Shift+= = + (US style)
+    // Number row symbols (Italian): 1! 2" 3£ 4$ 5% 6& 7/ 8( 9) 0= '? ì^
+    '!': [MOD_LSHIFT, 0x1E], // Shift+1 = !
+    '"': [MOD_LSHIFT, 0x1F], // Shift+2 = "
+    '\$': [MOD_LSHIFT, 0x21], // Shift+4 = $
+    '%': [MOD_LSHIFT, 0x22], // Shift+5 = %
+    '&': [MOD_LSHIFT, 0x23], // Shift+6 = &
+    '/': [MOD_LSHIFT, 0x24], // Shift+7 = /
+    '(': [MOD_LSHIFT, 0x25], // Shift+8 = (
+    ')': [MOD_LSHIFT, 0x26], // Shift+9 = )
+    '=': [MOD_LSHIFT, 0x27], // Shift+0 = =
+    '?': [MOD_LSHIFT, 0x2D], // Shift+' = ?
+    '^': [MOD_LSHIFT, 0x35], // Shift+ì (posizione fisica) = ^
 
-    '.': [MOD_NONE, 0x37], ',': [MOD_NONE, 0x36],
-    ':': [MOD_LSHIFT, 0x33], ';': [MOD_NONE, 0x33], // confirmed working
-    '-': [MOD_NONE, 0x38], // 0x38 no-modifier = -  — confirmed working
-    '_': [MOD_LSHIFT, 0x38], // Shift+0x38 = _ — Italian standard (Shift+minus)
+    '.': [MOD_NONE, 0x37], // .
+    ',': [MOD_NONE, 0x36], // ,
+    ':': [MOD_LSHIFT, 0x37], // Shift+. = :
+    ';': [MOD_LSHIFT, 0x36], // Shift+, = ;
+    '-': [MOD_NONE, 0x38], // -
+    '_': [MOD_LSHIFT, 0x38], // Shift+- = _
+    '+': [MOD_NONE, 0x30], // +
+    '*': [MOD_LSHIFT, 0x30], // Shift++ = *
+
     // Special symbols via AltGr on Italian keyboard
-    '@': [MOD_RALT, 0x34], // AltGr+à = @  (Italian standard)
-    '#': [MOD_RALT, 0x33], // AltGr+ò = #
+    '@': [MOD_RALT, 0x34], // AltGr+ò = @
+    '#': [MOD_RALT, 0x33], // AltGr+à = #
     '[': [MOD_RALT, 0x2F], // AltGr+è = [
     ']': [MOD_RALT, 0x30], // AltGr++ = ]
-    '{': [MOD_LSHIFT | MOD_RALT, 0x34], // AltGr+Shift+à = {
-    '}': [MOD_LSHIFT | MOD_RALT, 0x33], // AltGr+Shift+ò = }
-    '|': [MOD_LSHIFT, 0x35], // Italian: \ key with shift
-    '\\': [MOD_NONE, 0x35], // Italian backslash
-    '<': [MOD_NONE, 0x64], // Extra European key </>
-    '>': [MOD_LSHIFT, 0x64], // Extra European key </> with shift
-    '~': [MOD_RALT, 0x0C], // AltGr+i (common Italian)
+    '{': [MOD_LSHIFT | MOD_RALT, 0x2F], // AltGr+Shift+è = {
+    '}': [MOD_LSHIFT | MOD_RALT, 0x30], // AltGr+Shift++ = }
+    '|': [MOD_LSHIFT, 0x35], // Shift+\ = |
+    '\\': [MOD_NONE, 0x35], // \
+    '<': [MOD_NONE, 0x64], // <
+    '>': [MOD_LSHIFT, 0x64], // >
+    '~': [MOD_RALT, 0x11], // AltGr+n = ~ (Italian standard fallback)
+    '€': [MOD_RALT, 0x08], // AltGr+E = €
     // Italian accented chars fallback -> base letter keycodes (target likely US QWERTY)
     '\u00E0': [MOD_NONE, 0x04],
     '\u00E8': [MOD_NONE, 0x08],
