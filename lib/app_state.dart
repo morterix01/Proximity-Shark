@@ -280,7 +280,6 @@ class AppState extends ChangeNotifier {
           _isConnecting = false;
           _connectingAddress = null;
           notifyListeners();
-        }
       });
     } catch (e) {
       _isConnecting = false;
