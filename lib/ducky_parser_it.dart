@@ -427,15 +427,19 @@ class DuckyParserIt {
   Future<void> executeScript(
     String script, {
     KeyboardLayout layout = KeyboardLayout.pc,
+    void Function(double progress)? onProgress,
   }) async {
     _activeLayout = layout;
     debugPrint(
       "--- ESECUZIONE SCRIPT (LAYOUT: ${_activeLayout.name.toUpperCase()}) ---",
     );
-    List<String> lines = script.split('\n');
-    for (String line in lines) {
-      if (line.trim().isEmpty) continue;
-      await parseLine(line.trim());
+    List<String> lines = script.split('\n').where((l) => l.trim().isNotEmpty).toList();
+    if (lines.isEmpty && onProgress != null) onProgress(1.0);
+    for (int i = 0; i < lines.length; i++) {
+      await parseLine(lines[i].trim());
+      if (onProgress != null) {
+        onProgress((i + 1) / lines.length);
+      }
     }
   }
 

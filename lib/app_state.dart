@@ -5,6 +5,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:file_picker/file_picker.dart';
+import 'dart:convert';
+import 'package:flutter_wear_os_connectivity/flutter_wear_os_connectivity.dart';
 import 'hid_controller.dart';
 import 'ducky_parser_it.dart';
 import 'enums.dart';
@@ -20,6 +22,7 @@ class AppState extends ChangeNotifier {
   final HidController hidController = HidController();
   late final DuckyParserIt parser;
   StreamSubscription? _deviceStreamSub;
+  final FlutterWearOsConnectivity _wearOsConnectivity = FlutterWearOsConnectivity();
 
   String _script = "GUI r\nDELAY 500\nSTRING notepad.exe\nENTER\nDELAY 1000\nSTRING Ciao da Proximity Shark!\nENTER";
   bool _isExecuting = false;
@@ -51,11 +54,13 @@ class AppState extends ChangeNotifier {
   AppState() {
     parser = DuckyParserIt(hidController);
     _init();
+    _listenToWearMessages();
   }
 
   Future<void> _init() async {
     await _loadSettings();
     await _loadScripts();
+    await _syncLibraryWithWear();
     await _requestInitialPermissions();
     
     // Applying settings and checking states
@@ -344,6 +349,59 @@ class AppState extends ChangeNotifier {
       return a.path.compareTo(b.path);
     });
     notifyListeners();
+    _syncLibraryWithWear(); // Sync on every load/change
+  }
+
+  Future<void> _syncLibraryWithWear() async {
+    if (_rootDir == null) return;
+    try {
+      final structure = _getFolderStructure(_rootDir!);
+      final jsonStr = jsonEncode(structure);
+      
+      await _wearOsConnectivity.syncData(
+        path: "/library",
+        data: {"library_json": jsonStr},
+        isSticky: true,
+      );
+      debugPrint("Library synced with Wear OS");
+    } catch (e) {
+      debugPrint("Failed to sync library with Wear OS: $e");
+    }
+  }
+
+  Map<String, dynamic> _getFolderStructure(Directory dir) {
+    final Map<String, dynamic> structure = {
+      'name': dir.path.split(Platform.pathSeparator).last,
+      'isDir': true,
+      'children': [],
+    };
+    if (structure['name'] == 'scripts') structure['name'] = 'Libreria';
+
+    try {
+      final List<FileSystemEntity> entities = dir.listSync();
+      for (final entity in entities) {
+        if (entity is Directory) {
+          structure['children'].add(_getFolderStructure(entity));
+        } else if (entity is File && (entity.path.endsWith('.txt') || entity.path.endsWith('.ducky'))) {
+          structure['children'].add({
+            'name': entity.path.split(Platform.pathSeparator).last,
+            'isDir': false,
+            'path': entity.path,
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error walking directory: $e");
+    }
+    
+    // Sort so folders appear first
+    (structure['children'] as List).sort((a, b) {
+       if (a['isDir'] && !b['isDir']) return -1;
+       if (!a['isDir'] && b['isDir']) return 1;
+       return (a['name'] as String).compareTo(b['name'] as String);
+    });
+
+    return structure;
   }
 
   Future<void> navigateIntoFolder(Directory dir) async {
@@ -538,6 +596,20 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  void _listenToWearMessages() {
+    _wearOsConnectivity.messageStream.listen((message) async {
+      if (message.path == "/run_script") {
+        final String filePath = utf8.decode(message.data);
+        final file = File(filePath);
+        if (await file.exists()) {
+          _script = await file.readAsString();
+          notifyListeners();
+          runScript();
+        }
+      }
+    });
+  }
+
   // --- Stealth & Privacy Monitor ---
   void _startNetworkMonitor() async {
     while (true) {
@@ -576,10 +648,26 @@ class AppState extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await parser.executeScript(_script, layout: _activeLayout);
+      await parser.executeScript(
+        _script,
+        layout: _activeLayout,
+        onProgress: (progress) {
+          _wearOsConnectivity.sendMessage(
+            path: "/progress",
+            data: utf8.encode(progress.toString()),
+          );
+        },
+      );
       _executionCount++;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('execution_count', _executionCount);
+      
+      // Notify finished
+      _wearOsConnectivity.sendMessage(
+        path: "/progress",
+        data: utf8.encode("1.0"),
+      );
+
       notifyListeners();
     } catch (e) {
       debugPrint("Execution error: $e");
