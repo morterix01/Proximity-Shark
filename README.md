@@ -21,6 +21,7 @@ Proximity Shark è un'app Android sviluppata con Flutter che emula una **tastier
 | ⚡ **Esecuzione Rapida** | Un tocco per iniettare il payload sul dispositivo connesso |
 | 🔁 **Riconnessione Automatica** | Riconnessione intelligente per un link HID sempre stabile |
 | 🌙 **UI Dark** | Interfaccia scura e minimalista, pensata per l'uso sul campo |
+| ⌚ **Wear OS Companion** | Controlla i payload e visualizza il progresso dal tuo smartwatch |
 
 ---
 
@@ -36,7 +37,20 @@ Apri Proximity Shark, tocca **Scansione** nella schermata di connessione e selez
 Vai nella tab **Libreria Script**, tocca **➕ Importa** e seleziona un file `.txt` DuckyScript — o un'intera cartella di script.
 
 **4. Esegui**
-Tocca il tuo script e premi **▶ Esegui** — i tasti vengono iniettati sul PC in tempo reale.
+  Tocca il tuo script e premi **▶ Esegui** — i tasti vengono iniettati sul PC in tempo reale.
+
+---
+
+## ⌚ Wear OS Companion (NOVITÀ)
+
+Ora puoi controllare Proximity Shark direttamente dal tuo Galaxy Watch 4 o altri dispositivi Wear OS:
+
+1.  **Sfoglia la Libreria**: Naviga tra le cartelle degli script sincronizzate dal telefono.
+2.  **Trigger Remoto**: Lancia i payload sul PC lasciando il telefono in tasca.
+3.  **Progresso in Tempo Reale**: Visualizza la barra di avanzamento dell'esecuzione sul quadrante dell'orologio.
+
+> [!TIP]
+> Il codice sorgente per l'app orologio è disponibile separatamente: [Proximity-Shark-WearOS](https://github.com/morterix01/Proximity-Shark-WearOS)
 
 ---
 
