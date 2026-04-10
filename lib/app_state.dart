@@ -361,7 +361,6 @@ class AppState extends ChangeNotifier {
       await _wearOsConnectivity.syncData(
         path: "/library",
         data: {"library_json": jsonStr},
-        isSticky: true,
       );
       debugPrint("Library synced with Wear OS");
     } catch (e) {
@@ -597,7 +596,7 @@ class AppState extends ChangeNotifier {
   }
 
   void _listenToWearMessages() {
-    _wearOsConnectivity.messageStream.listen((message) async {
+    _wearOsConnectivity.messageReceived().listen((message) async {
       if (message.path == "/run_script") {
         final String filePath = utf8.decode(message.data);
         final file = File(filePath);
@@ -642,6 +641,18 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  Future<void> _sendWearProgress(String progressStr) async {
+    try {
+      final devices = await _wearOsConnectivity.getConnectedDevices();
+      final pb = utf8.encode(progressStr);
+      for (final dev in devices) {
+        await _wearOsConnectivity.sendMessage(pb, deviceId: dev.id, path: "/progress");
+      }
+    } catch (e) {
+      debugPrint("Wear Progress Error: $e");
+    }
+  }
+
   Future<void> runScript() async {
     if (_isExecuting) return;
     _isExecuting = true;
@@ -652,10 +663,7 @@ class AppState extends ChangeNotifier {
         _script,
         layout: _activeLayout,
         onProgress: (progress) {
-          _wearOsConnectivity.sendMessage(
-            path: "/progress",
-            data: utf8.encode(progress.toString()),
-          );
+          _sendWearProgress(progress.toString());
         },
       );
       _executionCount++;
@@ -663,10 +671,7 @@ class AppState extends ChangeNotifier {
       await prefs.setInt('execution_count', _executionCount);
       
       // Notify finished
-      _wearOsConnectivity.sendMessage(
-        path: "/progress",
-        data: utf8.encode("1.0"),
-      );
+      _sendWearProgress("1.0");
 
       notifyListeners();
     } catch (e) {
