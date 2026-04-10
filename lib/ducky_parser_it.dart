@@ -253,12 +253,133 @@ class DuckyParserIt {
     '\u00F9': [MOD_NONE, 0x18], // ù → u
   };
 
+  // --- Android IT Layout Map ---
+  // Mappatura per target Android con layout fisico della tastiera impostato su ITALIANO.
+  // Su Android, molti dei tasti base corrispondono alla tastiera PC, ma la gestione
+  // di AltGr (Right Alt) e dei simboli speciali può variare leggermente rispetto a Windows.
+  static final Map<String, List<int>> _androidItKeyMap = {
+    // Lettere standard
+    'a': [MOD_NONE, 0x04],
+    'b': [MOD_NONE, 0x05],
+    'c': [MOD_NONE, 0x06],
+    'd': [MOD_NONE, 0x07],
+    'e': [MOD_NONE, 0x08],
+    'f': [MOD_NONE, 0x09],
+    'g': [MOD_NONE, 0x0A],
+    'h': [MOD_NONE, 0x0B],
+    'i': [MOD_NONE, 0x0C],
+    'j': [MOD_NONE, 0x0D],
+    'k': [MOD_NONE, 0x0E],
+    'l': [MOD_NONE, 0x0F],
+    'm': [MOD_NONE, 0x10],
+    'n': [MOD_NONE, 0x11],
+    'o': [MOD_NONE, 0x12],
+    'p': [MOD_NONE, 0x13],
+    'q': [MOD_NONE, 0x14],
+    'r': [MOD_NONE, 0x15],
+    's': [MOD_NONE, 0x16],
+    't': [MOD_NONE, 0x17],
+    'u': [MOD_NONE, 0x18],
+    'v': [MOD_NONE, 0x19],
+    'w': [MOD_NONE, 0x1A],
+    'x': [MOD_NONE, 0x1B],
+    'y': [MOD_NONE, 0x1C], 'z': [MOD_NONE, 0x1D],
+
+    'A': [MOD_LSHIFT, 0x04],
+    'B': [MOD_LSHIFT, 0x05],
+    'C': [MOD_LSHIFT, 0x06],
+    'D': [MOD_LSHIFT, 0x07],
+    'E': [MOD_LSHIFT, 0x08],
+    'F': [MOD_LSHIFT, 0x09],
+    'G': [MOD_LSHIFT, 0x0A],
+    'H': [MOD_LSHIFT, 0x0B],
+    'I': [MOD_LSHIFT, 0x0C],
+    'J': [MOD_LSHIFT, 0x0D],
+    'K': [MOD_LSHIFT, 0x0E],
+    'L': [MOD_LSHIFT, 0x0F],
+    'M': [MOD_LSHIFT, 0x10],
+    'N': [MOD_LSHIFT, 0x11],
+    'O': [MOD_LSHIFT, 0x12],
+    'P': [MOD_LSHIFT, 0x13],
+    'Q': [MOD_LSHIFT, 0x14],
+    'R': [MOD_LSHIFT, 0x15],
+    'S': [MOD_LSHIFT, 0x16],
+    'T': [MOD_LSHIFT, 0x17],
+    'U': [MOD_LSHIFT, 0x18],
+    'V': [MOD_LSHIFT, 0x19],
+    'W': [MOD_LSHIFT, 0x1A],
+    'X': [MOD_LSHIFT, 0x1B],
+    'Y': [MOD_LSHIFT, 0x1C], 'Z': [MOD_LSHIFT, 0x1D],
+
+    // Numeri
+    '1': [MOD_NONE, 0x1E],
+    '2': [MOD_NONE, 0x1F],
+    '3': [MOD_NONE, 0x20],
+    '4': [MOD_NONE, 0x21],
+    '5': [MOD_NONE, 0x22],
+    '6': [MOD_NONE, 0x23],
+    '7': [MOD_NONE, 0x24],
+    '8': [MOD_NONE, 0x25],
+    '9': [MOD_NONE, 0x26], '0': [MOD_NONE, 0x27],
+
+    // Simboli riga dei numeri (Shift+)
+    '!': [MOD_LSHIFT, 0x1E],  // Shift + 1
+    '"': [MOD_LSHIFT, 0x1F],  // Shift + 2
+    '\u00A3': [MOD_LSHIFT, 0x20], // Shift + 3 (£)
+    '\$': [MOD_LSHIFT, 0x21], // Shift + 4 ($)
+    '%': [MOD_LSHIFT, 0x22],  // Shift + 5
+    '&': [MOD_LSHIFT, 0x23],  // Shift + 6
+    '/': [MOD_LSHIFT, 0x24],  // Shift + 7 (verrà intercettato da typeString per AltCode)
+    '(': [MOD_LSHIFT, 0x25],  // Shift + 8
+    ')': [MOD_LSHIFT, 0x26],  // Shift + 9
+    '=': [MOD_LSHIFT, 0x27],  // Shift + 0
+    '?': [MOD_LSHIFT, 0x2D],  // Shift + '
+    '^': [MOD_LSHIFT, 0x35],  // Shift + ì
+
+    // Whitespace
+    ' ': [MOD_NONE, 0x2C], '\n': [MOD_NONE, 0x28], '\t': [MOD_NONE, 0x2B],
+    
+    // Punteggiatura
+    '.': [MOD_NONE, 0x37],
+    ',': [MOD_NONE, 0x36],
+    ':': [MOD_LSHIFT, 0x37],
+    ';': [MOD_LSHIFT, 0x36],
+    '-': [MOD_NONE, 0x38],
+    '_': [MOD_LSHIFT, 0x38],
+    '+': [MOD_NONE, 0x30],
+    '*': [MOD_LSHIFT, 0x30],
+
+    // Lettere accentate italiane
+    '\u00E0': [MOD_NONE, 0x33], // à
+    '\u00E8': [MOD_NONE, 0x2F], // è
+    '\u00E9': [MOD_LSHIFT, 0x2F], // é (Shift+è)
+    '\u00EC': [MOD_NONE, 0x2E], // ì
+    '\u00F2': [MOD_NONE, 0x34], // ò
+    '\u00F9': [MOD_NONE, 0x31], // ù
+
+    // Simboli AltGr (Layout IT Android)
+    // Nota: Su Android, a volte l'RALT (AltGr) non attiva tutti i caratteri third-level standard di PC,
+    // potrebbe essere necessario esplorare comandi supplementari se questi non funzionano.
+    '@': [MOD_RALT, 0x34], // AltGr + ò
+    '#': [MOD_RALT, 0x33], // AltGr + à
+    '[': [MOD_RALT, 0x2F], // AltGr + è
+    ']': [MOD_RALT, 0x30], // AltGr + +
+    '{': [MOD_LSHIFT | MOD_RALT, 0x2F], // AltGr + Shift + è = { (Su Android a volte è diverso, ma solitamente matcha il PC)
+    '}': [MOD_LSHIFT | MOD_RALT, 0x30], // AltGr + Shift + + = }
+    '|': [MOD_LSHIFT, 0x35],            // Shift + \ = |
+    '\\': [MOD_NONE, 0x35],             // Tasto \ (vicino a 1)
+    '<': [MOD_NONE, 0x64],              // Tasto < (se presente sulla tastiera virtuale/fisica)
+    '>': [MOD_LSHIFT, 0x64],
+    '~': [MOD_RALT, 0x0C],              // AltGr + i (Fallback Windows/Android per tilde)
+    '`': [MOD_RALT, 0x2E],              // AltGr + ' (Fallback per backtick)
+  };
+
   Map<String, List<int>> get _currentKeyMap {
     switch (_activeLayout) {
       case KeyboardLayout.android:
-        return _androidKeyMap; // target Android con tastiera US
+        return _androidKeyMap; // target Android con decodifica US QWERTY
       case KeyboardLayout.androidIt:
-        return _pcKeyMap; // target Android con tastiera italiana
+        return _androidItKeyMap; // target Android con tastiera italiana impostata
       case KeyboardLayout.pc:
         return _pcKeyMap; // target Windows/Mac con tastiera italiana
     }
@@ -366,6 +487,23 @@ class DuckyParserIt {
     final curMap = _currentKeyMap;
     for (int i = 0; i < text.length; i++) {
       String char = text[i];
+      
+      // Workaround definitivo per stampare lo slash su Android saltando il layout fisico fallato.
+      // Esegue la macro: tieni premuto LALT + premi 4 (tastierino) + premi 7 (tastierino) + rilascia LALT.
+      // Questo invia l'ALT-CODE 47 che è il carattere '/' secondo la tabella ASCII.
+      if (char == '/' && _activeLayout == KeyboardLayout.androidIt) {
+        // [modifier, reserved, key1, key2, ...]
+        await hidController.sendReport([MOD_LALT, 0x00, 0x5C, 0x00, 0x00, 0x00, 0x00, 0x00]); // Hold LALT + Numpad 4
+        await Future.delayed(const Duration(milliseconds: 10));
+        await hidController.sendReport([MOD_LALT, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]); // Release 4, hold LALT
+        await Future.delayed(const Duration(milliseconds: 10));
+        await hidController.sendReport([MOD_LALT, 0x00, 0x5F, 0x00, 0x00, 0x00, 0x00, 0x00]); // Hold LALT + Numpad 7
+        await Future.delayed(const Duration(milliseconds: 10));
+        await hidController.sendReport([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]); // Release All
+        await Future.delayed(const Duration(milliseconds: 10));
+        continue;
+      }
+
       if (curMap.containsKey(char)) {
         List<int> combo = curMap[char]!;
         await hidController.sendKey(combo[0], combo[1]);
