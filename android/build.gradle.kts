@@ -15,15 +15,12 @@ subprojects {
 }
 
 subprojects {
-    afterEvaluate {
+    pluginManager.withPlugin("com.android.library") {
         val extension = extensions.findByName("android")
         if (extension != null) {
             val namespaceProperty = extension::class.members.find { it.name == "namespace" }
             if (namespaceProperty != null && (extension as com.android.build.gradle.BaseExtension).namespace == null) {
-                // Infer namespace from the package in AndroidManifest.xml if needed, 
-                // but usually fixed by setting it explicitly to the plugin id
-                val pluginId = project.name
-                if (pluginId == "flutter_wear_os_connectivity") {
+                if (project.name == "flutter_wear_os_connectivity") {
                     (extension as com.android.build.gradle.BaseExtension).namespace = "com.flutter_wear_os_connectivity"
                 }
             }
