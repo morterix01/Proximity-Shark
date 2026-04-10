@@ -487,22 +487,6 @@ class DuckyParserIt {
     final curMap = _currentKeyMap;
     for (int i = 0; i < text.length; i++) {
       String char = text[i];
-      
-      // Workaround definitivo per stampare lo slash su Android saltando il layout fisico fallato.
-      // Esegue la macro: tieni premuto LALT + premi 4 (tastierino) + premi 7 (tastierino) + rilascia LALT.
-      // Questo invia l'ALT-CODE 47 che è il carattere '/' secondo la tabella ASCII.
-      if (char == '/' && _activeLayout == KeyboardLayout.androidIt) {
-        // [modifier, reserved, key1, key2, ...]
-        await hidController.sendReport([MOD_LALT, 0x00, 0x5C, 0x00, 0x00, 0x00, 0x00, 0x00]); // Hold LALT + Numpad 4
-        await Future.delayed(const Duration(milliseconds: 10));
-        await hidController.sendReport([MOD_LALT, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]); // Release 4, hold LALT
-        await Future.delayed(const Duration(milliseconds: 10));
-        await hidController.sendReport([MOD_LALT, 0x00, 0x5F, 0x00, 0x00, 0x00, 0x00, 0x00]); // Hold LALT + Numpad 7
-        await Future.delayed(const Duration(milliseconds: 10));
-        await hidController.sendReport([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]); // Release All
-        await Future.delayed(const Duration(milliseconds: 10));
-        continue;
-      }
 
       if (curMap.containsKey(char)) {
         List<int> combo = curMap[char]!;
