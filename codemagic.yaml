@@ -9,6 +9,9 @@ workflows:
     scripts:
       - name: Install dependencies
         script: flutter pub get
+      - name: Patch plugins Manifest for AGP 8
+        script: |
+          find ~/.pub-cache/hosted/pub.dev/ -name "AndroidManifest.xml" -exec sed -i '' -e 's/package="[^"]*"//g' {} +
       - name: Build Android APK
         script: flutter build apk --release
     artifacts:
