@@ -1,4 +1,4 @@
-# 🦈 Proximity Shark
+# 🦈 Proximity Shark® 
 
 > Trasforma il tuo Android in una **tastiera Bluetooth wireless** — esegui payload DuckyScript senza alcun hardware aggiuntivo.
 
