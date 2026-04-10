@@ -28,13 +28,15 @@ class _QuickEditorScreenState extends State<QuickEditorScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Sync editor when AppState.script changes externally (e.g. loaded from Library)
-    final appState = Provider.of<AppState>(context, listen: false);
-    if (appState.script != _lastKnownScript && appState.script != _scriptController.text) {
+    final appState = Provider.of<AppState>(context);
+    if (appState.script != _lastKnownScript) {
       _lastKnownScript = appState.script;
-      _scriptController.value = TextEditingValue(
-        text: appState.script,
-        selection: TextSelection.collapsed(offset: appState.script.length),
-      );
+      if (_scriptController.text != appState.script) {
+        _scriptController.value = TextEditingValue(
+          text: appState.script,
+          selection: TextSelection.collapsed(offset: appState.script.length),
+        );
+      }
     }
   }
 
