@@ -736,6 +736,7 @@ class AppState extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint("Execution error: $e");
+      _sendWearProgress("-1.0");
     } finally {
       _isExecuting = false;
       notifyListeners();
