@@ -430,55 +430,103 @@ class DuckyParserIt {
     void Function(double progress)? onProgress,
   }) async {
     _activeLayout = layout;
-    debugPrint(
-      "--- ESECUZIONE SCRIPT (LAYOUT: ${_activeLayout.name.toUpperCase()}) ---",
-    );
+    debugPrint("--- ESECUZIONE SCRIPT (LAYOUT: ${_activeLayout.name.toUpperCase()}) ---");
+    
     List<String> lines = script.split('\n').where((l) => l.trim().isNotEmpty).toList();
-    if (lines.isEmpty && onProgress != null) onProgress(1.0);
+    if (lines.isEmpty) {
+      if (onProgress != null) onProgress(1.0);
+      return;
+    }
+
+    // Phase 1: Calculate total "weight" for smooth progress
+    double totalWeight = 0;
+    for (var line in lines) {
+      totalWeight += _calculateLineWeight(line.trim());
+    }
+
+    // Phase 2: Execute with granular updates
+    double currentWeight = 0;
     for (int i = 0; i < lines.length; i++) {
-      await parseLine(lines[i].trim());
-      if (onProgress != null) {
-        onProgress((i + 1) / lines.length);
-      }
+      String line = lines[i].trim();
+      await parseLine(line, onProgressStep: (stepWeight) {
+        currentWeight += stepWeight;
+        if (onProgress != null && totalWeight > 0) {
+          onProgress(currentWeight / totalWeight);
+        }
+      });
+    }
+
+    if (onProgress != null) onProgress(1.0);
+  }
+
+  double _calculateLineWeight(String line) {
+    List<String> parts = line.split(' ');
+    if (parts.isEmpty) return 0;
+    String command = parts[0].toUpperCase();
+    String argument = parts.length > 1 ? line.substring(parts[0].length + 1) : "";
+
+    switch (command) {
+      case 'STRING':
+        return argument.length.toDouble();
+      case 'DELAY':
+        int ms = int.tryParse(argument) ?? 0;
+        // 1 weight point every 20ms to match typing speed approx
+        return ms / 20.0;
+      default:
+        return 1.0;
     }
   }
 
-  Future<void> parseLine(String line) async {
+  Future<void> parseLine(String line, {void Function(double stepWeight)? onProgressStep}) async {
     List<String> parts = line.split(' ');
     String originalCommand = parts[0];
     String command = originalCommand.toUpperCase();
-    // Use originalCommand.length to correctly slice the argument from the original line
     String argument = parts.length > 1
         ? line.substring(originalCommand.length + 1)
         : "";
 
     switch (command) {
       case 'STRING':
-        await typeString(argument);
+        await typeString(argument, onProgressStep: onProgressStep);
         break;
       case 'DELAY':
         int ms = int.tryParse(argument) ?? 0;
-        await Future.delayed(Duration(milliseconds: ms));
+        // Granular delay updates
+        int steps = (ms / 20).floor();
+        int remaining = ms % 20;
+        for (int i = 0; i < steps; i++) {
+          await Future.delayed(const Duration(milliseconds: 20));
+          if (onProgressStep != null) onProgressStep(1.0);
+        }
+        if (remaining > 0) {
+          await Future.delayed(Duration(milliseconds: remaining));
+        }
         break;
       case 'GUI':
       case 'WINDOWS':
         await sendCombo(MOD_LGUI, argument);
+        if (onProgressStep != null) onProgressStep(1.0);
         break;
       case 'CONTROL':
       case 'CTRL':
         await sendCombo(MOD_LCTRL, argument);
+        if (onProgressStep != null) onProgressStep(1.0);
         break;
       case 'ALT':
         await sendCombo(MOD_LALT, argument);
+        if (onProgressStep != null) onProgressStep(1.0);
         break;
       case 'SHIFT':
         await sendCombo(MOD_LSHIFT, argument);
+        if (onProgressStep != null) onProgressStep(1.0);
         break;
       case 'ENTER':
         await hidController.sendKey(MOD_NONE, 0x28);
+        if (onProgressStep != null) onProgressStep(1.0);
         break;
       case 'TAB':
         await hidController.sendKey(MOD_NONE, 0x2B);
+        if (onProgressStep != null) onProgressStep(1.0);
         break;
       default:
         // Try as a special key
@@ -488,11 +536,12 @@ class DuckyParserIt {
           // Single key command — preserve original case!
           await typeString(originalCommand);
         }
+        if (onProgressStep != null) onProgressStep(1.0);
         break;
     }
   }
 
-  Future<void> typeString(String text) async {
+  Future<void> typeString(String text, {void Function(double stepWeight)? onProgressStep}) async {
     final curMap = _currentKeyMap;
     for (int i = 0; i < text.length; i++) {
       String char = text[i];
@@ -503,6 +552,10 @@ class DuckyParserIt {
         await Future.delayed(
           const Duration(milliseconds: 10),
         ); // Tiny delay for reliability
+      }
+      
+      if (onProgressStep != null) {
+        onProgressStep(1.0);
       }
     }
   }
