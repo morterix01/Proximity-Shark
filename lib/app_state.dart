@@ -58,6 +58,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _init() async {
+    await _wearOsConnectivity.configureWearableAPI();
     await _loadSettings();
     await _loadScripts();
     await _syncLibraryWithWear();
