@@ -57,6 +57,27 @@ class AppState extends ChangeNotifier {
     _listenToWearMessages();
   }
 
+  Future<void> _syncAppStateWithWear() async {
+    try {
+      final stateJson = {
+        'connectedAddress': _connectedAddress,
+        'connectionStatus': _connectionStatus, // 0 = disconnected, 1 = connected
+        'activeLayout': _activeLayout.name,
+        'bondedDevices': _bondedDevices.map((d) => {
+          'name': d.name,
+          'address': d.address
+        }).toList()
+      };
+      
+      await _wearOsConnectivity.syncData(
+        path: "/shark_state",
+        data: {"state_json": jsonEncode(stateJson)},
+      );
+    } catch (e) {
+      debugPrint("Failed to sync app state with Wear OS: $e");
+    }
+  }
+
   Future<void> _init() async {
     await _wearOsConnectivity.configureWearableAPI();
     await _loadSettings();
@@ -105,9 +126,16 @@ class AppState extends ChangeNotifier {
           _connectingAddress = null;
           _isConnecting = false;
           _connectionStartTime = DateTime.now();
+          // Save the last successfully connected device so auto-reconnect targets the right PC
+          if (_connectedAddress != null) {
+            SharedPreferences.getInstance().then((prefs) {
+              prefs.setString('last_connected_mac', _connectedAddress!);
+            });
+          }
           // Refresh bonded list so the new bond shows up
           fetchBondedDevices();
           notifyListeners();
+          _syncAppStateWithWear();
         } else if (state == 'disconnected') {
           _connectionStatus = 0;
           _connectedAddress = null;
@@ -115,6 +143,7 @@ class AppState extends ChangeNotifier {
           _isConnecting = false;
           _connectionStartTime = null;
           notifyListeners();
+          _syncAppStateWithWear();
         }
         return;
       }
@@ -190,6 +219,7 @@ class AppState extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('keyboard_layout', layout.index);
     notifyListeners();
+    _syncAppStateWithWear();
   }
 
   Future<void> fetchBondedDevices() async {
@@ -200,13 +230,26 @@ class AppState extends ChangeNotifier {
       rssi: 0,
     )).toList();
     notifyListeners();
+    _syncAppStateWithWear();
   }
 
   Future<void> _startAutoReconnectLoop() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastMac = prefs.getString('last_connected_mac');
+    if (lastMac == null) return; // No auto-connect history
+
     int retrySeconds = 5;
     while (_connectionStatus == 0) {
       if (_bondedDevices.isEmpty) break;
-      final target = _bondedDevices.first;
+      
+      ClassicDevice? target;
+      try {
+        target = _bondedDevices.firstWhere((d) => d.address == lastMac);
+      } catch (e) {
+        // Target device not found in bonded list
+        break;
+      }
+      
       await connectToDevice(target);
       
       // Wait for the result or timeout
@@ -605,6 +648,22 @@ class AppState extends ChangeNotifier {
           _script = await file.readAsString();
           notifyListeners();
           runScript();
+        }
+      } else if (message.path == "/connect_device") {
+        final String address = utf8.decode(message.data);
+        try {
+          final target = _bondedDevices.firstWhere((d) => d.address == address);
+          connectToDevice(target);
+        } catch (e) {
+          debugPrint("Failed to connect from watch: device $address not found.");
+        }
+      } else if (message.path == "/set_layout") {
+        final String layoutName = utf8.decode(message.data);
+        try {
+          final layout = KeyboardLayout.values.firstWhere((e) => e.name == layoutName);
+          updateKeyboardLayout(layout);
+        } catch (e) {
+          debugPrint("Failed to update layout from watch: $layoutName not found.");
         }
       }
     });
