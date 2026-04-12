@@ -1,32 +1,32 @@
-# 🦈 Proximity Shark Release Notes
+# 🦈 Note di Rilascio Proximity Shark
 
-## 📱 Phone App: v1.0.6
-This version focuses on refined branding and expanded keyboard compatibility.
+## 📱 Applicazione Telefono: v1.0.6
+Questa versione si concentra sulla rifinitura del branding e sull'espansione della compatibilità delle tastiere.
 
-### 🌟 What's New
-- **Custom Keyboard Layouts**: Full support for **PC IT**, **Android IT**, and **US International**.
-- **Visual Overhaul**: New "Mechanical Shark" aesthetic with high-definition assets and smooth micro-animations.
-- **Improved Security**: Enhanced Stealth Hub for monitoring IP exposure and MAC identity.
-- **Stability**: Fixed resource compilation issues (AAPT2) for more reliable builds.
+### 🌟 Novità
+- **Layout Tastiera Personalizzati**: Supporto completo per **PC IT**, **Android IT** e **US International**.
+- **Restyling Visivo**: Nuova estetica "Mechanical Shark" con asset in alta definizione e micro-animazioni fluide.
+- **Privacy Migliorata**: Stealth Hub potenziato per il monitoraggio dell'esposizione IP e dell'identità MAC.
+- **Stabilità**: Risolti i problemi di compilazione delle risorse (AAPT2) per build più affidabili.
 
 ---
 
 ## ⌚ Wear OS Companion: v1.0.0
-The official companion app is now ready for deployment.
+La companion app ufficiale è ora pronta per il deployment.
 
-### 🌟 Key Features
-- **Standard US Layout**: Support for US QWERTY injections directly from your watch.
-- **Remote Library**: Access your entire phone-based DuckyScript folder directly from the wrist.
-- **Instant Status Feedback**: Visual confirmation overlays (✅/❌) to track payload delivery in real-time.
-- **Optimized UI**: Dark theme tailored for OLED watch displays (Galaxy Watch 4+).
-
----
-
-## 🛠️ Deployment Instructions
-1. Build the Phone APK using `flutter build apk --release`.
-2. Build the Wear OS APK using the standard Android Studio build process.
-3. Ensure both devices are paired via Bluetooth to enable synchronization.
+### 🌟 Caratteristiche Principali
+- **Layout Standard US**: Supporto per iniezioni QWERTY US direttamente dal tuo smartwatch.
+- **Libreria Remota**: Accedi all'intera cartella DuckyScript del tuo telefono direttamente dal polso.
+- **Feedback Istantaneo**: Overlay di conferma visiva (✅/❌) per monitorare la consegna del payload in tempo reale.
+- **UI Ottimizzata**: Tema scuro personalizzato per display OLED (Galaxy Watch 4+).
 
 ---
 
-*Educational purpose only. The author is not responsible for any misuse of this tool.*
+## 🛠️ Istruzioni per il Deployment
+1. Compila l'APK del telefono usando `flutter build apk --release`.
+2. Compila l'APK Wear OS tramite la procedura standard di Android Studio.
+3. Assicurati che entrambi i dispositivi siano accoppiati via Bluetooth per abilitare la sincronizzazione.
+
+---
+
+*Solo a scopo educativo. L'autore non è responsabile per qualsiasi uso improprio di questo strumento.*
