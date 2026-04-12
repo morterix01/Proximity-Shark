@@ -9,7 +9,7 @@ Questa versione trasforma il tuo smartphone nell'hub centrale di un ecosistema H
 
 ### 🌟 Novità Assolute
 - **⌚ Integrazione Wear OS**: La rivoluzione è arrivata. Ora puoi comandare Proximity Shark direttamente dal tuo smartwatch. Sfoglia la libreria, seleziona il layout e lancia payload senza mai estrarre il telefono dalla tasca.
-- **🌍 Dominio dei Layout**: Espansione totale della compatibilità. Abbiamo aggiunto i layout **Standard US** e **US International**, che si affiancano ai già potenti **PC IT** e **Android IT**. Nessun sistema target è più al sicuro.
+- **🌍 Dominio dei Layout**: Espansione totale della compatibilità. Abbiamo aggiunto i layout **Standard US** e **US International**, fondamentali per la piena compatibilità con dispositivi e board interattive come **Helgi LIM**, aggirando le restrizioni della tastiera fisica predefinita. Questi si affiancano ai già potenti **PC IT** e **Android IT**. Nessun sistema target è più al sicuro.
 - **⚙️ Mechanical Shark UI**: Un'interfaccia ridisegnata per i professionisti. Estetica hacker, animazioni ultra-fluide e un'esperienza utente rifinita per la massima efficienza operativa.
 - **🛡️ Stealth Hub 2.0**: Il controllo della tua impronta digitale non è mai stato così granulare. Monitoraggio IP in tempo reale e gestione avanzata dell'identità Bluetooth (MAC) per operare nell'ombra.
 - **🛠️ Stabilità Core**: Risolti i bug di compilazione AAPT2 e ottimizzate le performance per un'esecuzione dei payload più rapida e affidabile.
