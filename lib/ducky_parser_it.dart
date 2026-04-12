@@ -10,119 +10,119 @@ class DuckyParserIt {
   DuckyParserIt(this.hidController);
 
   // HID Modifiers
-  static const int MOD_NONE = 0;
-  static const int MOD_LCTRL = 0x01;
-  static const int MOD_LSHIFT = 0x02;
-  static const int MOD_LALT = 0x04;
-  static const int MOD_LGUI = 0x08;
-  static const int MOD_RCTRL = 0x10;
-  static const int MOD_RSHIFT = 0x20;
-  static const int MOD_RALT = 0x40; // AltGr in IT layout
+  static const int modNone = 0;
+  static const int modLctrl = 0x01;
+  static const int modLshift = 0x02;
+  static const int modLalt = 0x04;
+  static const int modLgui = 0x08;
+  static const int modRctrl = 0x10;
+  static const int modRshift = 0x20;
+  static const int modRalt = 0x40; // AltGr in IT layout
 
   // --- PC Layout Map ---
   static final Map<String, List<int>> _pcKeyMap = {
-    'a': [MOD_NONE, 0x04],
-    'b': [MOD_NONE, 0x05],
-    'c': [MOD_NONE, 0x06],
-    'd': [MOD_NONE, 0x07],
-    'e': [MOD_NONE, 0x08],
-    'f': [MOD_NONE, 0x09],
-    'g': [MOD_NONE, 0x0A],
-    'h': [MOD_NONE, 0x0B],
-    'i': [MOD_NONE, 0x0C],
-    'j': [MOD_NONE, 0x0D],
-    'k': [MOD_NONE, 0x0E],
-    'l': [MOD_NONE, 0x0F],
-    'm': [MOD_NONE, 0x10],
-    'n': [MOD_NONE, 0x11],
-    'o': [MOD_NONE, 0x12],
-    'p': [MOD_NONE, 0x13],
-    'q': [MOD_NONE, 0x14],
-    'r': [MOD_NONE, 0x15],
-    's': [MOD_NONE, 0x16],
-    't': [MOD_NONE, 0x17],
-    'u': [MOD_NONE, 0x18],
-    'v': [MOD_NONE, 0x19],
-    'w': [MOD_NONE, 0x1A],
-    'x': [MOD_NONE, 0x1B],
-    'y': [MOD_NONE, 0x1C], 'z': [MOD_NONE, 0x1D],
+    'a': [modNone, 0x04],
+    'b': [modNone, 0x05],
+    'c': [modNone, 0x06],
+    'd': [modNone, 0x07],
+    'e': [modNone, 0x08],
+    'f': [modNone, 0x09],
+    'g': [modNone, 0x0A],
+    'h': [modNone, 0x0B],
+    'i': [modNone, 0x0C],
+    'j': [modNone, 0x0D],
+    'k': [modNone, 0x0E],
+    'l': [modNone, 0x0F],
+    'm': [modNone, 0x10],
+    'n': [modNone, 0x11],
+    'o': [modNone, 0x12],
+    'p': [modNone, 0x13],
+    'q': [modNone, 0x14],
+    'r': [modNone, 0x15],
+    's': [modNone, 0x16],
+    't': [modNone, 0x17],
+    'u': [modNone, 0x18],
+    'v': [modNone, 0x19],
+    'w': [modNone, 0x1A],
+    'x': [modNone, 0x1B],
+    'y': [modNone, 0x1C], 'z': [modNone, 0x1D],
 
-    'A': [MOD_LSHIFT, 0x04],
-    'B': [MOD_LSHIFT, 0x05],
-    'C': [MOD_LSHIFT, 0x06],
-    'D': [MOD_LSHIFT, 0x07],
-    'E': [MOD_LSHIFT, 0x08],
-    'F': [MOD_LSHIFT, 0x09],
-    'G': [MOD_LSHIFT, 0x0A],
-    'H': [MOD_LSHIFT, 0x0B],
-    'I': [MOD_LSHIFT, 0x0C],
-    'J': [MOD_LSHIFT, 0x0D],
-    'K': [MOD_LSHIFT, 0x0E],
-    'L': [MOD_LSHIFT, 0x0F],
-    'M': [MOD_LSHIFT, 0x10],
-    'N': [MOD_LSHIFT, 0x11],
-    'O': [MOD_LSHIFT, 0x12],
-    'P': [MOD_LSHIFT, 0x13],
-    'Q': [MOD_LSHIFT, 0x14],
-    'R': [MOD_LSHIFT, 0x15],
-    'S': [MOD_LSHIFT, 0x16],
-    'T': [MOD_LSHIFT, 0x17],
-    'U': [MOD_LSHIFT, 0x18],
-    'V': [MOD_LSHIFT, 0x19],
-    'W': [MOD_LSHIFT, 0x1A],
-    'X': [MOD_LSHIFT, 0x1B],
-    'Y': [MOD_LSHIFT, 0x1C], 'Z': [MOD_LSHIFT, 0x1D],
+    'A': [modLshift, 0x04],
+    'B': [modLshift, 0x05],
+    'C': [modLshift, 0x06],
+    'D': [modLshift, 0x07],
+    'E': [modLshift, 0x08],
+    'F': [modLshift, 0x09],
+    'G': [modLshift, 0x0A],
+    'H': [modLshift, 0x0B],
+    'I': [modLshift, 0x0C],
+    'J': [modLshift, 0x0D],
+    'K': [modLshift, 0x0E],
+    'L': [modLshift, 0x0F],
+    'M': [modLshift, 0x10],
+    'N': [modLshift, 0x11],
+    'O': [modLshift, 0x12],
+    'P': [modLshift, 0x13],
+    'Q': [modLshift, 0x14],
+    'R': [modLshift, 0x15],
+    'S': [modLshift, 0x16],
+    'T': [modLshift, 0x17],
+    'U': [modLshift, 0x18],
+    'V': [modLshift, 0x19],
+    'W': [modLshift, 0x1A],
+    'X': [modLshift, 0x1B],
+    'Y': [modLshift, 0x1C], 'Z': [modLshift, 0x1D],
 
-    '1': [MOD_NONE, 0x1E],
-    '2': [MOD_NONE, 0x1F],
-    '3': [MOD_NONE, 0x20],
-    '4': [MOD_NONE, 0x21],
-    '5': [MOD_NONE, 0x22],
-    '6': [MOD_NONE, 0x23],
-    '7': [MOD_NONE, 0x24],
-    '8': [MOD_NONE, 0x25],
-    '9': [MOD_NONE, 0x26], '0': [MOD_NONE, 0x27],
+    '1': [modNone, 0x1E],
+    '2': [modNone, 0x1F],
+    '3': [modNone, 0x20],
+    '4': [modNone, 0x21],
+    '5': [modNone, 0x22],
+    '6': [modNone, 0x23],
+    '7': [modNone, 0x24],
+    '8': [modNone, 0x25],
+    '9': [modNone, 0x26], '0': [modNone, 0x27],
 
-    '!': [MOD_LSHIFT, 0x1E],
-    '"': [MOD_LSHIFT, 0x1F],
-    '\u00A3': [MOD_LSHIFT, 0x20],
-    '\$': [MOD_LSHIFT, 0x21],
-    '%': [MOD_LSHIFT, 0x22],
-    '&': [MOD_LSHIFT, 0x23],
-    '/': [MOD_LSHIFT, 0x24],
-    '(': [MOD_LSHIFT, 0x25],
-    ')': [MOD_LSHIFT, 0x26],
-    '=': [MOD_LSHIFT, 0x27],
-    '?': [MOD_LSHIFT, 0x2D],
-    '^': [MOD_LSHIFT, 0x35],
+    '!': [modLshift, 0x1E],
+    '"': [modLshift, 0x1F],
+    '\u00A3': [modLshift, 0x20],
+    '\$': [modLshift, 0x21],
+    '%': [modLshift, 0x22],
+    '&': [modLshift, 0x23],
+    '/': [modLshift, 0x24],
+    '(': [modLshift, 0x25],
+    ')': [modLshift, 0x26],
+    '=': [modLshift, 0x27],
+    '?': [modLshift, 0x2D],
+    '^': [modLshift, 0x35],
 
-    ' ': [MOD_NONE, 0x2C], '\n': [MOD_NONE, 0x28], '\t': [MOD_NONE, 0x2B],
-    '.': [MOD_NONE, 0x37],
-    ',': [MOD_NONE, 0x36],
-    ':': [MOD_LSHIFT, 0x37],
-    ';': [MOD_LSHIFT, 0x36],
-    '-': [MOD_NONE, 0x38],
-    '_': [MOD_LSHIFT, 0x38],
-    '+': [MOD_NONE, 0x30],
-    '*': [MOD_LSHIFT, 0x30],
+    ' ': [modNone, 0x2C], '\n': [modNone, 0x28], '\t': [modNone, 0x2B],
+    '.': [modNone, 0x37],
+    ',': [modNone, 0x36],
+    ':': [modLshift, 0x37],
+    ';': [modLshift, 0x36],
+    '-': [modNone, 0x38],
+    '_': [modLshift, 0x38],
+    '+': [modNone, 0x30],
+    '*': [modLshift, 0x30],
 
-    '\u00E0': [MOD_NONE, 0x33],
-    '\u00E8': [MOD_NONE, 0x2F],
-    '\u00E9': [MOD_LSHIFT, 0x2F],
-    '\u00EC': [MOD_NONE, 0x2E],
-    '\u00F2': [MOD_NONE, 0x34], '\u00F9': [MOD_NONE, 0x31],
+    '\u00E0': [modNone, 0x33],
+    '\u00E8': [modNone, 0x2F],
+    '\u00E9': [modLshift, 0x2F],
+    '\u00EC': [modNone, 0x2E],
+    '\u00F2': [modNone, 0x34], '\u00F9': [modNone, 0x31],
 
-    '@': [MOD_RALT, 0x34],
-    '#': [MOD_RALT, 0x33],
-    '[': [MOD_RALT, 0x2F],
-    ']': [MOD_RALT, 0x30],
-    '{': [MOD_LSHIFT | MOD_RALT, 0x34], '}': [MOD_LSHIFT | MOD_RALT, 0x33],
-    '|': [MOD_LSHIFT, 0x35],
-    '\\': [MOD_NONE, 0x35],
-    '<': [MOD_NONE, 0x64],
-    '>': [MOD_LSHIFT, 0x64],
-    '~': [MOD_RALT, 0x0C], // AltGr + i (common Windows)
-    '` \u0060': [MOD_RALT, 0x2E], // AltGr + ' (common Windows)
+    '@': [modRalt, 0x34],
+    '#': [modRalt, 0x33],
+    '[': [modRalt, 0x2F],
+    ']': [modRalt, 0x30],
+    '{': [modLshift | modRalt, 0x34], '}': [modLshift | modRalt, 0x33],
+    '|': [modLshift, 0x35],
+    '\\': [modNone, 0x35],
+    '<': [modNone, 0x64],
+    '>': [modLshift, 0x64],
+    '~': [modRalt, 0x0C], // AltGr + i (common Windows)
+    '` \u0060': [modRalt, 0x2E], // AltGr + ' (common Windows)
   };
 
   // --- Android/Mobile Layout Map ---
@@ -130,125 +130,125 @@ class DuckyParserIt {
   // To type Italian payloads correctly, we send the US keycodes for the requested characters.
   static final Map<String, List<int>> _androidKeyMap = {
     // Letters
-    'a': [MOD_NONE, 0x04],
-    'b': [MOD_NONE, 0x05],
-    'c': [MOD_NONE, 0x06],
-    'd': [MOD_NONE, 0x07],
-    'e': [MOD_NONE, 0x08],
-    'f': [MOD_NONE, 0x09],
-    'g': [MOD_NONE, 0x0A],
-    'h': [MOD_NONE, 0x0B],
-    'i': [MOD_NONE, 0x0C],
-    'j': [MOD_NONE, 0x0D],
-    'k': [MOD_NONE, 0x0E],
-    'l': [MOD_NONE, 0x0F],
-    'm': [MOD_NONE, 0x10],
-    'n': [MOD_NONE, 0x11],
-    'o': [MOD_NONE, 0x12],
-    'p': [MOD_NONE, 0x13],
-    'q': [MOD_NONE, 0x14],
-    'r': [MOD_NONE, 0x15],
-    's': [MOD_NONE, 0x16],
-    't': [MOD_NONE, 0x17],
-    'u': [MOD_NONE, 0x18],
-    'v': [MOD_NONE, 0x19],
-    'w': [MOD_NONE, 0x1A],
-    'x': [MOD_NONE, 0x1B],
-    'y': [MOD_NONE, 0x1C], 'z': [MOD_NONE, 0x1D],
+    'a': [modNone, 0x04],
+    'b': [modNone, 0x05],
+    'c': [modNone, 0x06],
+    'd': [modNone, 0x07],
+    'e': [modNone, 0x08],
+    'f': [modNone, 0x09],
+    'g': [modNone, 0x0A],
+    'h': [modNone, 0x0B],
+    'i': [modNone, 0x0C],
+    'j': [modNone, 0x0D],
+    'k': [modNone, 0x0E],
+    'l': [modNone, 0x0F],
+    'm': [modNone, 0x10],
+    'n': [modNone, 0x11],
+    'o': [modNone, 0x12],
+    'p': [modNone, 0x13],
+    'q': [modNone, 0x14],
+    'r': [modNone, 0x15],
+    's': [modNone, 0x16],
+    't': [modNone, 0x17],
+    'u': [modNone, 0x18],
+    'v': [modNone, 0x19],
+    'w': [modNone, 0x1A],
+    'x': [modNone, 0x1B],
+    'y': [modNone, 0x1C], 'z': [modNone, 0x1D],
 
-    'A': [MOD_LSHIFT, 0x04],
-    'B': [MOD_LSHIFT, 0x05],
-    'C': [MOD_LSHIFT, 0x06],
-    'D': [MOD_LSHIFT, 0x07],
-    'E': [MOD_LSHIFT, 0x08],
-    'F': [MOD_LSHIFT, 0x09],
-    'G': [MOD_LSHIFT, 0x0A],
-    'H': [MOD_LSHIFT, 0x0B],
-    'I': [MOD_LSHIFT, 0x0C],
-    'J': [MOD_LSHIFT, 0x0D],
-    'K': [MOD_LSHIFT, 0x0E],
-    'L': [MOD_LSHIFT, 0x0F],
-    'M': [MOD_LSHIFT, 0x10],
-    'N': [MOD_LSHIFT, 0x11],
-    'O': [MOD_LSHIFT, 0x12],
-    'P': [MOD_LSHIFT, 0x13],
-    'Q': [MOD_LSHIFT, 0x14],
-    'R': [MOD_LSHIFT, 0x15],
-    'S': [MOD_LSHIFT, 0x16],
-    'T': [MOD_LSHIFT, 0x17],
-    'U': [MOD_LSHIFT, 0x18],
-    'V': [MOD_LSHIFT, 0x19],
-    'W': [MOD_LSHIFT, 0x1A],
-    'X': [MOD_LSHIFT, 0x1B],
-    'Y': [MOD_LSHIFT, 0x1C], 'Z': [MOD_LSHIFT, 0x1D],
+    'A': [modLshift, 0x04],
+    'B': [modLshift, 0x05],
+    'C': [modLshift, 0x06],
+    'D': [modLshift, 0x07],
+    'E': [modLshift, 0x08],
+    'F': [modLshift, 0x09],
+    'G': [modLshift, 0x0A],
+    'H': [modLshift, 0x0B],
+    'I': [modLshift, 0x0C],
+    'J': [modLshift, 0x0D],
+    'K': [modLshift, 0x0E],
+    'L': [modLshift, 0x0F],
+    'M': [modLshift, 0x10],
+    'N': [modLshift, 0x11],
+    'O': [modLshift, 0x12],
+    'P': [modLshift, 0x13],
+    'Q': [modLshift, 0x14],
+    'R': [modLshift, 0x15],
+    'S': [modLshift, 0x16],
+    'T': [modLshift, 0x17],
+    'U': [modLshift, 0x18],
+    'V': [modLshift, 0x19],
+    'W': [modLshift, 0x1A],
+    'X': [modLshift, 0x1B],
+    'Y': [modLshift, 0x1C], 'Z': [modLshift, 0x1D],
 
-    '1': [MOD_NONE, 0x1E],
-    '2': [MOD_NONE, 0x1F],
-    '3': [MOD_NONE, 0x20],
-    '4': [MOD_NONE, 0x21],
-    '5': [MOD_NONE, 0x22],
-    '6': [MOD_NONE, 0x23],
-    '7': [MOD_NONE, 0x24],
-    '8': [MOD_NONE, 0x25],
-    '9': [MOD_NONE, 0x26], '0': [MOD_NONE, 0x27],
+    '1': [modNone, 0x1E],
+    '2': [modNone, 0x1F],
+    '3': [modNone, 0x20],
+    '4': [modNone, 0x21],
+    '5': [modNone, 0x22],
+    '6': [modNone, 0x23],
+    '7': [modNone, 0x24],
+    '8': [modNone, 0x25],
+    '9': [modNone, 0x26], '0': [modNone, 0x27],
 
     // ── Whitespace ──────────────────────────────────────────────────────────
-    ' ': [MOD_NONE, 0x2C], '\n': [MOD_NONE, 0x28], '\t': [MOD_NONE, 0x2B],
+    ' ': [modNone, 0x2C], '\n': [modNone, 0x28], '\t': [modNone, 0x2B],
 
     // ── DATI EMPIRICI CONFERMATI DAI TEST ───────────────────────────────────
     // Il target usa layout IBRIDO: US per i tasti standard, IT per i tasti
     // fisicamente diversi tra US e IT (0x38 e 0x2D).
 
     // Tasti confermati IT (override italiano):
-    '-': [MOD_NONE, 0x38], // ✅ CONFERMATO: 0x38 no-mod = -
-    '_': [MOD_LSHIFT, 0x38], // ✅ CONFERMATO: Shift+0x38 = _
-    '?': [MOD_LSHIFT, 0x2D], // ✅ CONFERMATO: Shift+0x2D = ?
+    '-': [modNone, 0x38], // ✅ CONFERMATO: 0x38 no-mod = -
+    '_': [modLshift, 0x38], // ✅ CONFERMATO: Shift+0x38 = _
+    '?': [modLshift, 0x2D], // ✅ CONFERMATO: Shift+0x2D = ?
     // Tasti confermati US (comportamento americano):
     ':': [
-      MOD_LSHIFT,
+      modLshift,
       0x33,
     ], // ✅ CONFERMATO: Shift+0x33 = : (tasto punto-e-virgola US)
-    '=': [MOD_NONE, 0x2E], // ✅ CONFERMATO: 0x2E = = (tasto uguale US)
-    '.': [MOD_NONE, 0x37], // US: tasto punto
-    ',': [MOD_NONE, 0x36], // US: tasto virgola
-    ';': [MOD_NONE, 0x33], // US: 0x33 non-shiftato = ;
-    '\'': [MOD_NONE, 0x2D], // Italian: 0x2D non-shiftato = ' (apostrofo)
+    '=': [modNone, 0x2E], // ✅ CONFERMATO: 0x2E = = (tasto uguale US)
+    '.': [modNone, 0x37], // US: tasto punto
+    ',': [modNone, 0x36], // US: tasto virgola
+    ';': [modNone, 0x33], // US: 0x33 non-shiftato = ;
+    '\'': [modNone, 0x2D], // Italian: 0x2D non-shiftato = ' (apostrofo)
     // ── Simboli fila numerica: il target usa valori SHIFTATI americani ──────
     // (confermato: Shift+7 → & come su US, non / come su IT standard)
-    '!': [MOD_LSHIFT, 0x1E], // Shift+1 = ! (uguale su US e IT)
-    '"': [MOD_LSHIFT, 0x34], // US: Shift+apostrofo = "
-    '\$': [MOD_LSHIFT, 0x21], // Shift+4 = $ (uguale su US e IT)
-    '%': [MOD_LSHIFT, 0x22], // Shift+5 = % (uguale)
-    '&': [MOD_LSHIFT, 0x24], // ✅ CONFERMATO: Shift+7 = & (comportamento US)
-    '(': [MOD_LSHIFT, 0x26], // US: Shift+9 = (
-    ')': [MOD_LSHIFT, 0x27], // US: Shift+0 = )
-    '+': [MOD_LSHIFT, 0x2E], // US: Shift+= = +
-    '*': [MOD_LSHIFT, 0x25], // US: Shift+8 = *
-    '^': [MOD_LSHIFT, 0x23], // US: Shift+6 = ^
+    '!': [modLshift, 0x1E], // Shift+1 = ! (uguale su US e IT)
+    '"': [modLshift, 0x34], // US: Shift+apostrofo = "
+    '\$': [modLshift, 0x21], // Shift+4 = $ (uguale su US e IT)
+    '%': [modLshift, 0x22], // Shift+5 = % (uguale)
+    '&': [modLshift, 0x24], // ✅ CONFERMATO: Shift+7 = & (comportamento US)
+    '(': [modLshift, 0x26], // US: Shift+9 = (
+    ')': [modLshift, 0x27], // US: Shift+0 = )
+    '+': [modLshift, 0x2E], // US: Shift+= = +
+    '*': [modLshift, 0x25], // US: Shift+8 = *
+    '^': [modLshift, 0x23], // US: Shift+6 = ^
     // ── SLASH — nessuna via standard funziona su questo target ──────────────
     // Testati e falliti: Shift+7→&, 0x38→-, Shift+0x38→_, numpad→-, AltGr+7→fiasco
     // Ultima opzione non testata: AltGr+tasto-slash (0x38)
-    '/': [MOD_RALT, 0x38], // ⚠️ UNTESTED: AltGr+0x38 — ultima opzione rimasta
+    '/': [modRalt, 0x38], // ⚠️ UNTESTED: AltGr+0x38 — ultima opzione rimasta
     // ── Simboli AltGr (layout IT) ───────────────────────────────────────────
-    '@': [MOD_RALT, 0x34], // AltGr+à = @
-    '#': [MOD_RALT, 0x33], // AltGr+ò = #
-    '[': [MOD_RALT, 0x2F], // AltGr+è = [
-    ']': [MOD_RALT, 0x30], // AltGr++ = ]
-    '{': [MOD_LSHIFT | MOD_RALT, 0x2F], // AltGr+Shift+è = {
-    '}': [MOD_LSHIFT | MOD_RALT, 0x30], // AltGr+Shift++ = }
-    '\\': [MOD_RALT, 0x31], // AltGr+ù = backslash
-    '|': [MOD_LSHIFT, 0x31], // Shift+backslash = |
-    '<': [MOD_NONE, 0x64], // Tasto europeo extra
-    '>': [MOD_LSHIFT, 0x64], // Tasto europeo extra shiftato
-    '€': [MOD_RALT, 0x08], // AltGr+E = €
-    '~': [MOD_RALT, 0x0C], // AltGr+i (fallback IT)
+    '@': [modRalt, 0x34], // AltGr+à = @
+    '#': [modRalt, 0x33], // AltGr+ò = #
+    '[': [modRalt, 0x2F], // AltGr+è = [
+    ']': [modRalt, 0x30], // AltGr++ = ]
+    '{': [modLshift | modRalt, 0x2F], // AltGr+Shift+è = {
+    '}': [modLshift | modRalt, 0x30], // AltGr+Shift++ = }
+    '\\': [modRalt, 0x31], // AltGr+ù = backslash
+    '|': [modLshift, 0x31], // Shift+backslash = |
+    '<': [modNone, 0x64], // Tasto europeo extra
+    '>': [modLshift, 0x64], // Tasto europeo extra shiftato
+    '€': [modRalt, 0x08], // AltGr+E = €
+    '~': [modRalt, 0x0C], // AltGr+i (fallback IT)
     // ── Caratteri accentati — fallback al tasto base ─────────────────────────
-    '\u00E0': [MOD_NONE, 0x04], // à → a
-    '\u00E8': [MOD_NONE, 0x08], // è → e
-    '\u00E9': [MOD_NONE, 0x08], // é → e
-    '\u00EC': [MOD_NONE, 0x0C], // ì → i
-    '\u00F2': [MOD_NONE, 0x12], // ò → o
-    '\u00F9': [MOD_NONE, 0x18], // ù → u
+    '\u00E0': [modNone, 0x04], // à → a
+    '\u00E8': [modNone, 0x08], // è → e
+    '\u00E9': [modNone, 0x08], // é → e
+    '\u00EC': [modNone, 0x0C], // ì → i
+    '\u00F2': [modNone, 0x12], // ò → o
+    '\u00F9': [modNone, 0x18], // ù → u
   };
 
   // --- Android IT Layout Map ---
@@ -257,126 +257,159 @@ class DuckyParserIt {
   // di AltGr (Right Alt) e dei simboli speciali può variare leggermente rispetto a Windows.
   static final Map<String, List<int>> _androidItKeyMap = {
     // Lettere standard
-    'a': [MOD_NONE, 0x04],
-    'b': [MOD_NONE, 0x05],
-    'c': [MOD_NONE, 0x06],
-    'd': [MOD_NONE, 0x07],
-    'e': [MOD_NONE, 0x08],
-    'f': [MOD_NONE, 0x09],
-    'g': [MOD_NONE, 0x0A],
-    'h': [MOD_NONE, 0x0B],
-    'i': [MOD_NONE, 0x0C],
-    'j': [MOD_NONE, 0x0D],
-    'k': [MOD_NONE, 0x0E],
-    'l': [MOD_NONE, 0x0F],
-    'm': [MOD_NONE, 0x10],
-    'n': [MOD_NONE, 0x11],
-    'o': [MOD_NONE, 0x12],
-    'p': [MOD_NONE, 0x13],
-    'q': [MOD_NONE, 0x14],
-    'r': [MOD_NONE, 0x15],
-    's': [MOD_NONE, 0x16],
-    't': [MOD_NONE, 0x17],
-    'u': [MOD_NONE, 0x18],
-    'v': [MOD_NONE, 0x19],
-    'w': [MOD_NONE, 0x1A],
-    'x': [MOD_NONE, 0x1B],
-    'y': [MOD_NONE, 0x1C], 'z': [MOD_NONE, 0x1D],
+    'a': [modNone, 0x04],
+    'b': [modNone, 0x05],
+    'c': [modNone, 0x06],
+    'd': [modNone, 0x07],
+    'e': [modNone, 0x08],
+    'f': [modNone, 0x09],
+    'g': [modNone, 0x0A],
+    'h': [modNone, 0x0B],
+    'i': [modNone, 0x0C],
+    'j': [modNone, 0x0D],
+    'k': [modNone, 0x0E],
+    'l': [modNone, 0x0F],
+    'm': [modNone, 0x10],
+    'n': [modNone, 0x11],
+    'o': [modNone, 0x12],
+    'p': [modNone, 0x13],
+    'q': [modNone, 0x14],
+    'r': [modNone, 0x15],
+    's': [modNone, 0x16],
+    't': [modNone, 0x17],
+    'u': [modNone, 0x18],
+    'v': [modNone, 0x19],
+    'w': [modNone, 0x1A],
+    'x': [modNone, 0x1B],
+    'y': [modNone, 0x1C], 'z': [modNone, 0x1D],
 
-    'A': [MOD_LSHIFT, 0x04],
-    'B': [MOD_LSHIFT, 0x05],
-    'C': [MOD_LSHIFT, 0x06],
-    'D': [MOD_LSHIFT, 0x07],
-    'E': [MOD_LSHIFT, 0x08],
-    'F': [MOD_LSHIFT, 0x09],
-    'G': [MOD_LSHIFT, 0x0A],
-    'H': [MOD_LSHIFT, 0x0B],
-    'I': [MOD_LSHIFT, 0x0C],
-    'J': [MOD_LSHIFT, 0x0D],
-    'K': [MOD_LSHIFT, 0x0E],
-    'L': [MOD_LSHIFT, 0x0F],
-    'M': [MOD_LSHIFT, 0x10],
-    'N': [MOD_LSHIFT, 0x11],
-    'O': [MOD_LSHIFT, 0x12],
-    'P': [MOD_LSHIFT, 0x13],
-    'Q': [MOD_LSHIFT, 0x14],
-    'R': [MOD_LSHIFT, 0x15],
-    'S': [MOD_LSHIFT, 0x16],
-    'T': [MOD_LSHIFT, 0x17],
-    'U': [MOD_LSHIFT, 0x18],
-    'V': [MOD_LSHIFT, 0x19],
-    'W': [MOD_LSHIFT, 0x1A],
-    'X': [MOD_LSHIFT, 0x1B],
-    'Y': [MOD_LSHIFT, 0x1C], 'Z': [MOD_LSHIFT, 0x1D],
+    'A': [modLshift, 0x04],
+    'B': [modLshift, 0x05],
+    'C': [modLshift, 0x06],
+    'D': [modLshift, 0x07],
+    'E': [modLshift, 0x08],
+    'F': [modLshift, 0x09],
+    'G': [modLshift, 0x0A],
+    'H': [modLshift, 0x0B],
+    'I': [modLshift, 0x0C],
+    'J': [modLshift, 0x0D],
+    'K': [modLshift, 0x0E],
+    'L': [modLshift, 0x0F],
+    'M': [modLshift, 0x10],
+    'N': [modLshift, 0x11],
+    'O': [modLshift, 0x12],
+    'P': [modLshift, 0x13],
+    'Q': [modLshift, 0x14],
+    'R': [modLshift, 0x15],
+    'S': [modLshift, 0x16],
+    'T': [modLshift, 0x17],
+    'U': [modLshift, 0x18],
+    'V': [modLshift, 0x19],
+    'W': [modLshift, 0x1A],
+    'X': [modLshift, 0x1B],
+    'Y': [modLshift, 0x1C], 'Z': [modLshift, 0x1D],
 
     // Numeri
-    '1': [MOD_NONE, 0x1E],
-    '2': [MOD_NONE, 0x1F],
-    '3': [MOD_NONE, 0x20],
-    '4': [MOD_NONE, 0x21],
-    '5': [MOD_NONE, 0x22],
-    '6': [MOD_NONE, 0x23],
-    '7': [MOD_NONE, 0x24],
-    '8': [MOD_NONE, 0x25],
-    '9': [MOD_NONE, 0x26], '0': [MOD_NONE, 0x27],
+    '1': [modNone, 0x1E],
+    '2': [modNone, 0x1F],
+    '3': [modNone, 0x20],
+    '4': [modNone, 0x21],
+    '5': [modNone, 0x22],
+    '6': [modNone, 0x23],
+    '7': [modNone, 0x24],
+    '8': [modNone, 0x25],
+    '9': [modNone, 0x26], '0': [modNone, 0x27],
 
     // Simboli riga dei numeri (Shift+)
-    '!': [MOD_LSHIFT, 0x1E], // Shift + 1
-    '"': [MOD_LSHIFT, 0x1F], // Shift + 2
-    '\u00A3': [MOD_LSHIFT, 0x20], // Shift + 3 (£)
-    '\$': [MOD_LSHIFT, 0x21], // Shift + 4 ($)
-    '%': [MOD_LSHIFT, 0x22], // Shift + 5
-    '&': [MOD_LSHIFT, 0x23], // Shift + 6
+    '!': [modLshift, 0x1E], // Shift + 1
+    '"': [modLshift, 0x1F], // Shift + 2
+    '\u00A3': [modLshift, 0x20], // Shift + 3 (£)
+    '\$': [modLshift, 0x21], // Shift + 4 ($)
+    '%': [modLshift, 0x22], // Shift + 5
+    '&': [modLshift, 0x23], // Shift + 6
     '/': [
-      MOD_LSHIFT,
+      modLshift,
       0x24,
     ], // Shift + 7 (verrà intercettato da typeString per AltCode)
-    '(': [MOD_LSHIFT, 0x25], // Shift + 8
-    ')': [MOD_LSHIFT, 0x26], // Shift + 9
-    '=': [MOD_LSHIFT, 0x27], // Shift + 0
-    '?': [MOD_LSHIFT, 0x2D], // Shift + '
-    '^': [MOD_LSHIFT, 0x35], // Shift + ì
+    '(': [modLshift, 0x25], // Shift + 8
+    ')': [modLshift, 0x26], // Shift + 9
+    '=': [modLshift, 0x27], // Shift + 0
+    '?': [modLshift, 0x2D], // Shift + '
+    '^': [modLshift, 0x35], // Shift + ì
     // Whitespace
-    ' ': [MOD_NONE, 0x2C], '\n': [MOD_NONE, 0x28], '\t': [MOD_NONE, 0x2B],
+    ' ': [modNone, 0x2C], '\n': [modNone, 0x28], '\t': [modNone, 0x2B],
 
     // Punteggiatura
-    '.': [MOD_NONE, 0x37],
-    ',': [MOD_NONE, 0x36],
-    ':': [MOD_LSHIFT, 0x37],
-    ';': [MOD_LSHIFT, 0x36],
-    '-': [MOD_NONE, 0x38],
-    '_': [MOD_LSHIFT, 0x38],
-    '+': [MOD_NONE, 0x30],
-    '*': [MOD_LSHIFT, 0x30],
+    '.': [modNone, 0x37],
+    ',': [modNone, 0x36],
+    ':': [modLshift, 0x37],
+    ';': [modLshift, 0x36],
+    '-': [modNone, 0x38],
+    '_': [modLshift, 0x38],
+    '+': [modNone, 0x30],
+    '*': [modLshift, 0x30],
 
     // Lettere accentate italiane
-    '\u00E0': [MOD_NONE, 0x33], // à
-    '\u00E8': [MOD_NONE, 0x2F], // è
-    '\u00E9': [MOD_LSHIFT, 0x2F], // é (Shift+è)
-    '\u00EC': [MOD_NONE, 0x2E], // ì
-    '\u00F2': [MOD_NONE, 0x34], // ò
-    '\u00F9': [MOD_NONE, 0x31], // ù
+    '\u00E0': [modNone, 0x33], // à
+    '\u00E8': [modNone, 0x2F], // è
+    '\u00E9': [modLshift, 0x2F], // é (Shift+è)
+    '\u00EC': [modNone, 0x2E], // ì
+    '\u00F2': [modNone, 0x34], // ò
+    '\u00F9': [modNone, 0x31], // ù
     // Simboli AltGr (Layout IT Android)
     // Nota: Su Android, a volte l'RALT (AltGr) non attiva tutti i caratteri third-level standard di PC,
     // potrebbe essere necessario esplorare comandi supplementari se questi non funzionano.
-    '@': [MOD_RALT, 0x34], // AltGr + ò
-    '#': [MOD_RALT, 0x33], // AltGr + à
-    '[': [MOD_RALT, 0x2F], // AltGr + è
-    ']': [MOD_RALT, 0x30], // AltGr + +
+    '@': [modRalt, 0x34], // AltGr + ò
+    '#': [modRalt, 0x33], // AltGr + à
+    '[': [modRalt, 0x2F], // AltGr + è
+    ']': [modRalt, 0x30], // AltGr + +
     '{': [
-      MOD_LSHIFT | MOD_RALT,
+      modLshift | modRalt,
       0x2F,
     ], // AltGr + Shift + è = { (Su Android a volte è diverso, ma solitamente matcha il PC)
-    '}': [MOD_LSHIFT | MOD_RALT, 0x30], // AltGr + Shift + + = }
-    '|': [MOD_LSHIFT, 0x35], // Shift + \ = |
-    '\\': [MOD_NONE, 0x35], // Tasto \ (vicino a 1)
+    '}': [modLshift | modRalt, 0x30], // AltGr + Shift + + = }
+    '|': [modLshift, 0x35], // Shift + \ = |
+    '\\': [modNone, 0x35], // Tasto \ (vicino a 1)
     '<': [
-      MOD_NONE,
+      modNone,
       0x64,
     ], // Tasto < (se presente sulla tastiera virtuale/fisica)
-    '>': [MOD_LSHIFT, 0x64],
-    '~': [MOD_RALT, 0x0C], // AltGr + i (Fallback Windows/Android per tilde)
-    '`': [MOD_RALT, 0x2E], // AltGr + ' (Fallback per backtick)
+    '>': [modLshift, 0x64],
+    '~': [modRalt, 0x0C], // AltGr + i (Fallback Windows/Android per tilde)
+    '`': [modRalt, 0x2E], // AltGr + ' (Fallback per backtick)
+  };
+
+  // --- US International Layout Map ---
+  // Mappatura per target con layout US International.
+  // Identico a US QWERTY per gli scancode base.
+  static final Map<String, List<int>> _usIntlKeyMap = {
+    'a': [modNone, 0x04], 'b': [modNone, 0x05], 'c': [modNone, 0x06], 'd': [modNone, 0x07],
+    'e': [modNone, 0x08], 'f': [modNone, 0x09], 'g': [modNone, 0x0A], 'h': [modNone, 0x0B],
+    'i': [modNone, 0x0C], 'j': [modNone, 0x0D], 'k': [modNone, 0x0E], 'l': [modNone, 0x0F],
+    'm': [modNone, 0x10], 'n': [modNone, 0x11], 'o': [modNone, 0x12], 'p': [modNone, 0x13],
+    'q': [modNone, 0x14], 'r': [modNone, 0x15], 's': [modNone, 0x16], 't': [modNone, 0x17],
+    'u': [modNone, 0x18], 'v': [modNone, 0x19], 'w': [modNone, 0x1A], 'x': [modNone, 0x1B],
+    'y': [modNone, 0x1C], 'z': [modNone, 0x1D],
+    'A': [modLshift, 0x04], 'B': [modLshift, 0x05], 'C': [modLshift, 0x06], 'D': [modLshift, 0x07],
+    'E': [modLshift, 0x08], 'F': [modLshift, 0x09], 'G': [modLshift, 0x0A], 'H': [modLshift, 0x0B],
+    'I': [modLshift, 0x0C], 'J': [modLshift, 0x0D], 'K': [modLshift, 0x0E], 'L': [modLshift, 0x0F],
+    'M': [modLshift, 0x10], 'N': [modLshift, 0x11], 'O': [modLshift, 0x12], 'P': [modLshift, 0x13],
+    'Q': [modLshift, 0x14], 'R': [modLshift, 0x15], 'S': [modLshift, 0x16], 'T': [modLshift, 0x17],
+    'U': [modLshift, 0x18], 'V': [modLshift, 0x19], 'W': [modLshift, 0x1A], 'X': [modLshift, 0x1B],
+    'Y': [modLshift, 0x1C], 'Z': [modLshift, 0x1D],
+    '1': [modNone, 0x1E], '2': [modNone, 0x1F], '3': [modNone, 0x20], '4': [modNone, 0x21],
+    '5': [modNone, 0x22], '6': [modNone, 0x23], '7': [modNone, 0x24], '8': [modNone, 0x25],
+    '9': [modNone, 0x26], '0': [modNone, 0x27],
+    '!': [modLshift, 0x1E], '@': [modLshift, 0x1F], '#': [modLshift, 0x20], '\$': [modLshift, 0x21],
+    '%': [modLshift, 0x22], '^': [modLshift, 0x23], '&': [modLshift, 0x24], '*': [modLshift, 0x25],
+    '(': [modLshift, 0x26], ')': [modLshift, 0x27],
+    ' ': [modNone, 0x2C], '\n': [modNone, 0x28], '\t': [modNone, 0x2B],
+    '.': [modNone, 0x37], ',': [modNone, 0x36], ':': [modLshift, 0x33], ';': [modNone, 0x33],
+    '-': [modNone, 0x2D], '_': [modLshift, 0x2D], '=': [modNone, 0x2E], '+': [modLshift, 0x2E],
+    '[': [modNone, 0x2F], '{': [modLshift, 0x2F], ']': [modNone, 0x30], '}': [modLshift, 0x30],
+    '\\': [modNone, 0x31], '|': [modLshift, 0x31], '`': [modNone, 0x35], '~': [modLshift, 0x35],
+    '\'': [modNone, 0x34], '"': [modLshift, 0x34], '<': [modLshift, 0x36], '>': [modLshift, 0x37],
+    '/': [modNone, 0x38], '?': [modLshift, 0x38],
   };
 
   Map<String, List<int>> get _currentKeyMap {
@@ -387,6 +420,8 @@ class DuckyParserIt {
         return _androidItKeyMap; // target Android con tastiera italiana impostata
       case KeyboardLayout.pc:
         return _pcKeyMap; // target Windows/Mac con tastiera italiana
+      case KeyboardLayout.usInternational:
+        return _usIntlKeyMap;
     }
   }
 
@@ -504,34 +539,34 @@ class DuckyParserIt {
         break;
       case 'GUI':
       case 'WINDOWS':
-        await sendCombo(MOD_LGUI, argument);
+        await sendCombo(modLgui, argument);
         if (onProgressStep != null) onProgressStep(1.0);
         break;
       case 'CONTROL':
       case 'CTRL':
-        await sendCombo(MOD_LCTRL, argument);
+        await sendCombo(modLctrl, argument);
         if (onProgressStep != null) onProgressStep(1.0);
         break;
       case 'ALT':
-        await sendCombo(MOD_LALT, argument);
+        await sendCombo(modLalt, argument);
         if (onProgressStep != null) onProgressStep(1.0);
         break;
       case 'SHIFT':
-        await sendCombo(MOD_LSHIFT, argument);
+        await sendCombo(modLshift, argument);
         if (onProgressStep != null) onProgressStep(1.0);
         break;
       case 'ENTER':
-        await hidController.sendKey(MOD_NONE, 0x28);
+        await hidController.sendKey(modNone, 0x28);
         if (onProgressStep != null) onProgressStep(1.0);
         break;
       case 'TAB':
-        await hidController.sendKey(MOD_NONE, 0x2B);
+        await hidController.sendKey(modNone, 0x2B);
         if (onProgressStep != null) onProgressStep(1.0);
         break;
       default:
         // Try as a special key
         if (specialKeys.containsKey(command)) {
-          await hidController.sendKey(MOD_NONE, specialKeys[command]!);
+          await hidController.sendKey(modNone, specialKeys[command]!);
         } else if (argument.isEmpty && originalCommand.length == 1) {
           // Single key command — preserve original case!
           await typeString(originalCommand);

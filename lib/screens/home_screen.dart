@@ -86,17 +86,29 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ─── Header ───────────────────────────────────────────────────────────────
   Widget _buildHeader(AppState appState) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        const Text(
-          "PROXIMITY SHARK",
-          style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 3.0),
-        ).animate().fadeIn().slideX(begin: -0.2),
-        Text(
-          "HYPER-MOBILE HID INJECTION UNIT // v1.0.4 // HYBRID KEYBOARD PC/ANDROID",
-          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.cyanAccent.withValues(alpha: 0.7), letterSpacing: 1.5),
-        ).animate().fadeIn(delay: 200.ms).shimmer(duration: 2.seconds, color: Colors.cyanAccent.withValues(alpha: 0.2)),
+        Image.asset(
+          'assets/shark_logo.png',
+          width: 60,
+          height: 60,
+        ).animate().scale(delay: 100.ms, duration: 600.ms, curve: Curves.easeOutBack),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "PROXIMITY SHARK",
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 3.0),
+              ).animate().fadeIn().slideX(begin: -0.2),
+              Text(
+                "HYPER-MOBILE HID INJECTION UNIT // v1.0.4 // HYBRID KEYBOARD PC/ANDROID",
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.cyanAccent.withValues(alpha: 0.7), letterSpacing: 1.5),
+              ).animate().fadeIn(delay: 200.ms).shimmer(duration: 2.seconds, color: Colors.cyanAccent.withValues(alpha: 0.2)),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -565,13 +577,23 @@ class _HomeScreenState extends State<HomeScreen> {
               Icons.android_rounded,
               Colors.greenAccent,
             ),
+            const SizedBox(width: 8),
+            _buildLayoutOption(
+              "US INTL",
+              "Standard US\nInternational",
+              appState.activeLayout == KeyboardLayout.usInternational,
+              () => appState.updateKeyboardLayout(KeyboardLayout.usInternational),
+              null, // image replacement logic below
+              Colors.lightBlueAccent,
+              imageAsset: 'assets/shark_logo.png',
+            ),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildLayoutOption(String label, String subtitle, bool isSelected, VoidCallback onTap, IconData icon, Color accentColor) {
+  Widget _buildLayoutOption(String label, String subtitle, bool isSelected, VoidCallback onTap, IconData? icon, Color accentColor, {String? imageAsset}) {
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -593,7 +615,10 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: isSelected ? accentColor : Colors.white38, size: 18),
+              if (imageAsset != null)
+                Image.asset(imageAsset, width: 22, height: 22, color: isSelected ? accentColor : Colors.white38)
+              else if (icon != null)
+                Icon(icon, color: isSelected ? accentColor : Colors.white38, size: 18),
               const SizedBox(height: 5),
               Text(
                 label,
