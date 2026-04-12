@@ -571,8 +571,8 @@ class _HomeScreenState extends State<HomeScreen> {
               "Standard US\nInternational",
               appState.activeLayout == KeyboardLayout.usInternational,
               () => appState.updateKeyboardLayout(KeyboardLayout.usInternational),
-              null, // image replacement logic below
-              Colors.lightBlueAccent,
+              null,
+              Colors.deepPurpleAccent,
               imageAsset: 'assets/shark_logo.png',
             ),
           ],
