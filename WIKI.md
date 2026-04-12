@@ -1,109 +1,107 @@
-# 🦈 Proximity Shark – Wiki Ufficiale
+# 🦈 Proximity Shark – The Official Wiki 🌊
 
-Benvenuto nella Wiki Ufficiale di **Proximity Shark**. Abbiamo trasformato un normale smartphone (e il corrispondente smartwatch Wear OS) in un potentissimo vettore di attacco via Bluetooth (BadUSB tramite BLE HID). In questa wiki troverai tutte le informazioni per configurare l'ecosistema, scrivere i tuoi payload e scatenarli in silenzio.
+Benvenuto nell'abisso! Preparati a trasformare il tuo telefono (e il tuo inseparabile smartwatch) in uno strumento di pentesting Bluetooth che farebbe invidia a un agente segreto. 🕵️‍♂️🔥
 
----
-
-## 📑 Indice dei Contenuti
-
-1. [Panoramica e Obiettivi](#1-panoramica-e-obiettivi)
-2. [Installazione e Setup](#2-installazione-e-setup)
-3. [Componenti Core: Smartphone e Smartwatch](#3-componenti-core-smartphone-e-smartwatch)
-4. [Sintassi degli Script e Layout Tastiere](#4-sintassi-degli-script-e-layout-tastiere)
-5. [Guida alla Wear OS Companion App](#5-guida-alla-wear-os-companion-app)
-6. [Stealth Hub & Privacy](#6-stealth-hub--privacy)
-7. [F.A.Q. e Risoluzione dei Problemi](#7-faq-e-risoluzione-dei-problemi)
-8. [Disclaimer Legale](#8-disclaimer-legale)
+Con **Proximity Shark**, non serve nessun dongle USB o hardware costoso. Sfrutti i chip Bluetooth del tuo dispositivo per colpire in incognito, emulando una vera e propria tastiera fisica a distanza. Pronto ad azzannare? Sincronizza l'orologio. ⌚🦈
 
 ---
 
-## 1. Panoramica e Obiettivi
-**Proximity Shark** è specializzato nella trasmissione rapida, silenziosa e programmabile di macro e sequenze di tasti. Funziona emulando a livello hardware una tastiera Bluetooth (HID - Human Interface Device). 
+## 📑 Indice dell'Abisso
 
-**Punti di forza:**
-- Nessun dongle richiesto: sfrutta i chip Bluetooth nativi.
-- Estremamente furtivo: triggerabile da Watch.
-- Interprete nativo di **DuckyScript** ottimizzato al 100% per Layout specifici fisici o virtuali.
+1. [Benvenuto a Bordo! 🌊](#1-benvenuto-a-bordo-)
+2. [Equipaggiamento Rapido 🛠️](#2-equipaggiamento-rapido-)
+3. [I Tuoi Nuovi Superpoteri 🧠](#3-i-tuoi-nuovi-superpoteri-)
+4. [L'Arte dei Payload & Layout Magici ⌨️](#4-larte-dei-payload--layout-magici-)
+5. [Agente 007 al Polso: Guidare Wear OS 🎯](#5-agente-007-al-polso-guidare-wear-os-)
+6. [Modalità Fantasma: Lo Stealth Hub 👻](#6-modalit-fantasma-lo-stealth-hub-)
+7. [Pronto Soccorso (F.A.Q.) 🚑](#7-pronto-soccorso-faq-)
+8. [Il Patto di Sangue (Disclaimer) 📜](#8-il-patto-di-sangue-disclaimer-)
 
-## 2. Installazione e Setup
-1. **Scarica l'ultima release:** Naviga nella sezione [Releases](https://github.com/morterix01/Proximity-Shark/releases) e scarica `app-release.apk`.
-2. **Wear OS:** Scarica il rispettivo `.apk` della companion app per lo smartwatch direttamente da Github tramite ADB al device, oppure utilizzando app per il ridirezionamento dell'installazione.
-   - Esempio ADB: `adb -s <IP_WATCH:PORT> install Proximity-Shark-WearOS.apk`
-3. **Permessi iniziali:** Al primo avvio sul telefono, concedi tassativamente i permessi per il Bluetooth (`BLUETOOTH_CONNECT`, `BLUETOOTH_SCAN`, `BLUETOOTH_ADVERTISE`). In caso contrario, l'HID profile non si attiverà.
+---
 
-## 3. Componenti Core: Smartphone e Smartwatch
+## 1. Benvenuto a Bordo! 🌊
+Ti sei mai chiesto come sarebbe poter controllare PC, tablet, e perfino lavagne interattive LIM senza mai farti vedere? **Proximity Shark** è la risposta. Funziona trasmettendo script furtivi tramite una finta connessione tastiera (HID - Human Interface Device) via Bluetooth. Non lasci impronte fisiche. Non infili chiavette USB. 
 
-L'app per Smartphone funge da **Cervello Centrale**. Qui gestisci:
-- L'importazione di migliaia di script nelle directory (file `.txt` classici).
-- La gestione dei DuckyScript modificabili nell'editor integrato.
-- L'associazione al target Bluetooth (Desktop/Laptop o Dispositivi smart vulnerabili).
-- Le impostazioni del MAC Address e dell'identità broadcastata.
+**I tuoi vantaggi:**
+- **Zero Tracce Hardware:** Nessun dongle da comprare, usi solo quello che hai in tasca. 📱
+- **Il Controllo Assoluto sull'Orologio:** Fai partire l'attacco senza nemmeno sbloccare lo smartphone. Boom. 💥
+- **Intelligenza Multi-Layout:** Algoritmi folli in grado di ingannare tastiere virtuali Windows, Android o standard d'oltreoceano e inserire il payload alla perfezione!
 
-L'app per Smartwatch (Wear OS) funge da **Grilletto in Remoto**.
-- Mostra in tempo reale (e a 60 fps) tutta l'intera la libreria Script aggiornata salvata nel telefono.
-- Ti permette di innescare l'attacco senza mai guardare il telefono.
-- Ti dà un feedback immediato (✅ / ❌) sulla riuscita o il fallimento dell'iniezione dei payload.
+## 2. Equipaggiamento Rapido 🛠️
+Vuoi tuffarti subito? Ecco cosa fare:
+1. **Per lo Smartphone:** Vai fiondato nella sezione [Releases](https://github.com/morterix01/Proximity-Shark/releases) e scarica `app-release.apk`.
+2. **Per l'Orologio (Wear OS):** Procurati anche il file Companion. Lo installi sullo smartwatch tramite ADB via Wi-Fi o app di debug (es. `adb -s <IP_WATCH:PORT> install Proximity-Shark-WearOS.apk`). 
+3. **Dammi i Permessi!** Al primo avvio dovrai concedere tutti i permessi Bluetooth, Posizione e Notifiche. Sii generoso, o il tuo Squalo non avrà i denti per azzannare (si disattiverà il profilo della tastiera)! 🦈
 
-## 4. Sintassi degli Script e Layout Tastiere
+## 3. I Tuoi Nuovi Superpoteri 🧠
 
-### L'importanza del Layout
-I caratteri inviati via Bluetooth HID viaggiano come "coordinate fisiche" di una tastiera (Scancode), e **non** come semplici lettere. Se non imposti il giusto target, un comando come `/` si scriverà come `&` a seconda del computer della vittima.
+🖥️ **Lo Smartphone (Il Cervello):**
+Qui prepari il colpo.
+- Organizzi comodamente migliaia di script (anche dividendoli in pratiche cartelle). 📂
+- Assumi identità fittizie Bluetooth o tieni d'occhio lo stato ip all'interno dell'app. 🕵️‍♀️
 
-Proximity Shark ha 4 formidabili algoritmi di mapping:
-- **PC (IT)**: Ottimizzato per bersagli Windows localizzati in Italia. Usa la logica di Shift e AltGr standard europei.
-- **Android (IT)**: Altamente specifico. Utile per bersagli con Android Base, incluse **Lavagne Interattive e LIM (come i pannelli Helgi)** che alterano o ignorano alcuni "Alt Gr" tipici dei desktop.
-- **Standard (US)**: Ottimo per sistemi Linux e configurazioni hardware d'oltreoceano.
-- **US INTL**: Modifica internazionale per gli shortcut combinati.
+⌚ **Lo Smartwatch (Il Grilletto):**
+Il braccio armato del piano.
+- Sincronizza al volo, e magicamente senza ritardi (è compresso in *GZIP/Base64*!) le tua intera struttura di cartelle personalizzate.
+- Selezioni il layout, prendi la mira verso il PC associato, e ordini il via del Payload. 
+- Avrai sempre feedback istantaneo! Verde ✅ *Payload inserito*, Rosso ❌ *Qualcosa è andato storto*.
 
-### Struttura Generale DuckyScript
-Tutti gli script accettano i normali comandi standard:
+## 4. L'Arte dei Payload & Layout Magici ⌨️
+
+### Smetti di cliccare a vuoto: Il Tuo Target Conta! 🎯
+Sapevi che la lettera `@` in un computer americano viene scritta diversamente da uno italiano? Ecco perché Proximity Shark possiede un motore di trascrizione chirurgico:
+- 🍕 **PC (IT)**: L'asso nella manica in Italia. Gestisce magistralmente Shift e AltGr standard per qualsiasi PC Windows italiano che trovi di fronte.
+- 🤖 **Android (IT)**: Questa è vera magia. Supera firewall virtuali ignorando vecchi schemi AltGr di Android. Perfetto per hackerare le grosse **Lavagne Interattive e LIM (tipo Helgi)** a scuola o in ufficio!
+- 🦅 **Standard (US)**: Ottimo per sistemi Linux e configurazioni estere pulite.
+- 🌐 **US INTL**: Modifica internazionale avanzata. Perfetto come coltellino svizzero.
+
+### Parla Serio con DuckyScript 🦆
+Il linguaggio che parla lo Squalo:
 ```duckyscript
-REM Questo è un commento
+REM Questo comando non serve a nulla, è solo un commento! 😉
 DELAY 1000
 GUI r
 DELAY 300
 STRING notepad.exe
 ENTER
 DELAY 500
-STRING Sei stato colpito dal Proximity Shark!
+STRING Lo Squalo di prossimità ha colpito ancora! 🦈💦
 ENTER
 ```
 > [!TIP]
-> Sfrutta le tue cartelle sul telefono per categorizzare gli script in (es. `Windows`, `Linux`, `Pranks`, `Recon`).
+> 💡 Sii saggio: raggruppa i tuoi script testuali `.txt` sul telefono in mega-cartelle (es. `Mac_Payloads`, `Windows`, `Scherzi_Epici`). L'Orologio li sfoglierà comodamente uno per uno in tempo reale!
 
-## 5. Guida alla Wear OS Companion App
+## 5. Agente 007 al Polso: Guidare Wear OS 🎯
 
-### Come Usare lo Smartwatch
-1. Assicurati che il telefono e lo smartwatch siano nativamente connessi via Bluetooth nelle impostazioni di sistema e che Proximity Shark sia aperto sul telefono.
-2. Apri `Proximity Shark` sul Wear OS.
-   - **Pagina 1 (Sezione Scripts):** Vedrai "Sincronizzazione...", che dura pochi istanti; poi naviga nelle tue cartelle e tocca il payload desiderato.
-   - **Pagina 2 (Dispositivi Paired):** Puoi dire al telefono a quale dispositivo obbiettivo collegarsi con un tap sull'orologio.
-   - **Pagina 3 (Layouts):** Switch rapido e furtivo del layout a seconda del bersaglio.
+Niente panico, usare l'orologio è come giocare a tris:
+1. Collega normalmente il telefono al watch. Accendi l'app Proximity dal telefono, poi apri la companion sull'orologio.
+2. Scorri verticalmente e orizzontalmente in modo naturalissimo:
+   - 📁 **Centro Comandi:** Ti appare "Sincronizzazione..." per mezzo secondo (seleziona quindi cartelle e Payload).
+   - 📡 **Menu Destra/Sinistra:** Gestisci il tuo Target corrente con la spunta verde (quale dispositivo colpirai) e la tua modalità d'attacco preferita (il famigerato Layout IT/US).
 
 > [!IMPORTANT]
-> Proximity Shark Wear OS dispone di un'ottimizzazione estrema GZIP per la sincronizzazione simultanea di cartelle multiple. Puoi avere infinite cartelle al volo senza problemi di blocco o memory leak!
+> 🔥 La UI sull'orologio vola. Se l'hai scaricata ufficialmente (Modalità *Release R8*), viaggerà fluidissima a 60 FPS senza mai battere ciglio, indipendentemente dalla grandezza folle delle tue cartelle Script!
 
-## 6. Stealth Hub & Privacy
-Essendo uno strumento di Red Teaming avanzato:
-- Ricorda di controllare il log del monitoraggio della Rete o l'indirizzo IP locale mostrato nell'Hub per confermare tunnel VPN / hotspot anonimi.
-- Puoi cambiare al volo il nome Bluetooth fittizio (Broadcast Identity) (es. da "Proximity Shark" a "Logitech Keyboard" o "Apple Magic Mouse") affinché le vittime credano di associare una periferica innocua.
+## 6. Modalità Fantasma: Lo Stealth Hub 👻
+L'Hub è il tuo radar di sicurezza privato.
+Sei collegato a un hotspot losco? Verifica nel radar del tuo Stealth Hub l'IP di aggancio prima di lanciare payload compromettenti.
+Vuoi essere meno sospetto di una chiavetta "BadUSB" col nome in formato alieno? Trascina l'Identità Bluetooth in basso e cambia istantaneamente il tuo finto nome.
+Sei "Proximity Shark", ma per il PC del bersaglio puoi comodamente diventare la sua dolce *"Logitech MX Master"* in due tap. 🦇💻
 
-## 7. F.A.Q. e Risoluzione dei Problemi
+## 7. Pronto Soccorso (F.A.Q.) 🚑
 
-**D: Il target non trova l'applicazione Bluetooth!**
-*R: Spegni e riaccendi la modalità Discovery col pulsante apposito dall'app sul telefono per forzare l'Advertising dell'identità HID. Inoltre, verifica di aver accettato tutti i permessi nelle info dell'app.*
+**D: Ops! Il telefono / il pc della vittima non rileva la finta tastiera!**
+*R: Fiammata improvvisa! Spegni e riaccendi lo "Shark Control" in cima all'app, forzerà il target a vedere il tuo nuovo, finto "Identity" e ti paleserai nella sua lista Bluetooth.*
 
-**D: Lo smartwatch rimane perennemente fermo su "Sincronizzazione..."**
-*R: Significa che il layer DataClient di WearOS ha perso il bridge. Riapri l'applicazione sul telefono. Il telefono trasmette istantaneamente l'infrastruttura GZIP all'orologio ad ogni riapertura dell'app o aggiunta script.*
+**D: L'orologio lagga stranamente e scatta.**
+*R: Questo significa che hai compilato a mano l'app in modalità DEBUG! Torna da bravo programmatore ad Android Studio, esci dalla caverna e compila l'app Wear OS come build di "**Release**". Rivedrai i 60fps!*
 
-**D: Alcuni caratteri escono sbagliati (es. `?` o `_`)**
-*R: Stai colpendo il target con un Layout di decodifica errato. Usare l'ambiente `Android (IT)` è vitale se stai penetrando LIM Helgi fisiche o Android Target custom.*
+**D: Ho scritto un payload favoloso ma mi sputa accenti a vanvera (`&/?...`)!**
+*R: Non dare la colpa allo Squalo! Probabilmente il server/PC su cui stai digitando i Payload ha un'impostazione di sistema in Inglese (US), ma tu hai forzato nel polso Proximity Shark su Layout `PC (IT)`. Switcha il profilo all'ultimo secondo!*
 
-**D: La companion Wear OS va a scatti!**
-*R: Assicurati di non star testando su Android Studio l'eseguibile di Debug. Le animazioni Jetpack Compose Wear OS girano a 60 FPS unicamente dopo aver buildato in Rilasciato (Release con R8 Minifier attivo).*
-
-## 8. Disclaimer Legale
+## 8. Il Patto di Sangue (Disclaimer) 📜
 > [!CAUTION]
-> **ESCLUSIONE DI RESPONSABILITÀ (EDUCATIONAL ONLY)**
-> Questo strumento software, le routine del Parser e le istruzioni ad esso collegate sono fornite **solo ed esclusivamente per scopi di ricerca sulla sicurezza informatica (Red Teaming/Pentesting Etico)**.
-> Qualsiasi uso non autorizzato per colpire sistemi, reti o device di cui non si possiede l'autorizzazione scritta costituisce un **reato informatico severamente punibile dalla legge**. Sviluppatore e contributori declinano esplicitamente ogni tipo di responsabilità per danni derivanti dall'utilizzo improprio. Usalo a tuo rischio.
+> **IL VANGELO DELL'HACKER ETICO (SOLO SCOPI EDUCATIVI)**🚨
+> Noi adoriamo Proximity Shark, ma le cose in chiaro: questo strumento è una navicella progettata unicamente per la Ricerca, la Cybersecurity e i Red Team (Pentesting). 
+> Penetrare un computer a cui il proprietario NON ti ha esplicitamente dato il consenso è un **reato reale e ti sbatte nei guai seriamente**. Nessuno degli sviluppatori vi rimborserà, si assumerà la colpa o scriverà lettere per giustificarvi.
+> Fai l'Hacker, non il Criminale. Usa i tuoi superpoteri in maniera responsabile! 🤍🦈
