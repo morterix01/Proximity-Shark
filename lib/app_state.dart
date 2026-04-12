@@ -402,9 +402,15 @@ class AppState extends ChangeNotifier {
       final structure = _getFolderStructure(_rootDir!);
       final jsonStr = jsonEncode(structure);
       
+      // Compress to avoid Wear OS DataLayer 100KB limits on large structures
+      final compressedBytes = gzip.encode(utf8.encode(jsonStr));
+      final jsonBase64 = base64Encode(compressedBytes);
+      
       await _wearOsConnectivity.syncData(
         path: "/library",
-        data: {"library_json": jsonStr},
+        data: {
+          "library_json_b64": jsonBase64,
+        },
       );
       debugPrint("Library synced with Wear OS");
     } catch (e) {
