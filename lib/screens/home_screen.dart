@@ -94,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 3.0),
         ).animate().fadeIn().slideX(begin: -0.2),
         Text(
-          "HYPER-MOBILE HID INJECTION UNIT // v1.0.4 // HYBRID KEYBOARD PC/ANDROID",
+          "HYPER-MOBILE HID INJECTION UNIT // v1.0.5 // HYBRID KEYBOARD PC/ANDROID",
           style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.cyanAccent.withValues(alpha: 0.7), letterSpacing: 1.5),
         ).animate().fadeIn(delay: 200.ms).shimmer(duration: 2.seconds, color: Colors.cyanAccent.withValues(alpha: 0.2)),
       ],
