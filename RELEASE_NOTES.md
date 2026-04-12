@@ -1,6 +1,14 @@
-# 🦈 Note di Rilascio: Proximity Shark — "The Ecosystem Update"
+# 🦈 Note di Rilascio: Proximity Shark
 
-Il predatore si evolve. Proximity Shark non è più solo un'applicazione, ma un sistema di attacco coordinato e letale. 
+---
+
+## 🛠️ Pre-Release (Beta): Phone v1.0.7 & Wear OS v1.0.1
+*Aggiornamento di stabilità critico per il modulo Wear OS.*
+
+### 🚀 Bug Fixes & Ottimizzazioni
+- **Sincronizzazione Wear OS a 60 FPS**: Abilitato R8 Shrink (ProGuard) e state immutabili in Jetpack Compose, garantendo massime performance grafiche a 60fps abolendo i lag di sistema riscontrati nell'orologio.
+- **Supporto Massivo Script (GZIP Base64)**: Abbattimento dei limiti dell'API Wear OS (100KB); la struttura delle librerie inviata dall'app smartphone viene ora super-compressa offrendo scalabilità infinita per centinaia di script.
+- **Fix "Crash Subito" (Duplicate Key)**: Risolto un grave bug logico al parse del path delle directory (che in precedenza risultava vacante causando conflitti in UI) e portato il runtime del parse nel thread in background `Dispatchers.IO` eliminando errori causati dal freeze dell'Activity (ANR).Il predatore si evolve. Proximity Shark non è più solo un'applicazione, ma un sistema di attacco coordinato e letale. 
 
 ---
 
