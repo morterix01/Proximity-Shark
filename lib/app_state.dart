@@ -422,6 +422,7 @@ class AppState extends ChangeNotifier {
     final Map<String, dynamic> structure = {
       'name': dir.path.split(Platform.pathSeparator).last,
       'isDir': true,
+      'path': dir.path,
       'children': [],
     };
     if (structure['name'] == 'scripts') structure['name'] = 'Libreria';
