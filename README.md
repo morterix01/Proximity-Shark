@@ -14,7 +14,6 @@ Proximity Shark è un'app Android sviluppata con Flutter che emula una **tastier
 
 | | |
 |---|---|
-| 🔵 **Emulazione HID** | Il telefono viene riconosciuto come tastiera Bluetooth dal PC host |
 | 📝 **Parser DuckyScript** | Supporto per `STRING`, `DELAY`, `GUI`, `CTRL`, `ALT`, `SHIFT`, `ENTER`, `TAB` e combinazioni di tasti |
 | 🇮🇹 **Layout Italiano** | Parser ottimizzato per la tastiera italiana |
 | 📂 **Libreria Script** | Importa file o intere cartelle di payload, organizzali e lanciali con un tap |
