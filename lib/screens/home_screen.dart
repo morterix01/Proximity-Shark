@@ -573,7 +573,7 @@ class _HomeScreenState extends State<HomeScreen> {
               () => appState.updateKeyboardLayout(KeyboardLayout.usInternational),
               null,
               Colors.deepPurpleAccent,
-              imageAsset: 'assets/shark_logo.png',
+              imageAsset: 'assets/ui_shark_icon.png',
             ),
           ],
         ),
