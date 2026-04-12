@@ -86,29 +86,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ─── Header ───────────────────────────────────────────────────────────────
   Widget _buildHeader(AppState appState) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Image.asset(
-          'assets/shark_logo.png',
-          width: 60,
-          height: 60,
-        ).animate().scale(delay: 100.ms, duration: 600.ms, curve: Curves.easeOutBack),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "PROXIMITY SHARK",
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 3.0),
-              ).animate().fadeIn().slideX(begin: -0.2),
-              Text(
-                "HYPER-MOBILE HID INJECTION UNIT // v1.0.4 // HYBRID KEYBOARD PC/ANDROID",
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.cyanAccent.withValues(alpha: 0.7), letterSpacing: 1.5),
-              ).animate().fadeIn(delay: 200.ms).shimmer(duration: 2.seconds, color: Colors.cyanAccent.withValues(alpha: 0.2)),
-            ],
-          ),
-        ),
+        const Text(
+          "PROXIMITY SHARK",
+          style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 3.0),
+        ).animate().fadeIn().slideX(begin: -0.2),
+        Text(
+          "HYPER-MOBILE HID INJECTION UNIT // v1.0.4 // HYBRID KEYBOARD PC/ANDROID",
+          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.cyanAccent.withValues(alpha: 0.7), letterSpacing: 1.5),
+        ).animate().fadeIn(delay: 200.ms).shimmer(duration: 2.seconds, color: Colors.cyanAccent.withValues(alpha: 0.2)),
       ],
     );
   }
