@@ -49,6 +49,11 @@ class AppState extends ChangeNotifier {
   String? _activeIpAddress;
   DateTime? _connectionStartTime;
 
+  // Win11 connection stability helpers
+  Timer? _connectSafetyTimer;      // cancelable safety timer for stuck HID connections
+  DateTime? _lastDisconnectTime;   // track when we last disconnected for Win11 grace period
+  bool _checkConnectionDebounce = false; // suppress poll interference right after events
+
   KeyboardLayout _activeLayout = KeyboardLayout.pc;
 
   AppState() {
@@ -121,11 +126,17 @@ class AppState extends ChangeNotifier {
       if (event.containsKey('connection_state')) {
         final state = event['connection_state'] as String;
         if (state == 'connected') {
+          // Cancel any pending safety timer — connection succeeded
+          _connectSafetyTimer?.cancel();
+          _connectSafetyTimer = null;
           _connectionStatus = 1;
           _connectedAddress = event['address'] as String?;
           _connectingAddress = null;
           _isConnecting = false;
           _connectionStartTime = DateTime.now();
+          // Suppress _checkConnection poll for 2s to avoid event/poll race
+          _checkConnectionDebounce = true;
+          Future.delayed(const Duration(seconds: 2), () => _checkConnectionDebounce = false);
           // Save the last successfully connected device so auto-reconnect targets the right PC
           if (_connectedAddress != null) {
             SharedPreferences.getInstance().then((prefs) {
@@ -137,11 +148,18 @@ class AppState extends ChangeNotifier {
           notifyListeners();
           _syncAppStateWithWear();
         } else if (state == 'disconnected') {
+          // Cancel safety timer if we already got a native disconnect
+          _connectSafetyTimer?.cancel();
+          _connectSafetyTimer = null;
           _connectionStatus = 0;
           _connectedAddress = null;
           _connectingAddress = null;
           _isConnecting = false;
           _connectionStartTime = null;
+          _lastDisconnectTime = DateTime.now(); // Record for Win11 grace period
+          // Suppress poll for 2s after disconnect to avoid double-clear
+          _checkConnectionDebounce = true;
+          Future.delayed(const Duration(seconds: 2), () => _checkConnectionDebounce = false);
           notifyListeners();
           _syncAppStateWithWear();
         }
@@ -234,37 +252,49 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _startAutoReconnectLoop() async {
+    // Wait a bit after app init before first attempt —
+    // the HID proxy may still be binding on app start.
+    await Future.delayed(const Duration(seconds: 4));
+
     final prefs = await SharedPreferences.getInstance();
     final lastMac = prefs.getString('last_connected_mac');
     if (lastMac == null) return; // No auto-connect history
 
-    int retrySeconds = 5;
+    // Windows 11 needs at least 10s after a previous session before it will
+    // accept a new HID connection; shorter intervals lead to silent rejections.
+    int retrySeconds = 10;
+    int attempt = 0;
+
     while (_connectionStatus == 0) {
       if (_bondedDevices.isEmpty) break;
-      
+      if (_isScanning) {
+        // Pause auto-reconnect if user is doing a manual scan
+        await Future.delayed(const Duration(seconds: 3));
+        continue;
+      }
+
       ClassicDevice? target;
       try {
         target = _bondedDevices.firstWhere((d) => d.address == lastMac);
       } catch (e) {
-        // Target device not found in bonded list
+        // Target device not found in bonded list — stop trying
         break;
       }
-      
+
+      attempt++;
+      debugPrint("[Win11] Auto-reconnect attempt #$attempt to $lastMac (next wait: ${retrySeconds}s)");
       await connectToDevice(target);
-      
-      // Wait for the result or timeout
+
+      // Wait for connection to settle or timeout
       await Future.delayed(Duration(seconds: retrySeconds));
-      
+
       if (_connectionStatus == 1) {
-        debugPrint("Auto-reconnect successful!");
+        debugPrint("[Win11] Auto-reconnect successful on attempt #$attempt!");
         break;
       }
-      
-      // Exponential backoff: 5, 10, 20, 40, MAX 60
-      retrySeconds = (retrySeconds * 2).clamp(5, 60);
-      
-      // Safety: if user switched screen or started manual scan, maybe pause? 
-      // For now, keep it simple.
+
+      // Exponential backoff tuned for Win11: 10 → 20 → 40 → MAX 90s
+      retrySeconds = (retrySeconds * 2).clamp(10, 90);
     }
   }
 
@@ -304,11 +334,24 @@ class AppState extends ChangeNotifier {
 
   Future<void> connectToDevice(ClassicDevice device) async {
     if (_isConnecting && _connectingAddress == device.address) return; // Prevent double-tap
-    
+
+    // Cancel any pending safety timer before starting a new attempt
+    _connectSafetyTimer?.cancel();
+    _connectSafetyTimer = null;
+
     // Explicitly disconnect if already connected to something else
     if (_connectionStatus == 1 && _connectedAddress != device.address) {
       await disconnectDevice();
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 800));
+    }
+
+    // Windows 11 grace period: after a disconnect the HID stack on the PC
+    // needs ~800ms before accepting a new connection on the same profile slot.
+    if (_lastDisconnectTime != null) {
+      final msSinceDisconnect = DateTime.now().difference(_lastDisconnectTime!).inMilliseconds;
+      if (msSinceDisconnect < 800) {
+        await Future.delayed(Duration(milliseconds: 800 - msSinceDisconnect));
+      }
     }
 
     _isConnecting = true;
@@ -316,7 +359,7 @@ class AppState extends ChangeNotifier {
     notifyListeners();
     try {
       final success = await hidController.connectHid(device.address);
-      
+
       if (!success) {
         _isConnecting = false;
         _connectingAddress = null;
@@ -324,13 +367,19 @@ class AppState extends ChangeNotifier {
         return;
       }
 
-      // Safety timeout in case Android Bluetooth gets stuck
-      Future.delayed(const Duration(seconds: 15), () {
+      // Cancelable safety timeout: if Android BT gets stuck, clean up UI
+      // (but if we already got 'connected' event, the timer is cancelled there)
+      _connectSafetyTimer = Timer(const Duration(seconds: 20), () {
+        if (_isConnecting) {
           _isConnecting = false;
           _connectingAddress = null;
           notifyListeners();
+          debugPrint("[Win11] Safety timer fired — HID connection timed out after 20s");
+        }
       });
     } catch (e) {
+      _connectSafetyTimer?.cancel();
+      _connectSafetyTimer = null;
       _isConnecting = false;
       _connectingAddress = null;
       notifyListeners();
@@ -358,12 +407,15 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> disconnectDevice() async {
+    _connectSafetyTimer?.cancel();
+    _connectSafetyTimer = null;
     await hidController.disconnectHid();
     _connectedAddress = null;
     _connectionStatus = 0;
     _isConnecting = false;
     _connectingAddress = null;
     _connectionStartTime = null;
+    _lastDisconnectTime = DateTime.now();
     notifyListeners();
   }
 
@@ -634,15 +686,19 @@ class AppState extends ChangeNotifier {
     while (true) {
       // Only poll to detect unexpected disconnects (1→0).
       // Connection (0→1) is driven by EventChannel events from native.
-      if (!_isConnecting) {
+      // Debounce is true for 2s after any native event to avoid poll/event race.
+      if (!_isConnecting && !_checkConnectionDebounce) {
         final status = await hidController.getConnectionStatus();
         if (status != _connectionStatus) {
           _connectionStatus = status;
-          if (status == 0) _connectedAddress = null;
+          if (status == 0) {
+            _connectedAddress = null;
+            _lastDisconnectTime = DateTime.now();
+          }
           notifyListeners();
         }
       }
-      await Future.delayed(const Duration(seconds: 1));
+      await Future.delayed(const Duration(seconds: 2));
     }
   }
 
@@ -752,6 +808,7 @@ class AppState extends ChangeNotifier {
 
   @override
   void dispose() {
+    _connectSafetyTimer?.cancel();
     _deviceStreamSub?.cancel();
     super.dispose();
   }

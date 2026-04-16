@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -52,6 +53,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildHeader(appState),
                   const SizedBox(height: 32),
                   _buildStatusCard(appState),
+                  // Animated connecting banner
+                  _buildConnectingBanner(appState),
                   const SizedBox(height: 24),
                   _buildIdentityConfig(context, appState),
                   const SizedBox(height: 24),
@@ -94,14 +97,40 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 3.0),
         ).animate().fadeIn().slideX(begin: -0.2),
         Text(
-          "HYPER-MOBILE HID INJECTION UNIT // v1.0.6 // HYBRID KEYBOARD PC/ANDROID",
+          "HYPER-MOBILE HID INJECTION UNIT // v1.0.8 // HYBRID KEYBOARD PC/ANDROID",
           style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.cyanAccent.withValues(alpha: 0.7), letterSpacing: 1.5),
         ).animate().fadeIn(delay: 200.ms).shimmer(duration: 2.seconds, color: Colors.cyanAccent.withValues(alpha: 0.2)),
       ],
     );
   }
 
-  // ─── Status Card ──────────────────────────────────────────────────────────
+  // ─── Connecting Banner ───────────────────────────────────────────────────
+  Widget _buildConnectingBanner(AppState appState) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 400),
+      transitionBuilder: (child, animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, -0.4),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+            child: child,
+          ),
+        );
+      },
+      child: appState.isConnecting
+          ? Padding(
+              key: const ValueKey('connecting_banner'),
+              padding: const EdgeInsets.only(top: 12),
+              child: _ConnectingBannerContent(deviceName: appState.connectingAddress),
+            )
+          : const SizedBox.shrink(key: ValueKey('no_banner')),
+    );
+  }
+
+  // ─── Status Card ────────────────────────────────────────────────────────
   Widget _buildStatusCard(AppState appState) {
     final isConnected = appState.connectionStatus == 1;
     final color = isConnected ? Colors.greenAccent : Colors.redAccent;
@@ -629,6 +658,100 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ─── Connecting Banner Widget ────────────────────────────────────────────────
+class _ConnectingBannerContent extends StatefulWidget {
+  final String? deviceName;
+  const _ConnectingBannerContent({this.deviceName});
+
+  @override
+  State<_ConnectingBannerContent> createState() => _ConnectingBannerContentState();
+}
+
+class _ConnectingBannerContentState extends State<_ConnectingBannerContent>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _dotsController;
+  int _dotCount = 0;
+  static const _kAmberDim = Color(0xFFFFA000);
+  static const _kAmberBright = Color(0xFFFFD54F);
+
+  @override
+  void initState() {
+    super.initState();
+    _dotsController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    )..addListener(() {
+        final newDot = (_dotsController.value * 4).floor() % 4;
+        if (newDot != _dotCount) {
+          setState(() => _dotCount = newDot);
+        }
+      })
+      ..repeat();
+  }
+
+  @override
+  void dispose() {
+    _dotsController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dots = '.' * (_dotCount + 1);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        color: _kAmberDim.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _kAmberDim.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          // Pulsing icon
+          AnimatedBuilder(
+            animation: _dotsController,
+            builder: (context, _) {
+              final alpha = 0.4 + 0.6 * (math.sin(_dotsController.value * 2 * math.pi).abs());
+              return Icon(Icons.bluetooth_searching_rounded,
+                  color: _kAmberBright.withValues(alpha: alpha), size: 20);
+            },
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'CONNESSIONE IN CORSO',
+                  style: TextStyle(
+                      color: _kAmberBright,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.2),
+                ),
+                Text(
+                  widget.deviceName != null
+                      ? '${widget.deviceName}$dots'
+                      : 'Attendere$dots',
+                  style: const TextStyle(color: Colors.white38, fontSize: 9, height: 1.3),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: _kAmberBright.withValues(alpha: 0.8),
+            ),
+          ),
+        ],
       ),
     );
   }
