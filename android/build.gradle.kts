@@ -15,16 +15,17 @@ subprojects {
 }
 
 subprojects {
-    afterEvaluate {
-        if (project.extensions.findByName("android") != null) {
-            val android = project.extensions.getByName("android") as com.android.build.gradle.BaseExtension
-            if (android.namespace == null) {
-                // Genera un namespace basato sul nome del progetto se manca
-                val name = project.name.replace("-", "_").replace(".", "_")
-                android.namespace = "com.$name"
-            }
+    val fixNamespace = {
+        val android = extensions.findByName("android") as? com.android.build.gradle.BaseExtension
+        if (android != null && android.namespace == null) {
+            val name = project.name.replace("-", "_").replace(".", "_")
+            android.namespace = "com.$name"
         }
     }
+
+    pluginManager.withPlugin("com.android.application") { fixNamespace() }
+    pluginManager.withPlugin("com.android.library") { fixNamespace() }
+    pluginManager.withPlugin("com.android.dynamic-feature") { fixNamespace() }
 }
 
 tasks.register<Delete>("clean") {
