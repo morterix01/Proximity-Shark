@@ -11,21 +11,22 @@ subprojects {
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
 
-// Spostiamo qui la logica dei namespace PRIMA di ogni altra valutazione
+// Fix Namespace ultra-aggressivo per compatibilità AGP 8+
 subprojects {
-    project.plugins.whenPluginAdded {
-        if (this is com.android.build.gradle.api.AndroidBasePlugin) {
-            val android = project.extensions.getByName("android") as com.android.build.gradle.BaseExtension
-            if (android.namespace == null) {
-                val name = project.name.replace("-", "_").replace(".", "_")
-                android.namespace = "com.$name"
-            }
+    afterEvaluate {
+        val android = extensions.findByName("android") as? com.android.build.gradle.BaseExtension
+        if (android != null && android.namespace == null) {
+            android.namespace = "com." + project.name.replace("-", "_").replace(".", "_")
         }
     }
 }
 
+// Spostato in fondo per evitare conflitti di valutazione
 subprojects {
-    project.evaluationDependsOn(":app")
+    if (project.name != "app") {
+        // Rimuoviamo la dipendenza forzata che causava l'errore 'already evaluated'
+        // project.evaluationDependsOn(":app") 
+    }
 }
 
 tasks.register<Delete>("clean") {
