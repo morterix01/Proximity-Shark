@@ -15,14 +15,13 @@ subprojects {
 }
 
 subprojects {
-    pluginManager.withPlugin("com.android.library") {
-        val extension = extensions.findByName("android")
-        if (extension != null) {
-            val namespaceProperty = extension::class.members.find { it.name == "namespace" }
-            if (namespaceProperty != null && (extension as com.android.build.gradle.BaseExtension).namespace == null) {
-                if (project.name == "flutter_wear_os_connectivity") {
-                    (extension as com.android.build.gradle.BaseExtension).namespace = "com.flutter_wear_os_connectivity"
-                }
+    afterEvaluate {
+        if (project.extensions.findByName("android") != null) {
+            val android = project.extensions.getByName("android") as com.android.build.gradle.BaseExtension
+            if (android.namespace == null) {
+                // Genera un namespace basato sul nome del progetto se manca
+                val name = project.name.replace("-", "_").replace(".", "_")
+                android.namespace = "com.$name"
             }
         }
     }
