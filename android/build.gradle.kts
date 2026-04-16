@@ -10,22 +10,22 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
+
+// Spostiamo qui la logica dei namespace PRIMA di ogni altra valutazione
 subprojects {
-    project.evaluationDependsOn(":app")
+    project.plugins.whenPluginAdded {
+        if (this is com.android.build.gradle.api.AndroidBasePlugin) {
+            val android = project.extensions.getByName("android") as com.android.build.gradle.BaseExtension
+            if (android.namespace == null) {
+                val name = project.name.replace("-", "_").replace(".", "_")
+                android.namespace = "com.$name"
+            }
+        }
+    }
 }
 
 subprojects {
-    val fixNamespace = {
-        val android = extensions.findByName("android") as? com.android.build.gradle.BaseExtension
-        if (android != null && android.namespace == null) {
-            val name = project.name.replace("-", "_").replace(".", "_")
-            android.namespace = "com.$name"
-        }
-    }
-
-    pluginManager.withPlugin("com.android.application") { fixNamespace() }
-    pluginManager.withPlugin("com.android.library") { fixNamespace() }
-    pluginManager.withPlugin("com.android.dynamic-feature") { fixNamespace() }
+    project.evaluationDependsOn(":app")
 }
 
 tasks.register<Delete>("clean") {
