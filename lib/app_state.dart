@@ -23,6 +23,10 @@ class AppState extends ChangeNotifier {
   late final DuckyParserIt parser;
   StreamSubscription? _deviceStreamSub;
   final FlutterWearOsConnectivity _wearOsConnectivity = FlutterWearOsConnectivity();
+  
+  // Stream per notificare la UI degli eventi di navigazione da Wear OS (es. ghiera)
+  final StreamController<String> _navStreamController = StreamController<String>.broadcast();
+  Stream<String> get navStream => _navStreamController.stream;
 
   String _script = "GUI r\nDELAY 500\nSTRING notepad.exe\nENTER\nDELAY 1000\nSTRING Ciao da Proximity Shark!\nENTER";
   bool _isExecuting = false;
@@ -50,9 +54,11 @@ class AppState extends ChangeNotifier {
   DateTime? _connectionStartTime;
 
   // Win11 connection stability helpers
-  Timer? _connectSafetyTimer;      // cancelable safety timer for stuck HID connections
-  DateTime? _lastDisconnectTime;   // track when we last disconnected for Win11 grace period
+  Timer? _connectSafetyTimer;       // cancelable safety timer for stuck HID connections
+  DateTime? _lastDisconnectTime;    // track when we last disconnected for Win11 grace period
   bool _checkConnectionDebounce = false; // suppress poll interference right after events
+  bool _autoReconnectActive = false;// prevent multiple reconnect loops running in parallel
+  int _consecutiveFailures = 0;     // track failures to scale grace period dynamically
 
   KeyboardLayout _activeLayout = KeyboardLayout.pc;
 
@@ -99,13 +105,11 @@ class AppState extends ChangeNotifier {
     // Give HID Profile some time to bind if it failed initially
     // (Native side tries once on proxy connection, we retry once here)
     Future.delayed(const Duration(seconds: 2), () {
-      hidController.initHidProfile(_bleName); // This also triggers a refresh in some cases
+      hidController.initHidProfile(_bleName);
     });
 
-    // Try to reconnect to the most recent device if available with backoff
-    if (_bondedDevices.isNotEmpty) {
-      _startAutoReconnectLoop();
-    }
+    // Start the persistent auto-reconnect engine
+    _ensureAutoReconnectRunning();
   }
 
   Future<void> _requestInitialPermissions() async {
@@ -157,11 +161,14 @@ class AppState extends ChangeNotifier {
           _isConnecting = false;
           _connectionStartTime = null;
           _lastDisconnectTime = DateTime.now(); // Record for Win11 grace period
-          // Suppress poll for 2s after disconnect to avoid double-clear
+          _consecutiveFailures = 0; // reset on clean disconnect
+          // Suppress poll for 3s after disconnect to avoid double-clear
           _checkConnectionDebounce = true;
-          Future.delayed(const Duration(seconds: 2), () => _checkConnectionDebounce = false);
+          Future.delayed(const Duration(seconds: 3), () => _checkConnectionDebounce = false);
           notifyListeners();
           _syncAppStateWithWear();
+          // Re-trigger the reconnect loop if it's not already running
+          _ensureAutoReconnectRunning();
         }
         return;
       }
@@ -251,51 +258,99 @@ class AppState extends ChangeNotifier {
     _syncAppStateWithWear();
   }
 
+  // ─── Auto-Reconnect Engine ───────────────────────────────────────────────
+  // Ensures only one reconnect loop is ever running at a time.
+  void _ensureAutoReconnectRunning() {
+    if (_autoReconnectActive) return;
+    _autoReconnectActive = true;
+    _startAutoReconnectLoop();
+  }
+
   Future<void> _startAutoReconnectLoop() async {
-    // Wait a bit after app init before first attempt —
-    // the HID proxy may still be binding on app start.
+    // Brief initial pause to let the HID proxy and Android BT stack settle.
     await Future.delayed(const Duration(seconds: 4));
 
     final prefs = await SharedPreferences.getInstance();
     final lastMac = prefs.getString('last_connected_mac');
-    if (lastMac == null) return; // No auto-connect history
 
-    // Windows 11 needs at least 10s after a previous session before it will
-    // accept a new HID connection; shorter intervals lead to silent rejections.
-    int retrySeconds = 10;
+    if (lastMac == null) {
+      _autoReconnectActive = false;
+      return; // No connection history — nothing to reconnect to
+    }
+
+    // Win11 base grace period between attempts.
+    // Never go below 12s or Win11 silently rejects the HID profile.
+    int retrySeconds = 12;
     int attempt = 0;
 
     while (_connectionStatus == 0) {
       if (_bondedDevices.isEmpty) break;
+
+      // Don't try while a manual scan is in progress
       if (_isScanning) {
-        // Pause auto-reconnect if user is doing a manual scan
         await Future.delayed(const Duration(seconds: 3));
+        continue;
+      }
+
+      // Don't double-start if something else is already connecting
+      if (_isConnecting) {
+        await Future.delayed(const Duration(seconds: 5));
         continue;
       }
 
       ClassicDevice? target;
       try {
         target = _bondedDevices.firstWhere((d) => d.address == lastMac);
-      } catch (e) {
-        // Target device not found in bonded list — stop trying
+      } catch (_) {
+        // Target no longer in bonded list — abort
         break;
       }
 
       attempt++;
-      debugPrint("[Win11] Auto-reconnect attempt #$attempt to $lastMac (next wait: ${retrySeconds}s)");
+      debugPrint("[Win11] Reconnect attempt #$attempt to $lastMac (wait: ${retrySeconds}s)");
+
+      // Re-initialize the HID profile before every attempt.
+      // Win11 often requires a fresh profile registration after a drop.
+      await hidController.initHidProfile(_bleName);
+      await Future.delayed(const Duration(milliseconds: 800));
+
       await connectToDevice(target);
 
-      // Wait for connection to settle or timeout
+      // Wait for the connection to settle
       await Future.delayed(Duration(seconds: retrySeconds));
 
       if (_connectionStatus == 1) {
-        debugPrint("[Win11] Auto-reconnect successful on attempt #$attempt!");
-        break;
+        debugPrint("[Win11] Reconnect successful on attempt #$attempt!");
+        _consecutiveFailures = 0;
+        // Don't exit the loop — keep it ready to re-trigger on next disconnect.
+        // The while condition (_connectionStatus == 0) will block here until next drop.
+        // We wait in a tight loop until we drop again.
+        while (_connectionStatus == 1) {
+          await Future.delayed(const Duration(seconds: 5));
+        }
+        // We just dropped — reset backoff and immediately loop again
+        retrySeconds = 12;
+        attempt = 0;
+        continue;
       }
 
-      // Exponential backoff tuned for Win11: 10 → 20 → 40 → MAX 90s
-      retrySeconds = (retrySeconds * 2).clamp(10, 90);
+      // Connection failed — increase failure counter and backoff with jitter
+      _consecutiveFailures++;
+
+      // After 3+ consecutive failures, re-register HID identity completely
+      if (_consecutiveFailures >= 3) {
+        debugPrint("[Win11] ${ _consecutiveFailures} failures — forcing HID identity reset");
+        await resetHidIdentity();
+        await Future.delayed(const Duration(seconds: 3));
+      }
+
+      // Exponential backoff: 12 → 20 → 35 → 60 → MAX 90s
+      // Add random jitter (0-5s) to avoid thundering-herd on rapid app restarts
+      final jitter = (DateTime.now().millisecond % 5000);
+      retrySeconds = ((retrySeconds * 1.7).round() + (jitter ~/ 1000)).clamp(12, 90);
     }
+
+    _autoReconnectActive = false;
   }
 
   Future<void> updateBleName(String newName) async {
@@ -342,15 +397,17 @@ class AppState extends ChangeNotifier {
     // Explicitly disconnect if already connected to something else
     if (_connectionStatus == 1 && _connectedAddress != device.address) {
       await disconnectDevice();
-      await Future.delayed(const Duration(milliseconds: 800));
+      await Future.delayed(const Duration(milliseconds: 1500));
     }
 
-    // Windows 11 grace period: after a disconnect the HID stack on the PC
-    // needs ~800ms before accepting a new connection on the same profile slot.
+    // Windows 11 grace period: the HID stack needs time after a disconnect
+    // before it will accept a new connection on the same profile slot.
+    // Base: 1500ms. Scaled up by consecutive failures (max 4s).
     if (_lastDisconnectTime != null) {
+      final graceMs = (1500 + (_consecutiveFailures * 500)).clamp(1500, 4000);
       final msSinceDisconnect = DateTime.now().difference(_lastDisconnectTime!).inMilliseconds;
-      if (msSinceDisconnect < 800) {
-        await Future.delayed(Duration(milliseconds: 800 - msSinceDisconnect));
+      if (msSinceDisconnect < graceMs) {
+        await Future.delayed(Duration(milliseconds: graceMs - msSinceDisconnect));
       }
     }
 
@@ -361,6 +418,7 @@ class AppState extends ChangeNotifier {
       final success = await hidController.connectHid(device.address);
 
       if (!success) {
+        _consecutiveFailures++;
         _isConnecting = false;
         _connectingAddress = null;
         notifyListeners();
@@ -368,18 +426,20 @@ class AppState extends ChangeNotifier {
       }
 
       // Cancelable safety timeout: if Android BT gets stuck, clean up UI
-      // (but if we already got 'connected' event, the timer is cancelled there)
-      _connectSafetyTimer = Timer(const Duration(seconds: 20), () {
+      // Win11 connections can take up to 15s legitimately; 25s is safe upper bound
+      _connectSafetyTimer = Timer(const Duration(seconds: 25), () {
         if (_isConnecting) {
           _isConnecting = false;
           _connectingAddress = null;
+          _consecutiveFailures++;
           notifyListeners();
-          debugPrint("[Win11] Safety timer fired — HID connection timed out after 20s");
+          debugPrint("[Win11] Safety timer fired — HID connection timed out after 25s");
         }
       });
     } catch (e) {
       _connectSafetyTimer?.cancel();
       _connectSafetyTimer = null;
+      _consecutiveFailures++;
       _isConnecting = false;
       _connectingAddress = null;
       notifyListeners();
@@ -681,24 +741,30 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // --- HID Control ---
+  // --- HID Connection Poll ---
   void _checkConnection() async {
     while (true) {
       // Only poll to detect unexpected disconnects (1→0).
       // Connection (0→1) is driven by EventChannel events from native.
-      // Debounce is true for 2s after any native event to avoid poll/event race.
+      // Debounce suppresses interference right after a native event.
       if (!_isConnecting && !_checkConnectionDebounce) {
         final status = await hidController.getConnectionStatus();
         if (status != _connectionStatus) {
           _connectionStatus = status;
           if (status == 0) {
             _connectedAddress = null;
+            _connectionStartTime = null;
             _lastDisconnectTime = DateTime.now();
+            notifyListeners();
+            _syncAppStateWithWear();
+            // Poll detected a drop — ensure the reconnect engine is running
+            _ensureAutoReconnectRunning();
+          } else {
+            notifyListeners();
           }
-          notifyListeners();
         }
       }
-      await Future.delayed(const Duration(seconds: 2));
+      await Future.delayed(const Duration(seconds: 3));
     }
   }
 
@@ -728,6 +794,15 @@ class AppState extends ChangeNotifier {
         } catch (e) {
           debugPrint("Failed to update layout from watch: $layoutName not found.");
         }
+      } else if (message.path == "/panic") {
+        // Wear OS panic button: send Ctrl+Alt+B (modifier 0x05 = LEFT_CTRL|LEFT_ALT, keycode 0x05 = 'b')
+        if (_connectionStatus == 1) {
+          hidController.sendKey(0x05, 0x05);
+        }
+      } else if (message.path == "/nav") {
+        // Messaggi di navigazione (es. dalla ghiera)
+        final String direction = utf8.decode(message.data);
+        _navStreamController.add(direction);
       }
     });
   }
@@ -806,10 +881,24 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  Future<void> runQuickScript(String customScript) async {
+    // Esegue uno script senza modificare _script e senza inviare progressi a Wear OS
+    try {
+      await parser.executeScript(
+        customScript,
+        layout: _activeLayout,
+      );
+    } catch (e) {
+      debugPrint("Quick Execution error: $e");
+      rethrow;
+    }
+  }
+
   @override
   void dispose() {
     _connectSafetyTimer?.cancel();
     _deviceStreamSub?.cancel();
+    _navStreamController.close();
     super.dispose();
   }
 }
