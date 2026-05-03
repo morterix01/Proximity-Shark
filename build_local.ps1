@@ -56,6 +56,26 @@ Write-Host "📦 Installazione dipendenze..." -ForegroundColor Yellow
 flutter pub get
 if ($LASTEXITCODE -ne 0) { Write-Host "❌ flutter pub get fallito" -ForegroundColor Red; exit 1 }
 
+# ── Patch flutter_wear_os_connectivity per AGP 8.0 ─────────────────────────────
+Write-Host "🔧 Applicazione patch namespace per flutter_wear_os_connectivity..." -ForegroundColor Yellow
+# Path can be in PUB_CACHE environment variable or LocalAppData
+$pubCache = if ($env:PUB_CACHE) { $env:PUB_CACHE } else { "$env:LOCALAPPDATA\Pub\Cache" }
+$pluginDir = "$pubCache\hosted\pub.dev\flutter_wear_os_connectivity-1.0.0\android\src\main"
+$manifestPath = "$pluginDir\AndroidManifest.xml"
+
+if (Test-Path $manifestPath) {
+    $content = Get-Content $manifestPath -Raw
+    if ($content -match 'package="com\.sstonn\.flutter_wear_os_connectivity"') {
+        $content = $content -replace 'package="com\.sstonn\.flutter_wear_os_connectivity"', ''
+        Set-Content -Path $manifestPath -Value $content
+        Write-Host "✅ Patch applicata con successo." -ForegroundColor Green
+    } else {
+        Write-Host "ℹ️ Patch già applicata o attributo package non trovato." -ForegroundColor DarkGray
+    }
+} else {
+    Write-Host "⚠️ Impossibile trovare AndroidManifest.xml del plugin per la patch." -ForegroundColor Yellow
+}
+
 # ── Build Android APK (arm64) ──────────────────────────────────────────────────
 Write-Host ""
 Write-Host "🔨 Build Android APK (arm64)..." -ForegroundColor Yellow

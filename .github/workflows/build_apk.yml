@@ -31,6 +31,14 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Patch flutter_wear_os_connectivity for AGP 8.0
+        run: |
+          PLUGIN_DIR="$HOME/.pub-cache/hosted/pub.dev/flutter_wear_os_connectivity-1.0.0/android/src/main"
+          if [ -f "$PLUGIN_DIR/AndroidManifest.xml" ]; then
+            sed -i 's/package="com.sstonn.flutter_wear_os_connectivity"//g' "$PLUGIN_DIR/AndroidManifest.xml"
+            echo "Patched flutter_wear_os_connectivity AndroidManifest.xml"
+          fi
+
       - name: Build Android APK (arm64 release)
         run: |
           flutter build apk \
