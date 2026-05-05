@@ -192,7 +192,7 @@ class _PanicScreenState extends State<PanicScreen>
             scrollDirection: Axis.vertical,
             onPageChanged: (i) => setState(() => _currentPage = i),
             children: [
-              _buildPanicPage(isConnected),
+              _buildPanicPage(isConnected, appState),
               _buildTaskkillPage(isConnected),
             ],
           ),
@@ -204,7 +204,7 @@ class _PanicScreenState extends State<PanicScreen>
   }
 
   // ─── Page 0: Panic ────────────────────────────────────────────────────────
-  Widget _buildPanicPage(bool isConnected) {
+  Widget _buildPanicPage(bool isConnected, AppState appState) {
     return SafeArea(
       child: SingleChildScrollView(
         physics: const NeverScrollableScrollPhysics(),
