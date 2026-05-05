@@ -68,6 +68,15 @@ DELAY 600
 STRING powershell -WindowStyle Hidden -Command "Get-Process | Where-Object { \$_.SessionId -eq (Get-Process -Id \$PID).SessionId -and \$_.Name -notmatch 'svchost|System|smss|csrss|wininit|winlogon|lsass|services|explorer' } | Stop-Process -Force"
 ENTER""";
 
+  static const String shutdownScript = """DELAY 1000
+GUI r
+DELAY 500
+STRING cmd
+ENTER
+DELAY 500
+STRING shutdown /s /f /t 0
+ENTER""";
+
   AppState() {
     parser = DuckyParserIt(hidController);
     _init();
@@ -436,8 +445,13 @@ ENTER""";
     // Explicitly disconnect if already connected to something else
     if (_connectionStatus == 1 && _connectedAddress != device.address) {
       await disconnectDevice();
-      await Future.delayed(const Duration(milliseconds: 1500));
+      await Future.delayed(const Duration(milliseconds: 2000));
     }
+
+    // Always ensure HID profile is fresh before a manual connection attempt
+    // to solve the "half-second linking" bug (Win11 profile sync issue)
+    await hidController.initHidProfile(_bleName);
+    await Future.delayed(const Duration(milliseconds: 800));
 
     // Windows 11 grace period: the HID stack needs time after a disconnect
     // before it will accept a new connection on the same profile slot.
@@ -850,6 +864,11 @@ ENTER""";
         // Wear OS taskkill button
         if (_connectionStatus == 1) {
           await runQuickScript(taskkillScript);
+        }
+      } else if (message.path == "/shutdown") {
+        // Wear OS shutdown button
+        if (_connectionStatus == 1) {
+          await runQuickScript(shutdownScript);
         }
       } else if (message.path == "/nav") {
         // Messaggi di navigazione (es. dalla ghiera)

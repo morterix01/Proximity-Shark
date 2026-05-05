@@ -24,6 +24,8 @@ class _PanicScreenState extends State<PanicScreen>
   bool _isFiring = false;
   bool _isKillPressing = false;
   bool _isKillingFiring = false;
+  bool _isShutdownPressing = false;
+  bool _isShutdownFiring = false;
   Timer? _uiRefreshTimer;
 
   String _statusMessage = "SISTEMA PRONTO";
@@ -31,6 +33,9 @@ class _PanicScreenState extends State<PanicScreen>
 
   String _killStatusMessage = "PRONTO";
   Color _killStatusColor = Colors.deepOrangeAccent;
+
+  String _shutdownStatusMessage = "PRONTO";
+  Color _shutdownStatusColor = Colors.redAccent;
 
   int _currentPage = 0;
 
@@ -43,7 +48,8 @@ class _PanicScreenState extends State<PanicScreen>
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
+    // Infinite loop trick: start at a large index that is a multiple of 3
+    _pageController = PageController(initialPage: 3000);
 
     _pulseController = AnimationController(
       vsync: this,
@@ -187,14 +193,16 @@ class _PanicScreenState extends State<PanicScreen>
           // Radar background always visible
           _buildRadarBackground(),
           // PageView fills the body
-          PageView(
+          PageView.builder(
             controller: _pageController,
             scrollDirection: Axis.vertical,
-            onPageChanged: (i) => setState(() => _currentPage = i),
-            children: [
-              _buildPanicPage(isConnected, appState),
-              _buildTaskkillPage(isConnected),
-            ],
+            onPageChanged: (i) => setState(() => _currentPage = i % 3),
+            itemBuilder: (context, index) {
+              final page = index % 3;
+              if (page == 0) return _buildPanicPage(isConnected, appState);
+              if (page == 1) return _buildTaskkillPage(isConnected);
+              return _buildShutdownPage(isConnected);
+            },
           ),
           // Page indicator on the right edge
           _buildPageIndicator(),
@@ -263,13 +271,46 @@ class _PanicScreenState extends State<PanicScreen>
               loading: _isKillingFiring,
             ),
             const SizedBox(height: 16),
-            _buildKillInfoCard(),
+            _buildSwipeHint(down: true, label: "SLIDE GIÙ → SHUTDOWN"),
           ],
         ),
       ),
     );
   }
 
+  // ─── Page 2: Shutdown ─────────────────────────────────────────────────────
+  Widget _buildShutdownPage(bool isConnected) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            _buildSwipeHint(down: false, label: "SLIDE SU → TASKKILL"),
+            const SizedBox(height: 16),
+            _buildHeader(isConnected,
+              title: "SHUTDOWN",
+              subtitle: "SPEGNIMENTO IMMEDIATO DEL TARGET  //  CMD FORCED",
+              subtitleColor: Colors.redAccent,
+            ),
+            const SizedBox(height: 28),
+            _buildShutdownButton(),
+            const SizedBox(height: 24),
+            _buildStatusCard(
+              icon: _isShutdownFiring ? Icons.power_settings_new_rounded : Icons.power_off_rounded,
+              label: "STATO SHUTDOWN",
+              message: _shutdownStatusMessage,
+              color: _shutdownStatusColor,
+              loading: _isShutdownFiring,
+            ),
+            const SizedBox(height: 16),
+            _buildSwipeHint(down: true, label: "SLIDE GIÙ → PANIC"),
+          ],
+        ),
+      ),
+    );
+  }
   // ─── Shared Header ────────────────────────────────────────────────────────
   Widget _buildHeader(bool isConnected, {
     required String title,
@@ -358,7 +399,7 @@ class _PanicScreenState extends State<PanicScreen>
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: List.generate(2, (i) {
+          children: List.generate(3, (i) {
             final isActive = i == _currentPage;
             return GestureDetector(
               onTap: () => _pageController.animateToPage(
@@ -374,10 +415,10 @@ class _PanicScreenState extends State<PanicScreen>
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(4),
                   color: isActive
-                      ? (i == 0 ? const Color(0xFFFF3B3B) : Colors.deepOrangeAccent)
+                      ? (i == 0 ? const Color(0xFFFF3B3B) : (i == 1 ? Colors.deepOrangeAccent : Colors.redAccent))
                       : Colors.white24,
                   boxShadow: isActive ? [BoxShadow(
-                    color: (i == 0 ? const Color(0xFFFF3B3B) : Colors.deepOrangeAccent)
+                    color: (i == 0 ? const Color(0xFFFF3B3B) : (i == 1 ? Colors.deepOrangeAccent : Colors.redAccent))
                         .withValues(alpha: 0.5),
                     blurRadius: 8,
                   )] : null,
@@ -544,6 +585,90 @@ class _PanicScreenState extends State<PanicScreen>
                           "KILL ALL PROCESSES",
                           style: TextStyle(
                             color: (_isKillingFiring ? Colors.amberAccent : Colors.deepOrangeAccent)
+                                .withValues(alpha: 0.8),
+                            fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    ).animate().fadeIn(delay: 200.ms).scale(begin: const Offset(0.8, 0.8));
+  }
+
+  // ─── Shutdown Circle Button ───────────────────────────────────────────────
+  Widget _buildShutdownButton() {
+    return Center(
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _isShutdownPressing = true),
+        onTapUp: (_) { setState(() => _isShutdownPressing = false); _triggerShutdown(); },
+        onTapCancel: () => setState(() => _isShutdownPressing = false),
+        child: AnimatedBuilder(
+          animation: _pulseController, // Reuse pulse controller
+          builder: (context, _) {
+            final glow = _isShutdownFiring ? 0.0 : _pulseController.value;
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 200 + 30,
+                  height: 200 + 30,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.redAccent.withValues(alpha: 0.05 * glow),
+                  ),
+                ),
+                AnimatedScale(
+                  scale: _isShutdownPressing ? 0.92 : 1.0,
+                  duration: const Duration(milliseconds: 100),
+                  child: Container(
+                    width: 200, height: 200,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: _isShutdownFiring
+                          ? [Colors.amberAccent.withValues(alpha: 0.25), Colors.transparent]
+                          : [Colors.redAccent.withValues(alpha: 0.20), Colors.transparent],
+                      ),
+                      border: Border.all(
+                        color: _isShutdownFiring
+                          ? Colors.amberAccent.withValues(alpha: 0.6)
+                          : Colors.redAccent.withValues(alpha: 0.5),
+                        width: 2,
+                      ),
+                      boxShadow: [BoxShadow(
+                        color: (_isShutdownFiring ? Colors.amberAccent : Colors.redAccent)
+                            .withValues(alpha: 0.3 + glow * 0.2),
+                        blurRadius: 40, spreadRadius: 5,
+                      )],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          _isShutdownFiring ? Icons.power_settings_new_rounded : Icons.power_off_rounded,
+                          color: _isShutdownFiring ? Colors.amberAccent : Colors.redAccent,
+                          size: 46,
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          _isShutdownFiring ? "INVIO..." : "SHUTDOWN",
+                          style: TextStyle(
+                            color: _isShutdownFiring ? Colors.amberAccent : Colors.white,
+                            fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 2.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "FORCE POWER OFF",
+                          style: TextStyle(
+                            color: (_isShutdownFiring ? Colors.amberAccent : Colors.redAccent)
                                 .withValues(alpha: 0.8),
                             fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1.5,
                           ),
