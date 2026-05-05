@@ -189,7 +189,11 @@ ENTER""";
       final name = event['name'] as String? ?? 'Unknown';
       final address = event['address'] as String? ?? '';
       final rssi = int.tryParse(event['rssi']?.toString() ?? '0') ?? 0;
-      if (address.isNotEmpty && !_classicDevices.any((d) => d.address == address)) {
+      if (address.isNotEmpty && 
+          !_classicDevices.any((d) => d.address == address) &&
+          name != 'Unknown' && 
+          name.isNotEmpty && 
+          name.toLowerCase() != 'unknown device') {
         _classicDevices.add(ClassicDevice(name: name, address: address, rssi: rssi));
         notifyListeners();
       }
@@ -282,11 +286,13 @@ ENTER""";
 
   Future<void> fetchBondedDevices() async {
     final bonded = await hidController.getBondedDevices();
-    _bondedDevices = bonded.map((d) => ClassicDevice(
-      name: d['name'] ?? 'Unknown',
-      address: d['address'] ?? '',
-      rssi: 0,
-    )).toList();
+    _bondedDevices = bonded
+      .where((d) => d['name'] != null && d['name'].toString().isNotEmpty && d['name'].toString().toLowerCase() != 'unknown device' && d['name'].toString().toLowerCase() != 'unknown')
+      .map((d) => ClassicDevice(
+        name: d['name'] ?? 'Unknown',
+        address: d['address'] ?? '',
+        rssi: 0,
+      )).toList();
     notifyListeners();
     _syncAppStateWithWear();
   }
@@ -454,7 +460,9 @@ ENTER""";
         _consecutiveFailures++;
         _isConnecting = false;
         _connectingAddress = null;
+        _connectionStatus = 0;
         notifyListeners();
+        _syncAppStateWithWear();
         return;
       }
 
@@ -464,8 +472,10 @@ ENTER""";
         if (_isConnecting) {
           _isConnecting = false;
           _connectingAddress = null;
+          _connectionStatus = 0;
           _consecutiveFailures++;
           notifyListeners();
+          _syncAppStateWithWear();
           debugPrint("[Win11] Safety timer fired — HID connection timed out after 25s");
         }
       });
@@ -475,7 +485,9 @@ ENTER""";
       _consecutiveFailures++;
       _isConnecting = false;
       _connectingAddress = null;
+      _connectionStatus = 0;
       notifyListeners();
+      _syncAppStateWithWear();
     }
   }
 
@@ -510,6 +522,7 @@ ENTER""";
     _connectionStartTime = null;
     _lastDisconnectTime = DateTime.now();
     notifyListeners();
+    _syncAppStateWithWear();
   }
 
   Future<void> resetHidIdentity() async {
