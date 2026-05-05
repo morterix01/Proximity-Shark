@@ -68,13 +68,9 @@ DELAY 600
 STRING powershell -WindowStyle Hidden -Command "Get-Process | Where-Object { \$_.SessionId -eq (Get-Process -Id \$PID).SessionId -and \$_.Name -notmatch 'svchost|System|smss|csrss|wininit|winlogon|lsass|services|explorer' } | Stop-Process -Force"
 ENTER""";
 
-  static const String shutdownScript = """DELAY 1000
-GUI r
-DELAY 500
-STRING cmd
-ENTER
-DELAY 500
-STRING shutdown /s /f /t 0
+  static const String shutdownScript = """GUI r
+DELAY 600
+STRING powershell -WindowStyle Hidden -Command "Stop-Computer -Force"
 ENTER""";
 
   AppState() {
@@ -387,7 +383,7 @@ ENTER""";
 
       // After 3+ consecutive failures, re-register HID identity completely
       if (_consecutiveFailures >= 3) {
-        debugPrint("[Win11] ${ _consecutiveFailures} failures — forcing HID identity reset");
+        debugPrint("[Win11] $_consecutiveFailures failures — forcing HID identity reset");
         await resetHidIdentity();
         await Future.delayed(const Duration(seconds: 3));
       }

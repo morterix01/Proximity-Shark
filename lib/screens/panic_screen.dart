@@ -170,6 +170,50 @@ class _PanicScreenState extends State<PanicScreen>
     }
   }
 
+  // ─── Shutdown trigger ─────────────────────────────────────────────────────
+  Future<void> _triggerShutdown() async {
+    if (_isShutdownFiring) return;
+    final appState = Provider.of<AppState>(context, listen: false);
+
+    if (appState.connectionStatus == 0) {
+      _showNoTargetSnack();
+      return;
+    }
+
+    setState(() {
+      _isShutdownFiring = true;
+      _shutdownStatusMessage = "INVIO SHUTDOWN...";
+      _shutdownStatusColor = Colors.amberAccent;
+    });
+
+    try {
+      await appState.runQuickScript(AppState.shutdownScript);
+      if (mounted) {
+        setState(() {
+          _shutdownStatusMessage = "✓ COMANDO INVIATO";
+          _shutdownStatusColor = Colors.greenAccent;
+        });
+        Future.delayed(const Duration(seconds: 3), () {
+          if (mounted) {
+            setState(() {
+              _shutdownStatusMessage = "PRONTO";
+              _shutdownStatusColor = Colors.redAccent;
+              _isShutdownFiring = false;
+            });
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _shutdownStatusMessage = "✗ ERRORE: $e";
+          _shutdownStatusColor = Colors.redAccent;
+          _isShutdownFiring = false;
+        });
+      }
+    }
+  }
+
   void _showNoTargetSnack() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -270,6 +314,8 @@ class _PanicScreenState extends State<PanicScreen>
               color: _killStatusColor,
               loading: _isKillingFiring,
             ),
+            const SizedBox(height: 16),
+            _buildKillInfoCard(),
             const SizedBox(height: 16),
             _buildSwipeHint(down: true, label: "SLIDE GIÙ → SHUTDOWN"),
           ],
