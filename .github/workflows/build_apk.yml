@@ -57,7 +57,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Proximity-Shark-1.0.8 (android)
-          path: RELEASES/Proximity-Shark-1.0.8/"Proximity-Shark-1.0.8 (android).apk"
+          path: RELEASES/Proximity-Shark-1.0.8/*.apk
           retention-days: 30
 
       # ── Auto-create GitHub Release on version tags ──────────────────────────
