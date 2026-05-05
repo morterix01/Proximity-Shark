@@ -83,7 +83,9 @@ ENTER""";
     try {
       final stateJson = {
         'connectedAddress': _connectedAddress,
-        'connectionStatus': _connectionStatus, // 0 = disconnected, 1 = connected
+        'connectionStatus': _connectionStatus, 
+        'isConnecting': _isConnecting,
+        'connectingAddress': _connectingAddress,
         'activeLayout': _activeLayout.name,
         'panicEndTimeMillis': _panicEndTimeMillis,
         'bondedDevices': _bondedDevices.map((d) => {
@@ -463,6 +465,7 @@ ENTER""";
     _isConnecting = true;
     _connectingAddress = device.address;
     notifyListeners();
+    _syncAppStateWithWear();
     try {
       final success = await hidController.connectHid(device.address);
 
