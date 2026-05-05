@@ -65,17 +65,24 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: RELEASES/Proximity-Shark-1.0.8/"Proximity-Shark-1.0.8 (android).apk"
-          name: "🦈 Proximity Shark ${{ github.ref_name }}"
+          files: RELEASES/Proximity-Shark-1.0.8/"Proximity-Shark-1.0.8 (android) v2.apk"
+          name: "🦈 Proximity Shark ${{ github.ref_name }} — The Persistence & Stealth Update"
           body: |
-            ## 🦈 Proximity Shark ${{ github.ref_name }} — Android
+            ## 🦈 Proximity Shark ${{ github.ref_name }} — The Persistence & Stealth Update
 
-            ### Novità in questa release:
-            - ⏱️ **Timer Panico** — conto alla rovescia di 10 minuti sincronizzato
-            - 💀 **Taskkill Wear OS** — swipe verticale per accedere al Taskkill dall'orologio
-            - 🔴 **Panic Button** — tasto antipanico migliorato
+            ### 🚀 Novità in questa release (v1.0.8):
+            - **🛡️ Stealth Shutdown**: Spegnimento forzato del PC via PowerShell in modalità nascosta.
+            - **🔄 Infinite Loop Navigation**: Scorri all'infinito tra Panic, Taskkill e Shutdown.
+            - **⚓ Win11 Stability**: Reset automatico del profilo HID per connessioni ultra-stabili.
+            - **⌚ Sincronizzazione Totale**: Feedback real-time tra telefono e orologio durante il linking.
+            - **🧹 UI/UX Cleanup**: Rimossi dispositivi sconosciuti e layout ridondanti.
+
+            ### ⏪ Riepilogo v1.0.7:
+            - Ottimizzazione 60 FPS per Wear OS.
+            - Compressione GZIP per librerie script massive.
+            - Fix crash "Duplicate Key" e ANR durante il parsing.
 
             ### APK incluso:
-            - `ProximityShark_v1.1.0_android.apk` — per telefono Android (arm64)
+            - `Proximity-Shark-1.0.8 (android) v2.apk` — Build stabile per smartphone.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
