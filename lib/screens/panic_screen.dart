@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -23,6 +24,7 @@ class _PanicScreenState extends State<PanicScreen>
   bool _isFiring = false;
   bool _isKillPressing = false;
   bool _isKillingFiring = false;
+  Timer? _uiRefreshTimer;
 
   String _statusMessage = "SISTEMA PRONTO";
   Color _statusColor = const Color(0xFFFF3B3B);
@@ -36,12 +38,7 @@ class _PanicScreenState extends State<PanicScreen>
   static const int _modCtrlAlt = 0x05; // LEFT_CTRL (0x01) | LEFT_ALT (0x04)
   static const int _keyB = 0x05;       // USB HID keycode for 'b'
 
-  // ─── Taskkill DuckyScript ─────────────────────────────────────────────────
-  // Opens Run dialog → launches PowerShell hidden → kills all user processes
-  static const String _taskkillScript = """GUI r
-DELAY 600
-STRING powershell -WindowStyle Hidden -Command "Get-Process | Where-Object { \$_.SessionId -eq (Get-Process -Id \$PID).SessionId -and \$_.Name -notmatch 'svchost|System|smss|csrss|wininit|winlogon|lsass|services|explorer' } | Stop-Process -Force"
-ENTER""";
+  // ─── Taskkill script moved to AppState ───────────────────────────────────
 
   @override
   void initState() {
@@ -62,6 +59,10 @@ ENTER""";
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
+
+    _uiRefreshTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -70,6 +71,7 @@ ENTER""";
     _scanController.dispose();
     _killPulseController.dispose();
     _pageController.dispose();
+    _uiRefreshTimer?.cancel();
     super.dispose();
   }
 
@@ -91,6 +93,7 @@ ENTER""";
 
     try {
       final success = await appState.hidController.sendKey(_modCtrlAlt, _keyB);
+      if (success) appState.triggerPanicTimer();
       if (mounted) {
         setState(() {
           _statusMessage = success ? "✓ SEGNALE INVIATO" : "✗ INVIO FALLITO";
@@ -134,7 +137,7 @@ ENTER""";
     });
 
     try {
-      await appState.runQuickScript(_taskkillScript);
+      await appState.runQuickScript(AppState.taskkillScript);
       if (mounted) {
         setState(() {
           _killStatusMessage = "✓ SCRIPT INVIATO";
@@ -216,6 +219,7 @@ ENTER""";
             ),
             const SizedBox(height: 32),
             _buildPanicButton(),
+            _buildPanicTimer(appState),
             const SizedBox(height: 24),
             _buildStatusCard(
               icon: _isFiring ? Icons.bolt_rounded : Icons.shield_rounded,
@@ -663,6 +667,57 @@ ENTER""";
         ),
       ),
     ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2);
+  }
+
+  // ─── Panic Timer Display ──────────────────────────────────────────────────
+  Widget _buildPanicTimer(AppState appState) {
+    if (appState.panicEndTimeMillis == null) return const SizedBox.shrink();
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final remaining = appState.panicEndTimeMillis! - now;
+
+    if (remaining <= 0) {
+      Future.microtask(() => appState.clearPanicTimer());
+      return const SizedBox.shrink();
+    }
+
+    final minutes = (remaining / 60000).floor();
+    final seconds = ((remaining % 60000) / 1000).floor();
+    final timeStr =
+        "${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}";
+
+    return Container(
+      margin: const EdgeInsets.only(top: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.timer_outlined, color: Colors.white54, size: 14),
+          const SizedBox(width: 8),
+          Text(
+            "RIATTIVAZIONE BLUETOOTH TRA: ",
+            style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.4),
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.0),
+          ),
+          Text(
+            timeStr,
+            style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                fontFamily: 'monospace'),
+          ),
+        ],
+      ),
+    ).animate().fadeIn();
   }
 
   // ─── Radar Background ─────────────────────────────────────────────────────

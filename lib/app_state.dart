@@ -61,6 +61,12 @@ class AppState extends ChangeNotifier {
   int _consecutiveFailures = 0;     // track failures to scale grace period dynamically
 
   KeyboardLayout _activeLayout = KeyboardLayout.pc;
+  int? _panicEndTimeMillis;
+
+  static const String taskkillScript = """GUI r
+DELAY 600
+STRING powershell -WindowStyle Hidden -Command "Get-Process | Where-Object { \$_.SessionId -eq (Get-Process -Id \$PID).SessionId -and \$_.Name -notmatch 'svchost|System|smss|csrss|wininit|winlogon|lsass|services|explorer' } | Stop-Process -Force"
+ENTER""";
 
   AppState() {
     parser = DuckyParserIt(hidController);
@@ -74,6 +80,7 @@ class AppState extends ChangeNotifier {
         'connectedAddress': _connectedAddress,
         'connectionStatus': _connectionStatus, // 0 = disconnected, 1 = connected
         'activeLayout': _activeLayout.name,
+        'panicEndTimeMillis': _panicEndTimeMillis,
         'bondedDevices': _bondedDevices.map((d) => {
           'name': d.name,
           'address': d.address
@@ -215,6 +222,7 @@ class AppState extends ChangeNotifier {
   String? get activeIpAddress => _activeIpAddress;
   DateTime? get connectionStartTime => _connectionStartTime;
   KeyboardLayout get activeLayout => _activeLayout;
+  int? get panicEndTimeMillis => _panicEndTimeMillis;
 
   // --- Setters ---
   set script(String value) {
@@ -236,7 +244,32 @@ class AppState extends ChangeNotifier {
     final layoutIndex = prefs.getInt('keyboard_layout') ?? 0;
     _activeLayout = KeyboardLayout.values[layoutIndex];
     
+    _panicEndTimeMillis = prefs.getInt('panic_end_time');
+    if (_panicEndTimeMillis != null) {
+      if (DateTime.now().millisecondsSinceEpoch > _panicEndTimeMillis!) {
+        _panicEndTimeMillis = null;
+      }
+    }
+    
     notifyListeners();
+  }
+
+  void triggerPanicTimer() {
+    _panicEndTimeMillis = DateTime.now().millisecondsSinceEpoch + 600000;
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setInt('panic_end_time', _panicEndTimeMillis!);
+    });
+    notifyListeners();
+    _syncAppStateWithWear();
+  }
+
+  void clearPanicTimer() {
+    _panicEndTimeMillis = null;
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.remove('panic_end_time');
+    });
+    notifyListeners();
+    _syncAppStateWithWear();
   }
 
   Future<void> updateKeyboardLayout(KeyboardLayout layout) async {
@@ -797,7 +830,13 @@ class AppState extends ChangeNotifier {
       } else if (message.path == "/panic") {
         // Wear OS panic button: send Ctrl+Alt+B (modifier 0x05 = LEFT_CTRL|LEFT_ALT, keycode 0x05 = 'b')
         if (_connectionStatus == 1) {
-          hidController.sendKey(0x05, 0x05);
+          await hidController.sendKey(0x05, 0x05);
+          triggerPanicTimer();
+        }
+      } else if (message.path == "/taskkill") {
+        // Wear OS taskkill button
+        if (_connectionStatus == 1) {
+          await runQuickScript(taskkillScript);
         }
       } else if (message.path == "/nav") {
         // Messaggi di navigazione (es. dalla ghiera)
