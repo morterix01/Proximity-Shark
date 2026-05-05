@@ -44,9 +44,19 @@ Qui prepari il colpo.
 Il braccio armato del piano.
 - Sincronizza al volo, e magicamente senza ritardi (è compresso in *GZIP/Base64*!) le tua intera struttura di cartelle personalizzate.
 - Selezioni il layout, prendi la mira verso il PC associato, e ordini il via del Payload. 
+- **Novità Tattica:** Ora con **Navigazione Circolare** (Loop). Scorri all'infinito tra le schede principali senza mai fermarti.
 - Avrai sempre feedback istantaneo! Verde ✅ *Payload inserito*, Rosso ❌ *Qualcosa è andato storto*.
 
-## 4. L'Arte dei Payload & Layout Magici ⌨️
+## 4. Controllo Remoto & Bottoni Panico 🛡️💀
+Oltre ai payload, Proximity Shark offre tre strumenti di controllo diretto pronti all'uso:
+
+1.  **🚨 Panic Button (CTRL+ALT+B)**: Invia istantaneamente una combinazione di tasti per bloccare o nascondere tutto sul PC target. Perfetto per le emergenze.
+2.  **💀 Taskkill**: Esegue uno script PowerShell silente che termina tutti i processi utente non vitali, "pulendo" la sessione corrente in pochi secondi.
+3.  **🛡️ Shutdown Stealth**: Lo strumento definitivo. Spegne forzatamente il PC target tramite PowerShell in modalità **nascosta** (`-WindowStyle Hidden`). L'utente non vedrà alcuna finestra di comando, solo il PC che si spegne improvvisamente.
+
+---
+
+## 5. L'Arte dei Payload & Layout Magici ⌨️
 
 ### Smetti di cliccare a vuoto: Il Tuo Target Conta! 🎯
 Sapevi che la lettera `@` in un computer americano viene scritta diversamente da uno italiano? Ecco perché Proximity Shark possiede un motore di trascrizione chirurgico:

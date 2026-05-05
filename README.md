@@ -17,9 +17,9 @@ Proximity Shark è un'app Android sviluppata con Flutter che emula una **tastier
 | 📝 **Parser DuckyScript** | Supporto per `STRING`, `DELAY`, `GUI`, `CTRL`, `ALT`, `SHIFT`, `ENTER`, `TAB` e combinazioni di tasti |
 | 🇮🇹 **Layout Italiano** | Parser ottimizzato per la tastiera italiana |
 | 📂 **Libreria Script** | Importa file o intere cartelle di payload, organizzali e lanciali con un tap |
-| ⚡ **Esecuzione Rapida** | Un tocco per iniettare il payload sul dispositivo connesso |
-| 🔁 **Riconnessione Automatica** | Riconnessione intelligente per un link HID sempre stabile |
-| 🌙 **UI Dark** | Interfaccia scura e minimalista, pensata per l'uso sul campo |
+| ⚡ **Remote Control** | Schede dedicate per **Panic Button**, **Taskkill** (chiusura processi) e **Shutdown** stealth |
+| 🔄 **Infinite Navigation** | Navigazione circolare tra le funzioni principali per un accesso rapido |
+| ⚓ **Win11 Stability** | Algoritmo di riconnessione HID avanzato ottimizzato per Windows 11 |
 | ⌚ **Wear OS Companion** | Controlla i payload e visualizza il progresso dal tuo smartwatch |
 
 ---

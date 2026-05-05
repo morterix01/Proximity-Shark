@@ -2,6 +2,20 @@
 
 ---
 
+## 🛠️ Release v1.0.8 — "The Persistence & Stealth Update" (v2)
+*Un aggiornamento massiccio focalizzato su controllo remoto, navigazione e stabilità Win11.*
+
+### 🌟 Novità Assolute
+- **🛡️ Stealth Shutdown**: Introdotta una terza scheda tattica che permette lo spegnimento forzato del PC target. Il comando viene eseguito via PowerShell con finestra nascosta (`-WindowStyle Hidden`), garantendo un'azione totalmente invisibile all'utente target.
+- **🔄 Navigazione Circolare (Infinite Loop)**: Implementata la navigazione infinita tra le pagine *Panic*, *Taskkill* e *Shutdown*. Ora puoi scorrere verso l'alto dall'ultima pagina per tornare alla prima e viceversa, sia su smartphone che su Wear OS.
+- **⚓ Win11 Stability Fix**: Risolto il bug critico della "connessione di mezzo secondo" su Windows 11. Il sistema ora esegue un reset automatico del profilo HID e un periodo di grazia (grace period) dinamico per garantire che il target accetti sempre il link.
+- **⌚ WearOS Sync 2.0**: Sincronizzazione totale degli stati di "Linking". L'orologio ora riceve feedback in tempo reale sul progresso della connessione dal telefono e interrompe correttamente l'animazione di caricamento se la connessione fallisce o termina.
+- **🧹 UI/UX Cleanup**: 
+    - Rimozione dei dispositivi "Unknown" dalla lista scansione per un accoppiamento rapido.
+    - Rimozione del layout "US" ridondante su Wear OS per una navigazione più snella.
+
+---
+
 ## 🛠️ Pre-Release (Beta): Phone v1.0.7 & Wear OS v1.0.1
 *Aggiornamento di stabilità critico per il modulo Wear OS.*
 
