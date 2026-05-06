@@ -88,12 +88,11 @@ class HidController {
     final released = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
     
     bool ok = await sendReport(pressed);
-    // Balanced delay for stability (12ms is the sweet spot for most BT stacks)
-    await Future.delayed(const Duration(milliseconds: 12));
+    // Restored 1.0.8 timing: 5ms press duration
+    await Future.delayed(const Duration(milliseconds: 5));
     
     bool okRel = await sendReport(released);
-    // Safety delay to ensure the OS processes the release before the next character
-    await Future.delayed(const Duration(milliseconds: 8));
+    // No post-release delay as in 1.0.8
     
     return ok && okRel;
   }
