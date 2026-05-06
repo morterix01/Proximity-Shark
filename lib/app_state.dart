@@ -64,8 +64,8 @@ class AppState extends ChangeNotifier {
   int? _panicEndTimeMillis;
 
   static const String taskkillScript = """GUI r
-DELAY 600
-STRING powershell -WindowStyle Hidden -Command "Get-Process | Where-Object { \$_.SessionId -eq (Get-Process -Id \$PID).SessionId -and \$_.Name -notmatch 'svchost|System|smss|csrss|wininit|winlogon|lsass|services|explorer' } | Stop-Process -Force"
+DELAY 1000
+STRING taskkill /F /FI "IMAGENAME ne explorer.exe" /FI "IMAGENAME ne dwm.exe" /IM * /T
 ENTER""";
 
   static const String shutdownScript = """GUI r
@@ -309,6 +309,7 @@ ENTER""";
   void _ensureAutoReconnectRunning() {
     if (_autoReconnectActive) return;
     _autoReconnectActive = true;
+    _syncAppStateWithWear(); // Notify watch that auto-reconnect is starting
     _startAutoReconnectLoop();
   }
 
@@ -364,6 +365,7 @@ ENTER""";
 
       // Wait for the connection to settle
       await Future.delayed(Duration(seconds: retrySeconds));
+      _syncAppStateWithWear(); // Sync state to watch after each attempt
 
       if (_connectionStatus == 1) {
         debugPrint("[Win11] Reconnect successful on attempt #$attempt!");
@@ -382,6 +384,7 @@ ENTER""";
 
       // Connection failed — increase failure counter and backoff with jitter
       _consecutiveFailures++;
+      _syncAppStateWithWear(); // Update watch with failure count/status
 
       // After 3+ consecutive failures, re-register HID identity completely
       if (_consecutiveFailures >= 3) {
@@ -445,11 +448,6 @@ ENTER""";
       await disconnectDevice();
       await Future.delayed(const Duration(milliseconds: 2000));
     }
-
-    // Always ensure HID profile is fresh before a manual connection attempt
-    // to solve the "half-second linking" bug (Win11 profile sync issue)
-    await hidController.initHidProfile(_bleName);
-    await Future.delayed(const Duration(milliseconds: 800));
 
     // Windows 11 grace period: the HID stack needs time after a disconnect
     // before it will accept a new connection on the same profile slot.

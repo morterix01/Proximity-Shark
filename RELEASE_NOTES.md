@@ -2,6 +2,18 @@
 
 ---
 
+## 🛠️ Release v1.0.9 — "The Background Persistence Update"
+*Stabilità estrema, esecuzione in background e comando Taskkill potenziato.*
+
+### 🌟 Novità Assolute
+- **📡 Native Wearable Listener**: Implementato un servizio nativo Android (`WearableListenerService`) che permette all'orologio di svegliare il telefono e connettersi al PC anche se l'app è stata chiusa o rimossa dalle app recenti. Mai più interruzioni quando il telefono è lontano.
+- **💀 Taskkill Evoluto**: Nuovo comando standard `taskkill` con filtri intelligenti per escludere `explorer.exe` e `dwm.exe`, garantendo una chiusura massiva dei processi senza rompere la shell di Windows.
+- **🔋 Battery & WakeLock Optimization**: Aggiunta la gestione dei WakeLock per assicurare che il processore rimanga attivo durante l'invio dei comandi dall'orologio, prevenendo "bug" di sospensione quando il telefono è in standby.
+- **🔗 Final Linking Fix**: Risolto definitivamente il bug del "linking loop" di mezzo secondo su Windows 11 riducendo la reinizializzazione ridondante del profilo HID durante i tentativi manuali di riconnessione.
+- **⏱️ Feedback di Riconnessione**: L'orologio ora riceve aggiornamenti costanti sullo stato del motore di riconnessione automatica, inclusi i tempi di backoff.
+
+---
+
 ## 🛠️ Release v1.0.8 — "The Persistence & Stealth Update" (v2)
 *Un aggiornamento massiccio focalizzato su controllo remoto, navigazione e stabilità Win11.*
 
