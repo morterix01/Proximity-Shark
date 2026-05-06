@@ -44,20 +44,20 @@ jobs:
           flutter build apk \
             --release \
             --target-platform android-arm64 \
-            --build-name=1.0.8 \
-            --build-number=8
+            --build-name=1.0.9 \
+            --build-number=9
 
-      - name: Rename APK → Proximity-Shark-1.0.8 (android) v2.apk
+      - name: Rename APK → Proximity-Shark-1.0.9 (android).apk
         run: |
-          mkdir -p RELEASES/Proximity-Shark-1.0.8
+          mkdir -p RELEASES/Proximity-Shark-1.0.9
           cp build/app/outputs/flutter-apk/app-release.apk \
-             RELEASES/Proximity-Shark-1.0.8/"Proximity-Shark-1.0.8 (android) v2.apk"
+             RELEASES/Proximity-Shark-1.0.9/"Proximity-Shark-1.0.9 (android).apk"
 
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Proximity-Shark-1.0.8 (android) v2
-          path: RELEASES/Proximity-Shark-1.0.8/*.apk
+          name: Proximity-Shark-1.0.9 (android)
+          path: RELEASES/Proximity-Shark-1.0.9/*.apk
           retention-days: 30
 
       # ── Auto-create GitHub Release on version tags ──────────────────────────
@@ -65,24 +65,19 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: RELEASES/Proximity-Shark-1.0.8/"Proximity-Shark-1.0.8 (android) v2.apk"
-          name: "🦈 Proximity Shark ${{ github.ref_name }} — The Persistence & Stealth Update"
+          files: RELEASES/Proximity-Shark-1.0.9/"Proximity-Shark-1.0.9 (android).apk"
+          name: "🦈 Proximity Shark ${{ github.ref_name }} — The Background Persistence Update"
           body: |
-            ## 🦈 Proximity Shark ${{ github.ref_name }} — The Persistence & Stealth Update
-
-            ### 🚀 Novità in questa release (v1.0.8):
-            - **🛡️ Stealth Shutdown**: Spegnimento forzato del PC via PowerShell in modalità nascosta.
-            - **🔄 Infinite Loop Navigation**: Scorri all'infinito tra Panic, Taskkill e Shutdown.
-            - **⚓ Win11 Stability**: Reset automatico del profilo HID per connessioni ultra-stabili.
-            - **⌚ Sincronizzazione Totale**: Feedback real-time tra telefono e orologio durante il linking.
-            - **🧹 UI/UX Cleanup**: Rimossi dispositivi sconosciuti e layout ridondanti.
-
-            ### ⏪ Riepilogo v1.0.7:
-            - Ottimizzazione 60 FPS per Wear OS.
-            - Compressione GZIP per librerie script massive.
-            - Fix crash "Duplicate Key" e ANR durante il parsing.
+            ## 🦈 Proximity Shark ${{ github.ref_name }} — The Background Persistence Update
+            
+            ### 🚀 Novità in questa release (v1.0.9):
+            - **📡 Native Wearable Listener**: Servizio nativo per svegliare il telefono dall'orologio in background.
+            - **💀 Taskkill Evoluto**: Nuovo comando `taskkill` più pulito ed efficace.
+            - **🔋 Battery & WakeLock**: Ottimizzazione per evitare la sospensione del processo in standby.
+            - **🔗 Final Linking Fix**: Risolto il loop di connessione su Windows 11.
+            - **⏱️ Feedback di Riconnessione**: Feedback real-time sullo stato del motore di riconnessione.
 
             ### APK incluso:
-            - `Proximity-Shark-1.0.8 (android) v2.apk` — Build stabile per smartphone.
+            - `Proximity-Shark-1.0.9 (android).apk` — Build stabile per smartphone.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
