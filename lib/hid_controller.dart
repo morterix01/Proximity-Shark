@@ -88,12 +88,12 @@ class HidController {
     final released = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
     
     bool ok = await sendReport(pressed);
-    // Increased delay to ensure the OS registers the key press
-    await Future.delayed(const Duration(milliseconds: 15));
+    // Optimized delay for faster execution (10ms is usually safe)
+    await Future.delayed(const Duration(milliseconds: 10));
     
     bool okRel = await sendReport(released);
-    // Small delay after release to prevent report congestion
-    await Future.delayed(const Duration(milliseconds: 10));
+    // Minimal delay after release
+    await Future.delayed(const Duration(milliseconds: 5));
     
     return ok && okRel;
   }

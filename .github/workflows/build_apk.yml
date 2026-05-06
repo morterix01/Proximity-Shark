@@ -47,16 +47,16 @@ jobs:
             --build-name=1.0.9 \
             --build-number=9
 
-      - name: Rename APK → Proximity-Shark-1.0.9-v1 (android).apk
+      - name: Rename APK → Proximity-Shark-1.0.9-v2 (android).apk
         run: |
           mkdir -p RELEASES/Proximity-Shark-1.0.9
           cp build/app/outputs/flutter-apk/app-release.apk \
-             RELEASES/Proximity-Shark-1.0.9/"Proximity-Shark-1.0.9-v1 (android).apk"
+             RELEASES/Proximity-Shark-1.0.9/"Proximity-Shark-1.0.9-v2 (android).apk"
 
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Proximity-Shark-1.0.9-v1 (android)
+          name: Proximity-Shark-1.0.9-v2 (android)
           path: RELEASES/Proximity-Shark-1.0.9/*.apk
           retention-days: 30
 
@@ -65,19 +65,19 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: RELEASES/Proximity-Shark-1.0.9/"Proximity-Shark-1.0.9-v1 (android).apk"
+          files: RELEASES/Proximity-Shark-1.0.9/"Proximity-Shark-1.0.9-v2 (android).apk"
           name: "🦈 Proximity Shark ${{ github.ref_name }} — The Background Persistence Update"
           body: |
             ## 🦈 Proximity Shark ${{ github.ref_name }} — The Background Persistence Update
             
-            ### 🚀 Novità in questa release (v1.0.9):
-            - **📡 Native Wearable Listener**: Servizio nativo per svegliare il telefono dall'orologio in background.
-            - **💀 Taskkill Evoluto**: Nuovo comando `taskkill` più pulito ed efficace.
-            - **🔋 Battery & WakeLock**: Ottimizzazione per evitare la sospensione del processo in standby.
-            - **🔗 Final Linking Fix**: Risolto il loop di connessione su Windows 11.
-            - **⏱️ Feedback di Riconnessione**: Feedback real-time sullo stato del motore di riconnessione.
+            ### 🚀 Novità in questa release (v1.0.9-v2):
+            - **⚡ High-Speed Typing**: Latenza ridotta a 15ms per una scrittura ultra-rapida.
+            - **🤝 Pairing Fix**: Forzatura del pairing nativo per risolvere problemi di accoppiamento con nuovi PC.
+            - **📡 Native Wearable Listener**: Servizio nativo per svegliare il telefono dall'orologio.
+            - **💀 Taskkill Evoluto**: Nuovo comando `taskkill` potenziato.
+            - **🔗 Win11 Stability**: Fix per il loop di connessione e sincronizzazione UI.
 
             ### APK incluso:
-            - `Proximity-Shark-1.0.9-v1 (android).apk` — Build stabile per smartphone.
+            - `Proximity-Shark-1.0.9-v2 (android).apk` — Build stabile ottimizzata.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

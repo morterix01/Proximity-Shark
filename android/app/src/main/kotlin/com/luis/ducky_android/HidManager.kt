@@ -127,7 +127,17 @@ object HidManager {
 
     private fun doConnect(address: String) {
         try {
-            val device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address)
+            val adapter = BluetoothAdapter.getDefaultAdapter() ?: return
+            val device = adapter.getRemoteDevice(address)
+            
+            // If device is not bonded, trigger bonding first
+            if (device.bondState == BluetoothDevice.BOND_NONE) {
+                Log.d("HidManager", "Device not bonded. Triggering createBond for $address")
+                device.createBond()
+                // The connection will likely fail this time, but the dialog will appear.
+                // The auto-reconnect engine or the user clicking again will finish the job.
+            }
+            
             bluetoothHidDevice?.connect(device)
         } catch (e: Exception) {
             Log.e("HidManager", "doConnect failed: ${e.message}")

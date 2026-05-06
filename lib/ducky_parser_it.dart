@@ -589,8 +589,8 @@ class DuckyParserIt {
         List<int> combo = curMap[char]!;
         await hidController.sendKey(combo[0], combo[1]);
         await Future.delayed(
-          const Duration(milliseconds: 25),
-        ); // Delay for reliability on slower Bluetooth stacks
+          const Duration(milliseconds: 15),
+        ); // High-speed typing (approx 15-20ms per char)
       }
       
       if (onProgressStep != null) {
