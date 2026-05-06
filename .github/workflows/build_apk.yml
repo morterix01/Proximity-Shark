@@ -47,16 +47,16 @@ jobs:
             --build-name=1.0.9 \
             --build-number=9
 
-      - name: Rename APK → Proximity-Shark-1.0.9 (android).apk
+      - name: Rename APK → Proximity-Shark-1.0.9-v1 (android).apk
         run: |
           mkdir -p RELEASES/Proximity-Shark-1.0.9
           cp build/app/outputs/flutter-apk/app-release.apk \
-             RELEASES/Proximity-Shark-1.0.9/"Proximity-Shark-1.0.9 (android).apk"
+             RELEASES/Proximity-Shark-1.0.9/"Proximity-Shark-1.0.9-v1 (android).apk"
 
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Proximity-Shark-1.0.9 (android)
+          name: Proximity-Shark-1.0.9-v1 (android)
           path: RELEASES/Proximity-Shark-1.0.9/*.apk
           retention-days: 30
 
@@ -65,7 +65,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: RELEASES/Proximity-Shark-1.0.9/"Proximity-Shark-1.0.9 (android).apk"
+          files: RELEASES/Proximity-Shark-1.0.9/"Proximity-Shark-1.0.9-v1 (android).apk"
           name: "🦈 Proximity Shark ${{ github.ref_name }} — The Background Persistence Update"
           body: |
             ## 🦈 Proximity Shark ${{ github.ref_name }} — The Background Persistence Update
@@ -78,6 +78,6 @@ jobs:
             - **⏱️ Feedback di Riconnessione**: Feedback real-time sullo stato del motore di riconnessione.
 
             ### APK incluso:
-            - `Proximity-Shark-1.0.9 (android).apk` — Build stabile per smartphone.
+            - `Proximity-Shark-1.0.9-v1 (android).apk` — Build stabile per smartphone.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

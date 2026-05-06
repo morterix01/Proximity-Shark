@@ -86,10 +86,22 @@ class HidController {
     // HID report: [modifier, reserved, key1, key2, key3, key4, key5, key6]
     final pressed = [modifier, 0x00, keycode, 0x00, 0x00, 0x00, 0x00, 0x00];
     final released = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
-    final ok = await sendReport(pressed);
-    await Future.delayed(const Duration(milliseconds: 5));
-    await sendReport(released);
-    return ok;
+    
+    bool ok = await sendReport(pressed);
+    // Increased delay to ensure the OS registers the key press
+    await Future.delayed(const Duration(milliseconds: 15));
+    
+    bool okRel = await sendReport(released);
+    // Small delay after release to prevent report congestion
+    await Future.delayed(const Duration(milliseconds: 10));
+    
+    return ok && okRel;
+  }
+
+  /// Sends a null report to clear all modifiers and keys
+  Future<bool> clearAllKeys() async {
+    final released = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+    return await sendReport(released);
   }
 
   /// Returns 1 if a PC is connected, 0 otherwise

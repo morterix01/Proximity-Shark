@@ -139,6 +139,17 @@ class MainActivity : FlutterActivity() {
         
         // Initial setup
         HidManager.initialize(this, "Proximity Shark")
+        HidManager.setStateCallback { device, state ->
+            val status = if (state == BluetoothProfile.STATE_CONNECTED) "connected" else "disconnected"
+            val entry = mutableMapOf<String, String>(
+                "connection_state" to status
+            )
+            device?.let { 
+                entry["address"] = it.address
+                entry["name"] = it.name ?: "Unknown"
+            }
+            runOnUiThread { eventSink?.success(entry) }
+        }
         startHidService()
     }
 

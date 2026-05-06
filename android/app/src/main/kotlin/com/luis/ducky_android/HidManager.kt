@@ -13,6 +13,11 @@ object HidManager {
     private var pendingConnectAddress: String? = null
     private var pendingDeviceName: String? = null
     private var isProxyBinding = false
+    private var onStateChanged: ((BluetoothDevice?, Int) -> Unit)? = null
+
+    fun setStateCallback(callback: (BluetoothDevice?, Int) -> Unit) {
+        onStateChanged = callback
+    }
 
     private val HID_DESCRIPTOR = byteArrayOf(
         0x05.toByte(), 0x01.toByte(),
@@ -104,6 +109,7 @@ object HidManager {
                         BluetoothProfile.STATE_CONNECTED -> targetDevice = device
                         BluetoothProfile.STATE_DISCONNECTED -> targetDevice = null
                     }
+                    onStateChanged?.invoke(device, state)
                 }
             })
         }, 1500)

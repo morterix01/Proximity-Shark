@@ -577,6 +577,10 @@ class DuckyParserIt {
   }
 
   Future<void> typeString(String text, {void Function(double stepWeight)? onProgressStep}) async {
+    // Safety release to prevent modifier "bleeding" from previous commands
+    await hidController.clearAllKeys();
+    await Future.delayed(const Duration(milliseconds: 20));
+
     final curMap = _currentKeyMap;
     for (int i = 0; i < text.length; i++) {
       String char = text[i];
@@ -585,8 +589,8 @@ class DuckyParserIt {
         List<int> combo = curMap[char]!;
         await hidController.sendKey(combo[0], combo[1]);
         await Future.delayed(
-          const Duration(milliseconds: 10),
-        ); // Tiny delay for reliability
+          const Duration(milliseconds: 25),
+        ); // Delay for reliability on slower Bluetooth stacks
       }
       
       if (onProgressStep != null) {
