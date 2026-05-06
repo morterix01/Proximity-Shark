@@ -88,12 +88,12 @@ class HidController {
     final released = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
     
     bool ok = await sendReport(pressed);
-    // Extreme optimization: 5ms is the typical polling limit for many HID hosts
-    await Future.delayed(const Duration(milliseconds: 5));
+    // Balanced delay for stability (12ms is the sweet spot for most BT stacks)
+    await Future.delayed(const Duration(milliseconds: 12));
     
     bool okRel = await sendReport(released);
-    // 2ms to yield but keep the pipe open
-    await Future.delayed(const Duration(milliseconds: 2));
+    // Safety delay to ensure the OS processes the release before the next character
+    await Future.delayed(const Duration(milliseconds: 8));
     
     return ok && okRel;
   }

@@ -579,7 +579,7 @@ class DuckyParserIt {
   Future<void> typeString(String text, {void Function(double stepWeight)? onProgressStep}) async {
     // Safety release to prevent modifier "bleeding" from previous commands
     await hidController.clearAllKeys();
-    await Future.delayed(const Duration(milliseconds: 10));
+    await Future.delayed(const Duration(milliseconds: 30));
 
     final curMap = _currentKeyMap;
     for (int i = 0; i < text.length; i++) {
@@ -589,8 +589,8 @@ class DuckyParserIt {
         List<int> combo = curMap[char]!;
         await hidController.sendKey(combo[0], combo[1]);
         await Future.delayed(
-          const Duration(milliseconds: 5),
-        ); // Extreme speed (approx 10-12ms per char total)
+          const Duration(milliseconds: 10),
+        ); // Balanced speed (~30ms per char total) for maximum stability
       }
       
       if (onProgressStep != null) {
