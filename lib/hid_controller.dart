@@ -88,12 +88,12 @@ class HidController {
     final released = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
     
     bool ok = await sendReport(pressed);
-    // Optimized delay for faster execution (10ms is usually safe)
-    await Future.delayed(const Duration(milliseconds: 10));
+    // Extreme optimization: 5ms is the typical polling limit for many HID hosts
+    await Future.delayed(const Duration(milliseconds: 5));
     
     bool okRel = await sendReport(released);
-    // Minimal delay after release
-    await Future.delayed(const Duration(milliseconds: 5));
+    // 2ms to yield but keep the pipe open
+    await Future.delayed(const Duration(milliseconds: 2));
     
     return ok && okRel;
   }
