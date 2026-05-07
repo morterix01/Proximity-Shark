@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
+import '../app_state.dart';
 import '../chat/chat_message.dart';
 import '../chat/shark_chat_manager.dart';
 
@@ -94,12 +95,9 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
       return;
     }
 
-    // Get device name from system
-    const platform = MethodChannel('com.luis.ducky_android/hid');
-    String name = 'Shark';
-    try {
-      name = await platform.invokeMethod('getDeviceName') ?? 'Shark';
-    } catch (_) {}
+    // Use the BLE name configured in app settings as the advertising identity
+    final appState = Provider.of<AppState>(context, listen: false);
+    final name = appState.bleName.isNotEmpty ? appState.bleName : 'Shark';
 
     await chat.start(name);
     if (mounted) setState(() => _isStarting = false);
