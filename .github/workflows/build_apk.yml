@@ -58,17 +58,17 @@ jobs:
             --build-name=2.0.0 \
             --build-number=10
 
-      - name: Rename APK → Proximity-Shark-2.0.0 (android).apk
+      - name: Rename APK → Proximity-Shark-${{ github.ref_name }} (android).apk
         run: |
-          mkdir -p RELEASES/Proximity-Shark-2.0.0
+          mkdir -p RELEASES/Proximity-Shark-${{ github.ref_name }}
           cp build/app/outputs/flutter-apk/app-release.apk \
-             RELEASES/Proximity-Shark-2.0.0/"Proximity-Shark-2.0.0 (android).apk"
+             RELEASES/Proximity-Shark-${{ github.ref_name }}/"Proximity-Shark-${{ github.ref_name }} (android).apk"
 
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Proximity-Shark-2.0.0 (android)
-          path: RELEASES/Proximity-Shark-2.0.0/*.apk
+          name: Proximity-Shark-${{ github.ref_name }} (android)
+          path: RELEASES/Proximity-Shark-${{ github.ref_name }}/*.apk
           retention-days: 30
 
       # ── Auto-create GitHub Release on version tags ──────────────────────────
@@ -77,18 +77,18 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           prerelease: true
-          files: RELEASES/Proximity-Shark-2.0.0/Proximity-Shark-2.0.0 (android).apk
+          files: RELEASES/Proximity-Shark-${{ github.ref_name }}/Proximity-Shark-${{ github.ref_name }} (android).apk
           name: "🦈 Proximity Shark ${{ github.ref_name }} — Shark Chat (P2P)"
           body: |
             ## 🦈 Proximity Shark ${{ github.ref_name }} — Shark Chat (P2P)
             
-            ### 🚀 Novità in questa release (v2.0.0):
+            ### 🚀 Novità in questa release (${{ github.ref_name }}):
             - **💬 Shark Chat P2P**: Nuova chat offline (Bluetooth + WiFi Direct).
             - **⌚ Integrazione WearOS**: Leggi e rispondi ai messaggi direttamente dall'orologio.
             - **⚡ Messaggi Veloci**: Risposte rapide preimpostate per la chat.
             - **🔗 Nearby Connections**: Rilevamento automatico e comunicazione mesh tra dispositivi vicini senza internet.
 
             ### APK incluso:
-            - `Proximity-Shark-2.0.0 (android).apk` — Build stabile con Shark Chat.
+            - `Proximity-Shark-${{ github.ref_name }} (android).apk` — Build stabile con Shark Chat.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
