@@ -33,10 +33,19 @@ jobs:
 
       - name: Patch flutter_wear_os_connectivity for AGP 8.0
         run: |
-          PLUGIN_DIR="$HOME/.pub-cache/hosted/pub.dev/flutter_wear_os_connectivity-1.0.0/android/src/main"
-          if [ -f "$PLUGIN_DIR/AndroidManifest.xml" ]; then
-            sed -i 's/package="com.sstonn.flutter_wear_os_connectivity"//g' "$PLUGIN_DIR/AndroidManifest.xml"
-            echo "Patched flutter_wear_os_connectivity AndroidManifest.xml"
+          # Robust path discovery
+          PLUGIN_DIR=$(find $HOME/.pub-cache -name "flutter_wear_os_connectivity-1.0.0" -type d | head -n 1)
+          if [ -n "$PLUGIN_DIR" ]; then
+            MANIFEST_PATH="$PLUGIN_DIR/android/src/main/AndroidManifest.xml"
+            if [ -f "$MANIFEST_PATH" ]; then
+              sed -i 's/package="[^"]*"//g' "$MANIFEST_PATH"
+              echo "Successfully patched $MANIFEST_PATH"
+              cat "$MANIFEST_PATH" | head -n 5
+            else
+              echo "Manifest not found at $MANIFEST_PATH"
+            fi
+          else
+            echo "Plugin directory not found"
           fi
 
       - name: Build Android APK (arm64 release)
