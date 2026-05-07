@@ -19,8 +19,8 @@ class HidService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Shark HID Active")
-            .setContentText("Proximity Shark is ready in the background")
+            .setContentTitle("Proximity Shark Active")
+            .setContentText("Background services are active (HID / Chat)")
             .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setCategory(Notification.CATEGORY_SERVICE)

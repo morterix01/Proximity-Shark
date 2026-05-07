@@ -129,6 +129,19 @@ class MainActivity : FlutterActivity() {
                     val adapter = BluetoothAdapter.getDefaultAdapter()
                     result.success(adapter?.isEnabled == true)
                 }
+                "startForegroundService" -> {
+                    val intent = Intent(this, HidService::class.java)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        startForegroundService(intent)
+                    } else {
+                        startService(intent)
+                    }
+                    result.success(true)
+                }
+                "stopForegroundService" -> {
+                    stopService(Intent(this, HidService::class.java))
+                    result.success(true)
+                }
                 else -> result.notImplemented()
             }
         }

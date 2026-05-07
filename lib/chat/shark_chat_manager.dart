@@ -113,6 +113,9 @@ class SharkChatManager extends ChangeNotifier {
     _isRunning = true;
 
     try {
+      // Start Android foreground service to keep process alive in background
+      await _hidChannel.invokeMethod('startForegroundService');
+      
       // Start advertising so others can find us
       await Nearby().startAdvertising(
         _localName,
@@ -168,6 +171,10 @@ class SharkChatManager extends ChangeNotifier {
     _peers.clear();
     notifyListeners();
     debugPrint('[SharkChat] Stopped.');
+
+    try {
+      await _hidChannel.invokeMethod('stopForegroundService');
+    } catch (_) {}
   }
 
   // ── Send Message ────────────────────────────────────────────────────────────
