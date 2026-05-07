@@ -100,6 +100,7 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
         Permission.bluetoothConnect,
         Permission.bluetoothAdvertise,
         Permission.locationWhenInUse,
+        Permission.location, // Added for Nearby Connections compatibility
       ];
 
       // Request nearbyWifiDevices separately (best-effort, non-blocking)
