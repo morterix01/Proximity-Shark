@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
@@ -73,7 +74,7 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
 
     // 1. Ensure Bluetooth is actually enabled on the device
     // Nearby Connections will fail or hang if BT is off.
-    const platform = MethodChannel('com.luis.ducky_android/hid');
+    final platform = MethodChannel('com.luis.ducky_android/hid');
     try {
       final bool isBtOn = await platform.invokeMethod('isBluetoothEnabled') ?? false;
       if (!isBtOn) {
