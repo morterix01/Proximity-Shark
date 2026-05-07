@@ -119,7 +119,12 @@ class SharkChatManager extends ChangeNotifier {
         debugPrint('[SharkChat] Foreground service start warning: $e');
       });
       
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future.delayed(const Duration(milliseconds: 200));
+
+      // Kill any lingering Nearby sessions before starting new ones
+      try { await Nearby().stopAdvertising(); } catch (_) {}
+      try { await Nearby().stopDiscovery(); } catch (_) {}
+      await Future.delayed(const Duration(milliseconds: 200));
 
       // Start advertising so others can find us
       await Nearby().startAdvertising(
