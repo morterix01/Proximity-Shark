@@ -10,6 +10,8 @@ jobs:
   build-android:
     name: 📱 Android APK (Phone)
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -75,7 +77,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           prerelease: true
-          files: RELEASES/Proximity-Shark-2.0.0/"Proximity-Shark-2.0.0 (android).apk"
+          files: RELEASES/Proximity-Shark-2.0.0/Proximity-Shark-2.0.0 (android).apk
           name: "🦈 Proximity Shark ${{ github.ref_name }} — Shark Chat (P2P)"
           body: |
             ## 🦈 Proximity Shark ${{ github.ref_name }} — Shark Chat (P2P)
