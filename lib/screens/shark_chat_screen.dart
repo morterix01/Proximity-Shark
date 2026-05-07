@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 import '../chat/chat_message.dart';
@@ -17,6 +18,7 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
   final TextEditingController _textCtrl = TextEditingController();
   final ScrollController _scrollCtrl = ScrollController();
   bool _showQuickMessages = false;
+  bool _isStarting = false; // loading state while requesting permissions
 
   static const _quickMessages = [
     '✅ Ok',
@@ -58,16 +60,49 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
   Future<void> _toggleChat(SharkChatManager chat) async {
     if (chat.isRunning) {
       await chat.stop();
-    } else {
-      // Get device name from system
-      const platform = MethodChannel('com.luis.ducky_android/hid');
-      String name = 'Shark';
-      try {
-        name = await platform.invokeMethod('getDeviceName') ?? 'Shark';
-      } catch (_) {}
-      await chat.start(name);
+      if (mounted) setState(() => _isStarting = false);
+      return;
     }
-    if (mounted) setState(() {});
+
+    // Show loading state immediately so user sees feedback
+    if (mounted) setState(() => _isStarting = true);
+
+    // Request all permissions needed by Nearby Connections API
+    final statuses = await [
+      Permission.bluetooth,
+      Permission.bluetoothScan,
+      Permission.bluetoothConnect,
+      Permission.bluetoothAdvertise,
+      Permission.location,
+      Permission.nearbyWifiDevices,
+    ].request();
+
+    final denied = statuses.values.any(
+      (s) => s.isDenied || s.isPermanentlyDenied,
+    );
+
+    if (denied) {
+      if (mounted) {
+        setState(() => _isStarting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Permessi necessari non concessi. Abilita Bluetooth e Posizione.'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Get device name from system
+    const platform = MethodChannel('com.luis.ducky_android/hid');
+    String name = 'Shark';
+    try {
+      name = await platform.invokeMethod('getDeviceName') ?? 'Shark';
+    } catch (_) {}
+
+    await chat.start(name);
+    if (mounted) setState(() => _isStarting = false);
   }
 
   Future<void> _sendMessage(String text, SharkChatManager chat) async {
@@ -125,13 +160,18 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
         ],
       ),
       actions: [
-        // Toggle chat on/off
-        IconButton(
-          icon: Icon(chat.isRunning ? Icons.wifi_tethering_off : Icons.wifi_tethering,
-              color: chat.isRunning ? Colors.greenAccent : Colors.grey),
-          tooltip: chat.isRunning ? 'Interrompi Chat' : 'Avvia Chat',
-          onPressed: () => _toggleChat(chat),
-        ),
+        if (_isStarting)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 12),
+            child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: _sharkBlue)),
+          )
+        else
+          IconButton(
+            icon: Icon(chat.isRunning ? Icons.wifi_tethering_off : Icons.wifi_tethering,
+                color: chat.isRunning ? Colors.greenAccent : Colors.grey),
+            tooltip: chat.isRunning ? 'Interrompi Chat' : 'Avvia Chat',
+            onPressed: () => _toggleChat(chat),
+          ),
         IconButton(
           icon: const Icon(Icons.flash_on, color: _sharkBlue),
           tooltip: 'Messaggi Rapidi',
@@ -143,34 +183,54 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
 
   Widget _buildPeerStatus(SharkChatManager chat) {
     final peers = chat.discoveredPeers;
-    if (peers.isEmpty && !chat.isRunning) {
-      return InkWell(
-        onTap: () => _toggleChat(chat),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          color: _surfaceColor,
-          child: Row(
-            children: [
-              const Icon(Icons.wifi_tethering, color: _sharkBlue, size: 18),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Ricerca Shark DISATTIVATA',
-                      style: GoogleFonts.exo2(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      'Tocca qui per cercare dispositivi nelle vicinanze',
-                      style: GoogleFonts.exo2(color: Colors.grey, fontSize: 11),
-                    ),
-                  ],
+    if (!chat.isRunning && !_isStarting) {
+      // Stopped state — big tappable banner to start
+      return Material(
+        color: _surfaceColor,
+        child: InkWell(
+          onTap: () => _toggleChat(chat),
+          splashColor: _sharkBlue.withValues(alpha: 0.2),
+          highlightColor: _sharkBlue.withValues(alpha: 0.1),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            child: Row(
+              children: [
+                const Icon(Icons.wifi_tethering, color: _sharkBlue, size: 18),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Ricerca Shark DISATTIVATA',
+                        style: GoogleFonts.exo2(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        'Tocca qui per cercare dispositivi nelle vicinanze',
+                        style: GoogleFonts.exo2(color: Colors.grey, fontSize: 11),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const Icon(Icons.play_arrow_rounded, color: Colors.greenAccent),
-            ],
+                const Icon(Icons.play_arrow_rounded, color: Colors.greenAccent),
+              ],
+            ),
           ),
+        ),
+      );
+    }
+
+    if (_isStarting) {
+      // Loading state while requesting permissions
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        color: _surfaceColor,
+        child: Row(
+          children: [
+            const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: _sharkBlue)),
+            const SizedBox(width: 12),
+            Text('Avvio ricerca in corso...', style: GoogleFonts.exo2(color: Colors.white, fontSize: 13)),
+          ],
         ),
       );
     }
@@ -393,6 +453,8 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
   }
 
   Widget _buildInputBar(SharkChatManager chat) {
+    // Input is enabled as soon as the chat is running (even without connected peers)
+    final canSend = chat.isRunning;
     return Container(
       color: _surfaceColor,
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
@@ -402,17 +464,17 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
             Expanded(
               child: TextField(
                 controller: _textCtrl,
-                enabled: chat.isRunning,
+                enabled: canSend,
                 style: GoogleFonts.exo2(color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: chat.isRunning
-                      ? (chat.connectedPeers.isNotEmpty 
-                          ? 'Invia ai dispositivi connessi...' 
+                  hintText: canSend
+                      ? (chat.connectedPeers.isNotEmpty
+                          ? 'Invia ai dispositivi connessi...'
                           : 'In attesa di dispositivi Shark...')
                       : 'Attiva la ricerca per scrivere',
                   hintStyle: GoogleFonts.exo2(color: Colors.grey),
                   filled: true,
-                  fillColor: _cardColor,
+                  fillColor: canSend ? _cardColor : _cardColor.withValues(alpha: 0.5),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
@@ -430,25 +492,22 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
             const SizedBox(width: 8),
             Container(
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF0055AA), _sharkBlue],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                gradient: canSend
+                    ? const LinearGradient(
+                        colors: [Color(0xFF0055AA), _sharkBlue],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : null,
+                color: canSend ? null : Colors.grey.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: _sharkBlue.withValues(alpha: 0.4),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                boxShadow: canSend
+                    ? [BoxShadow(color: _sharkBlue.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 2))]
+                    : null,
               ),
               child: IconButton(
-                icon: const Icon(Icons.send_rounded, color: Colors.white),
-                onPressed: chat.isRunning
-                    ? () => _sendMessage(_textCtrl.text, chat)
-                    : null,
+                icon: Icon(Icons.send_rounded, color: canSend ? Colors.white : Colors.grey),
+                onPressed: canSend ? () => _sendMessage(_textCtrl.text, chat) : null,
               ),
             ),
           ],
