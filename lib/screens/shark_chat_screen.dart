@@ -55,6 +55,21 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
     });
   }
 
+  Future<void> _toggleChat(SharkChatManager chat) async {
+    if (chat.isRunning) {
+      await chat.stop();
+    } else {
+      // Get device name from system
+      const platform = MethodChannel('com.luis.ducky_android/hid');
+      String name = 'Shark';
+      try {
+        name = await platform.invokeMethod('getDeviceName') ?? 'Shark';
+      } catch (_) {}
+      await chat.start(name);
+    }
+    if (mounted) setState(() {});
+  }
+
   Future<void> _sendMessage(String text, SharkChatManager chat) async {
     if (text.trim().isEmpty) return;
     _textCtrl.clear();
@@ -119,19 +134,7 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
           icon: Icon(chat.isRunning ? Icons.wifi_tethering_off : Icons.wifi_tethering,
               color: chat.isRunning ? Colors.greenAccent : Colors.grey),
           tooltip: chat.isRunning ? 'Interrompi Chat' : 'Avvia Chat',
-          onPressed: () async {
-            if (chat.isRunning) {
-              await chat.stop();
-            } else {
-              // Get device name from system
-              const platform = MethodChannel('com.luis.ducky_android/hid');
-              String name = 'Shark';
-              try {
-                name = await platform.invokeMethod('getDeviceName') ?? 'Shark';
-              } catch (_) {}
-              await chat.start(name);
-            }
-          },
+          onPressed: () => _toggleChat(chat),
         ),
         IconButton(
           icon: const Icon(Icons.flash_on, color: _sharkBlue),
@@ -145,18 +148,33 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
   Widget _buildPeerStatus(SharkChatManager chat) {
     final peers = chat.discoveredPeers;
     if (peers.isEmpty && !chat.isRunning) {
-      return Container(
-        padding: const EdgeInsets.all(10),
-        color: _surfaceColor,
-        child: Row(
-          children: [
-            const Icon(Icons.info_outline, color: Colors.grey, size: 16),
-            const SizedBox(width: 8),
-            Text(
-              'Premi ▶ per avviare la ricerca di dispositivi Shark',
-              style: GoogleFonts.exo2(color: Colors.grey, fontSize: 12),
-            ),
-          ],
+      return InkWell(
+        onTap: () => _toggleChat(chat),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          color: _surfaceColor,
+          child: Row(
+            children: [
+              const Icon(Icons.wifi_tethering, color: _sharkBlue, size: 18),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Ricerca Shark DISATTIVATA',
+                      style: GoogleFonts.exo2(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      'Tocca qui per cercare dispositivi nelle vicinanze',
+                      style: GoogleFonts.exo2(color: Colors.grey, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.play_arrow_rounded, color: Colors.greenAccent),
+            ],
+          ),
         ),
       );
     }
@@ -204,9 +222,24 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    peer.name,
-                    style: GoogleFonts.exo2(fontSize: 12, color: isConnected ? Colors.white : Colors.grey, fontWeight: isConnected ? FontWeight.bold : FontWeight.normal),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        peer.name,
+                        style: GoogleFonts.exo2(
+                          fontSize: 12, 
+                          color: isConnected ? Colors.white : Colors.grey, 
+                          fontWeight: isConnected ? FontWeight.bold : FontWeight.normal
+                        ),
+                      ),
+                      if (isConnected)
+                        Text(
+                          'CONNESSO',
+                          style: GoogleFonts.exo2(fontSize: 7, color: Colors.greenAccent, fontWeight: FontWeight.bold),
+                        ),
+                    ],
                   ),
                 ],
               ),
@@ -367,8 +400,10 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
                 style: GoogleFonts.exo2(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: chat.isRunning
-                      ? 'Scrivi un messaggio...'
-                      : 'Avvia la chat prima di scrivere',
+                      ? (chat.connectedPeers.isNotEmpty 
+                          ? 'Invia ai dispositivi connessi...' 
+                          : 'In attesa di dispositivi Shark...')
+                      : 'Attiva la ricerca per scrivere',
                   hintStyle: GoogleFonts.exo2(color: Colors.grey),
                   filled: true,
                   fillColor: _cardColor,
