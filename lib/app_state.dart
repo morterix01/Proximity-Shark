@@ -79,11 +79,10 @@ ENTER""";
     parser = DuckyParserIt(hidController);
     _init();
     _listenToWearMessages();
-    // ── Shark Chat P2P ──────────────────────────────────────────────────────
+    // Shark Chat P2P
     // Push chat state to watch whenever peers/messages change.
     SharkChatManager().onStateChangedForWatch = () => _syncChatStateWithWear();
-    // Auto-start P2P advertising & discovery using the configured device name.
-    SharkChatManager().start(_bleName);
+    
     // Handle messages sent from the watch (via WearOS → SharkWearableListenerService
     // → local broadcast → Android MainActivity → this MethodChannel).
     const MethodChannel('com.luis.ducky_android/chat')

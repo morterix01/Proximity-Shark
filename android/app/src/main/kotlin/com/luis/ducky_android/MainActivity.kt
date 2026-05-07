@@ -117,6 +117,10 @@ class MainActivity : FlutterActivity() {
                     val name = try { android.os.Build.MODEL } catch (e: Exception) { "Shark" }
                     result.success(name)
                 }
+                "isBluetoothEnabled" -> {
+                    val adapter = BluetoothAdapter.getDefaultAdapter()
+                    result.success(adapter?.isEnabled == true)
+                }
                 else -> result.notImplemented()
             }
         }
