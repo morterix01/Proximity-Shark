@@ -55,7 +55,11 @@ object HidManager {
     )
 
     fun initialize(context: Context, deviceName: String?) {
-        if (isProxyBinding || bluetoothHidDevice != null) return
+        if (isProxyBinding || bluetoothHidDevice != null) {
+            // Already initialized — just update the name if changed
+            deviceName?.let { reinitialize(it) }
+            return
+        }
         isProxyBinding = true
         pendingDeviceName = deviceName
 
@@ -76,6 +80,32 @@ object HidManager {
                 }
             }
         }, BluetoothProfile.HID_DEVICE)
+    }
+
+    /**
+     * Update the HID device name. Unregisters the current SDP record and
+     * registers a new one with the updated name so the PC sees the correct identity.
+     */
+    fun reinitialize(newName: String) {
+        if (bluetoothHidDevice == null) return
+        pendingDeviceName = newName
+        hidRegistered = false
+        try { bluetoothHidDevice?.unregisterApp() } catch (e: Exception) {}
+        Handler(Looper.getMainLooper()).postDelayed({ doRegister(newName) }, 500)
+    }
+
+    /**
+     * Set the Bluetooth adapter name (what the PC/Windows sees when discovering).
+     * Requires BLUETOOTH_CONNECT permission on Android 12+.
+     */
+    @Suppress("DEPRECATION")
+    fun setAdapterName(name: String) {
+        try {
+            BluetoothAdapter.getDefaultAdapter()?.name = name
+            Log.d("HidManager", "Bluetooth adapter name set to: $name")
+        } catch (e: Exception) {
+            Log.w("HidManager", "Could not set adapter name: ${e.message}")
+        }
     }
 
     private fun doRegister(name: String) {

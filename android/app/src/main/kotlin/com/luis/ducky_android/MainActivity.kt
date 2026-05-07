@@ -109,7 +109,10 @@ class MainActivity : FlutterActivity() {
                 }
                 "disconnectHid" -> { HidManager.disconnect(); result.success(true) }
                 "initHidProfile" -> {
-                    HidManager.initialize(this, call.argument<String>("deviceName") ?: "Proximity Shark")
+                    val name = call.argument<String>("deviceName") ?: "Proximity Shark"
+                    // Update the Bluetooth adapter name so Windows/PC sees the correct identity
+                    HidManager.setAdapterName(name)
+                    HidManager.initialize(this, name)
                     result.success(true)
                 }
                 // Used by SharkChatScreen to display a user-friendly device name
@@ -186,8 +189,13 @@ class MainActivity : FlutterActivity() {
             registerReceiver(chatFromWatchReceiver, chatFilter)
         }
 
-        // HID setup
-        HidManager.initialize(this, "Proximity Shark")
+        // HID setup — load user-defined name from SharedPreferences
+        val savedName = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+            .getString("flutter.ble_name", null)
+            ?: "Proximity Shark"
+        Log.d("MainActivity", "Initializing HID with name: $savedName")
+        HidManager.setAdapterName(savedName)
+        HidManager.initialize(this, savedName)
         HidManager.setStateCallback { device, state ->
             val status = if (state == BluetoothProfile.STATE_CONNECTED) "connected" else "disconnected"
             val entry = mutableMapOf<String, String>("connection_state" to status)
