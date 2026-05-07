@@ -98,7 +98,7 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
               shape: BoxShape.circle,
               color: chat.isRunning ? Colors.greenAccent : Colors.redAccent,
               boxShadow: chat.isRunning
-                  ? [BoxShadow(color: Colors.greenAccent.withOpacity(0.5), blurRadius: 6)]
+                  ? [BoxShadow(color: Colors.greenAccent.withValues(alpha: 0.5), blurRadius: 6)]
                   : null,
             ),
           ),
@@ -168,7 +168,7 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: peers.isEmpty ? 1 : peers.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (_, i) {
           if (peers.isEmpty) {
              return Center(
@@ -190,7 +190,7 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
               decoration: BoxDecoration(
                 color: _cardColor,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: isConnected ? Colors.greenAccent.withOpacity(0.5) : Colors.white10),
+                border: Border.all(color: isConnected ? Colors.greenAccent.withValues(alpha: 0.5) : Colors.white10),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -200,7 +200,7 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: isConnected ? Colors.greenAccent : Colors.grey,
-                      boxShadow: isConnected ? [BoxShadow(color: Colors.greenAccent.withOpacity(0.5), blurRadius: 4)] : null,
+                      boxShadow: isConnected ? [BoxShadow(color: Colors.greenAccent.withValues(alpha: 0.5), blurRadius: 4)] : null,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -226,13 +226,13 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12),
         scrollDirection: Axis.horizontal,
         itemCount: _quickMessages.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (_, i) {
           final msg = _quickMessages[i];
           return ActionChip(
             label: Text(msg, style: const TextStyle(fontSize: 13)),
-            backgroundColor: _sharkBlue.withOpacity(0.2),
-            side: BorderSide(color: _sharkBlue.withOpacity(0.4)),
+            backgroundColor: _sharkBlue.withValues(alpha: 0.2),
+            side: BorderSide(color: _sharkBlue.withValues(alpha: 0.4)),
             onPressed: () => _sendMessage(msg, chat),
           );
         },
@@ -246,7 +246,7 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.chat_bubble_outline, color: _sharkBlue.withOpacity(0.3), size: 64),
+            Icon(Icons.chat_bubble_outline, color: _sharkBlue.withValues(alpha: 0.3), size: 64),
             const SizedBox(height: 12),
             Text(
               'Nessun messaggio ancora\nAvvia la chat per trovare dispositivi vicini',
@@ -283,7 +283,7 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
               padding: const EdgeInsets.only(right: 6, bottom: 2),
               child: CircleAvatar(
                 radius: 14,
-                backgroundColor: _sharkBlue.withOpacity(0.2),
+                backgroundColor: _sharkBlue.withValues(alpha: 0.2),
                 child: Text(
                   msg.senderName.isNotEmpty ? msg.senderName[0].toUpperCase() : '?',
                   style: const TextStyle(color: _sharkBlue, fontSize: 12, fontWeight: FontWeight.bold),
@@ -310,7 +310,7 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: (isOwn ? _sharkBlue : Colors.black).withOpacity(0.15),
+                    color: (isOwn ? _sharkBlue : Colors.black).withValues(alpha: 0.15),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -340,7 +340,7 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
                   Text(
                     _formatTime(msg.timestamp),
                     style: GoogleFonts.exo2(
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                       fontSize: 10,
                     ),
                   ),
@@ -379,7 +379,7 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide(color: _sharkBlue.withOpacity(0.6)),
+                    borderSide: BorderSide(color: _sharkBlue.withValues(alpha: 0.6)),
                   ),
                 ),
                 onSubmitted: (text) => _sendMessage(text, chat),
@@ -397,7 +397,7 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: _sharkBlue.withOpacity(0.4),
+                    color: _sharkBlue.withValues(alpha: 0.4),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
