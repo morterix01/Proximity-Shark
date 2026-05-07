@@ -80,24 +80,20 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: SharkChatManager(),
-      child: Consumer<SharkChatManager>(
-        builder: (context, chat, _) {
-          _scrollToBottom();
-          return Scaffold(
-            backgroundColor: _bgColor,
-            appBar: _buildAppBar(chat),
-            body: Column(
-              children: [
-                _buildPeerStatus(chat),
-                if (_showQuickMessages) _buildQuickMessages(chat),
-                Expanded(child: _buildMessageList(chat)),
-                _buildInputBar(chat),
-              ],
-            ),
-          );
-        },
+    // Recuperiamo l'istanza esistente dal provider globale
+    final chat = Provider.of<SharkChatManager>(context);
+    _scrollToBottom();
+
+    return Scaffold(
+      backgroundColor: _bgColor,
+      appBar: _buildAppBar(chat),
+      body: Column(
+        children: [
+          _buildPeerStatus(chat),
+          if (_showQuickMessages) _buildQuickMessages(chat),
+          Expanded(child: _buildMessageList(chat)),
+          _buildInputBar(chat),
+        ],
       ),
     );
   }
@@ -190,12 +186,22 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
         itemBuilder: (_, i) {
           if (peers.isEmpty) {
              return Center(
-               child: Row(
-                 children: [
-                   const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.grey)),
-                   const SizedBox(width: 8),
-                   Text('Ricerca dispositivi Shark...', style: GoogleFonts.exo2(color: Colors.grey, fontSize: 11)),
-                 ],
+               child: InkWell(
+                 onTap: () => _toggleChat(chat),
+                 borderRadius: BorderRadius.circular(20),
+                 child: Padding(
+                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                   child: Row(
+                     mainAxisSize: MainAxisSize.min,
+                     children: [
+                       const SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2, color: _sharkBlue)),
+                       const SizedBox(width: 10),
+                       Text('Ricerca in corso...', style: GoogleFonts.exo2(color: Colors.white, fontSize: 12)),
+                       const SizedBox(width: 8),
+                       const Icon(Icons.stop_circle, color: Colors.redAccent, size: 18),
+                     ],
+                   ),
+                 ),
                ),
              );
           }
