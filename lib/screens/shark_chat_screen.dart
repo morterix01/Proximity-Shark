@@ -142,8 +142,26 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
       // 3. Start chat with the configured name
       final name = appState.bleName.isNotEmpty ? appState.bleName : 'Shark';
       await chat.start(name);
+      
+      // If after await isRunning is still false, it means start() failed and caught its own error
+      if (!chat.isRunning && mounted) {
+        scaffoldMsg.showSnackBar(
+          const SnackBar(
+            content: Text('Errore durante l\'avvio della ricerca. Riprova.'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
     } catch (e) {
       debugPrint('[SharkChat] _toggleChat error: $e');
+      if (mounted) {
+        scaffoldMsg.showSnackBar(
+          SnackBar(
+            content: Text('Errore critico: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
     } finally {
       // Always reset the loading state, even on error
       if (mounted) setState(() => _isStarting = false);

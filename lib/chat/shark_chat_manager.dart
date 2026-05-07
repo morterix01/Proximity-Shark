@@ -114,8 +114,13 @@ class SharkChatManager extends ChangeNotifier {
 
     try {
       // Start Android foreground service to keep process alive in background
-      await _hidChannel.invokeMethod('startForegroundService');
+      // Made non-blocking to prevent immediate failure if the service takes time to bind
+      _hidChannel.invokeMethod('startForegroundService').catchError((e) {
+        debugPrint('[SharkChat] Foreground service start warning: $e');
+      });
       
+      await Future.delayed(const Duration(milliseconds: 100));
+
       // Start advertising so others can find us
       await Nearby().startAdvertising(
         _localName,
