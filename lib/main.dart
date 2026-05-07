@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'app_state.dart';
 import 'nav_hub.dart';
+import 'chat/shark_chat_manager.dart';
 
 void main() {
   runApp(const DuckyAndroidApp());
