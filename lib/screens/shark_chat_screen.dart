@@ -72,70 +72,81 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
     final appState = Provider.of<AppState>(context, listen: false);
     final scaffoldMsg = ScaffoldMessenger.of(context);
 
-    // 1. Ensure Bluetooth is actually enabled on the device
-    // Nearby Connections will fail or hang if BT is off.
-    final platform = MethodChannel('com.luis.ducky_android/hid');
     try {
-      final bool isBtOn = await platform.invokeMethod('isBluetoothEnabled') ?? false;
-      if (!isBtOn) {
+      // 1. Ensure Bluetooth is actually enabled on the device
+      final platform = MethodChannel('com.luis.ducky_android/hid');
+      try {
+        final bool isBtOn = await platform.invokeMethod('isBluetoothEnabled') ?? false;
+        if (!isBtOn) {
+          if (mounted) {
+            setState(() => _isStarting = false);
+            scaffoldMsg.showSnackBar(
+              const SnackBar(
+                content: Text('Bluetooth disattivato. Accendilo per usare la Shark Chat.'),
+                backgroundColor: Colors.orangeAccent,
+              ),
+            );
+          }
+          return;
+        }
+      } catch (_) {
+        // If method channel fails, proceed and let Nearby handle it
+      }
+
+      // 2. Request permissions — only CRITICAL ones block the chat.
+      // nearbyWifiDevices is optional: missing on older Android, may be restricted.
+      final criticalPermissions = [
+        Permission.bluetoothScan,
+        Permission.bluetoothConnect,
+        Permission.bluetoothAdvertise,
+        Permission.locationWhenInUse,
+      ];
+
+      // Request nearbyWifiDevices separately (best-effort, non-blocking)
+      try {
+        await Permission.nearbyWifiDevices.request();
+      } catch (_) {}
+
+      final statuses = await criticalPermissions.request();
+
+      // Only fail if a truly critical permission is permanently denied
+      final permanentlyDenied = statuses.values.any((s) => s.isPermanentlyDenied);
+      // Consider 'restricted' (iOS) as granted equivalent
+      final denied = statuses.values.any(
+        (s) => s.isDenied || s.isPermanentlyDenied,
+      );
+
+      if (denied) {
         if (mounted) {
           setState(() => _isStarting = false);
           scaffoldMsg.showSnackBar(
-            const SnackBar(
-              content: Text('Bluetooth disattivato. Accendilo per usare la Shark Chat.'),
-              backgroundColor: Colors.orangeAccent,
+            SnackBar(
+              content: Text(permanentlyDenied
+                  ? 'Apri Impostazioni e abilita Bluetooth e Posizione per Proximity Shark.'
+                  : 'Permessi Bluetooth e Posizione necessari. Concedili e riprova.'),
+              backgroundColor: Colors.redAccent,
+              action: permanentlyDenied
+                  ? SnackBarAction(
+                      label: 'Impostazioni',
+                      textColor: Colors.white,
+                      onPressed: openAppSettings,
+                    )
+                  : null,
             ),
           );
         }
         return;
       }
-    } catch (_) {
-      // If method channel fails, we proceed and let Nearby handle it
+
+      // 3. Start chat with the configured name
+      final name = appState.bleName.isNotEmpty ? appState.bleName : 'Shark';
+      await chat.start(name);
+    } catch (e) {
+      debugPrint('[SharkChat] _toggleChat error: $e');
+    } finally {
+      // Always reset the loading state, even on error
+      if (mounted) setState(() => _isStarting = false);
     }
-
-    // 2. Request all permissions needed by Nearby Connections
-    // We include both modern (Android 12+) and legacy permissions.
-    final permissions = [
-      Permission.bluetoothScan,
-      Permission.bluetoothConnect,
-      Permission.bluetoothAdvertise,
-      Permission.location,
-      Permission.nearbyWifiDevices,
-    ];
-
-    final statuses = await permissions.request();
-    
-    // Check if any critical permission was denied
-    final permanentlyDenied = statuses.values.any((s) => s.isPermanentlyDenied);
-    final denied = statuses.values.any((s) => s.isDenied || s.isPermanentlyDenied);
-
-    if (denied) {
-      if (mounted) {
-        setState(() => _isStarting = false);
-        scaffoldMsg.showSnackBar(
-          SnackBar(
-            content: Text(permanentlyDenied
-                ? 'Apri Impostazioni e abilita Bluetooth e Posizione per Proximity Shark.'
-                : 'Permessi necessari non concessi. Abilita Bluetooth e Posizione.'),
-            backgroundColor: Colors.redAccent,
-            action: permanentlyDenied
-                ? SnackBarAction(
-                    label: 'Impostazioni',
-                    textColor: Colors.white,
-                    onPressed: openAppSettings,
-                  )
-                : null,
-          ),
-        );
-      }
-      return;
-    }
-
-    // 3. Start chat with the configured name
-    final name = appState.bleName.isNotEmpty ? appState.bleName : 'Shark';
-    await chat.start(name);
-    
-    if (mounted) setState(() => _isStarting = false);
   }
 
   Future<void> _sendMessage(String text, SharkChatManager chat) async {

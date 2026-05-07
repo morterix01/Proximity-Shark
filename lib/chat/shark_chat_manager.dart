@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:nearby_connections/nearby_connections.dart';
@@ -42,6 +43,42 @@ class SharkChatManager extends ChangeNotifier {
 
   void setLocalName(String name) {
     _localName = name;
+  }
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  /// Nearby Connections sometimes returns endpointName as a base64-encoded
+  /// blob (known issue in nearby_connections 4.x on some devices).
+  /// This tries to decode it and returns the human-readable name.
+  String _decodePeerName(String raw) {
+    if (raw.isEmpty) return raw;
+    // If it already looks like a normal name (contains spaces, short, etc.) keep it
+    if (raw.length < 32 || raw.contains(' ') || raw.contains('@')) return raw;
+    try {
+      // Try standard base64 decode
+      final Uint8List bytes = base64Decode(raw);
+      final String decoded = utf8.decode(bytes, allowMalformed: false);
+      // Only accept if result is non-empty, shorter, and has printable chars
+      if (decoded.isNotEmpty &&
+          decoded.length <= raw.length &&
+          decoded.codeUnits.every((c) => c >= 32 && c < 127)) {
+        return decoded.trim();
+      }
+    } catch (_) {}
+    // Try url-safe base64 (replace - with + and _ with /)
+    try {
+      final String normalized = raw.replaceAll('-', '+').replaceAll('_', '/');
+      final String padded = normalized.padRight(
+        (normalized.length + 3) ~/ 4 * 4, '=',
+      );
+      final Uint8List bytes = base64Decode(padded);
+      final String decoded = utf8.decode(bytes, allowMalformed: false);
+      if (decoded.isNotEmpty &&
+          decoded.length <= raw.length &&
+          decoded.codeUnits.every((c) => c >= 32 && c < 127)) {
+        return decoded.trim();
+      }
+    } catch (_) {}
+    return raw;
   }
 
   // ── Start / Stop ────────────────────────────────────────────────────────────
@@ -124,9 +161,10 @@ class SharkChatManager extends ChangeNotifier {
 
   // ── Nearby Callbacks ────────────────────────────────────────────────────────
   void _onEndpointFound(String endpointId, String endpointName, String serviceId) {
-    debugPrint('[SharkChat] Found: $endpointId ($endpointName)');
+    final readableName = _decodePeerName(endpointName);
+    debugPrint('[SharkChat] Found: $endpointId (raw=$endpointName, decoded=$readableName)');
     if (!_peers.containsKey(endpointId)) {
-      _peers[endpointId] = ChatPeer(endpointId: endpointId, name: endpointName);
+      _peers[endpointId] = ChatPeer(endpointId: endpointId, name: readableName);
       notifyListeners();
     }
     // Automatically request connection to new peers
@@ -147,9 +185,10 @@ class SharkChatManager extends ChangeNotifier {
   }
 
   void _onConnectionInitiated(String endpointId, ConnectionInfo info) {
-    debugPrint('[SharkChat] Connection initiated with $endpointId (${info.endpointName})');
-    // Update peer name from connection info
-    _peers[endpointId] = ChatPeer(endpointId: endpointId, name: info.endpointName);
+    final readableName = _decodePeerName(info.endpointName);
+    debugPrint('[SharkChat] Connection initiated with $endpointId ($readableName)');
+    // Update peer name from connection info (more reliable than onEndpointFound)
+    _peers[endpointId] = ChatPeer(endpointId: endpointId, name: readableName);
     // Auto-accept all connections from other Proximity Shark instances
     Nearby().acceptConnection(
       endpointId,
