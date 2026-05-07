@@ -139,9 +139,11 @@ class SharkChatManager extends ChangeNotifier {
       await Future.delayed(const Duration(milliseconds: 800));
       await _restoreAdapterName();
       _startNameRestoreTimer();
+      notifyListeners();
     } catch (e) {
       debugPrint('[SharkChat] Error starting: $e');
       _isRunning = false;
+      notifyListeners();
     }
   }
 

@@ -135,6 +135,28 @@ class ScriptManagerScreen extends StatelessWidget {
                   ),
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: appState.isImporting ? null : () => appState.importFromGithub(context),
+                  borderRadius: BorderRadius.circular(18),
+                  child: _buildNeonContainer(
+                    color: appState.isImporting ? Colors.white10 : Colors.blueAccent,
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      children: [
+                        Icon(Icons.cloud_download_rounded, color: appState.isImporting ? Colors.white24 : Colors.blueAccent, size: 20),
+                        const SizedBox(height: 4),
+                        const Text("GITHUB", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: InkWell(

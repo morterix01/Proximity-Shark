@@ -440,9 +440,12 @@ ENTER""";
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('ble_name', newName);
       
-      // Restart Shark Chat with the new identity
+      // Restart Shark Chat with the new identity only if it was running
+      final wasRunning = SharkChatManager().isRunning;
       await SharkChatManager().stop();
-      await SharkChatManager().start(_bleName);
+      if (wasRunning) {
+        await SharkChatManager().start(_bleName);
+      }
       
       notifyListeners();
     }
@@ -831,6 +834,65 @@ ENTER""";
     } catch (e) {
       debugPrint("Error copying directory ${source.path}: $e");
       // Continue with other files if one fails
+    }
+  }
+
+  Future<void> importFromGithub(BuildContext context) async {
+    if (_isImporting || _rootDir == null) return;
+    
+    _isImporting = true;
+    notifyListeners();
+
+    try {
+      final client = HttpClient();
+      
+      Future<void> downloadDir(String path, Directory targetDir) async {
+        final uri = Uri.parse('https://api.github.com/repos/morterix01/DuckyScript-Library/contents/$path');
+        final request = await client.getUrl(uri);
+        request.headers.add('User-Agent', 'Proximity-Shark');
+        final response = await request.close();
+        if (response.statusCode == 200) {
+          final content = await response.transform(utf8.decoder).join();
+          final List<dynamic> items = jsonDecode(content);
+          
+          for (var item in items) {
+            final name = item['name'] as String;
+            if (name == 'README.md') continue;
+            
+            if (item['type'] == 'file' && (name.endsWith('.txt') || name.endsWith('.ducky'))) {
+              final downloadUrl = item['download_url'] as String;
+              final fileReq = await client.getUrl(Uri.parse(downloadUrl));
+              final fileResp = await fileReq.close();
+              final bytes = await consolidateHttpClientResponseBytes(fileResp);
+              final file = File('${targetDir.path}/$name');
+              await file.writeAsBytes(bytes);
+            } else if (item['type'] == 'dir') {
+              final newDir = Directory('${targetDir.path}/$name');
+              if (!await newDir.exists()) await newDir.create();
+              await downloadDir(item['path'], newDir);
+            }
+          }
+        }
+      }
+
+      await downloadDir('', _rootDir!);
+      await _loadScripts();
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Script installati da GitHub con successo!")),
+        );
+      }
+    } catch (e) {
+      debugPrint("GitHub import error: $e");
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Errore download: $e")),
+        );
+      }
+    } finally {
+      _isImporting = false;
+      notifyListeners();
     }
   }
 
