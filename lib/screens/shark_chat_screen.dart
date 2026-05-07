@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
@@ -68,6 +67,11 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
     // Show loading state immediately so user sees feedback
     if (mounted) setState(() => _isStarting = true);
 
+    // Capture context-dependent values BEFORE any async gap
+    final appState = Provider.of<AppState>(context, listen: false);
+    final name = appState.bleName.isNotEmpty ? appState.bleName : 'Shark';
+    final scaffoldMsg = ScaffoldMessenger.of(context);
+
     // Request all permissions needed by Nearby Connections API
     final statuses = await [
       Permission.bluetooth,
@@ -85,7 +89,7 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
     if (denied) {
       if (mounted) {
         setState(() => _isStarting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
+        scaffoldMsg.showSnackBar(
           const SnackBar(
             content: Text('Permessi necessari non concessi. Abilita Bluetooth e Posizione.'),
             backgroundColor: Colors.redAccent,
@@ -94,10 +98,6 @@ class _SharkChatScreenState extends State<SharkChatScreen> {
       }
       return;
     }
-
-    // Use the BLE name configured in app settings as the advertising identity
-    final appState = Provider.of<AppState>(context, listen: false);
-    final name = appState.bleName.isNotEmpty ? appState.bleName : 'Shark';
 
     await chat.start(name);
     if (mounted) setState(() => _isStarting = false);
