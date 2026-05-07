@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:nearby_connections/nearby_connections.dart';
 
 import 'chat_message.dart';
@@ -27,6 +29,11 @@ class SharkChatManager extends ChangeNotifier {
   final List<ChatMessage> messages = [];
   final Map<String, ChatPeer> _peers = {}; // endpointId → ChatPeer
   bool _isRunning = false;
+
+  // Timer that periodically re-asserts the BT adapter name
+  // (nearby_connections 4.x overwrites it during advertising)
+  Timer? _nameRestoreTimer;
+  static const _hidChannel = MethodChannel('com.luis.ducky_android/hid');
 
   List<ChatPeer> get connectedPeers =>
       _peers.values.where((p) => p.isConnected).toList();
@@ -81,6 +88,25 @@ class SharkChatManager extends ChangeNotifier {
     return raw;
   }
 
+  // ── Adapter name restoration ─────────────────────────────────────────────────
+  /// nearby_connections 4.x temporarily changes the BT adapter name during
+  /// advertising. We restore it immediately after start and every 8 seconds.
+  Future<void> _restoreAdapterName() async {
+    try {
+      await _hidChannel.invokeMethod('setAdapterName', {'name': _localName});
+      debugPrint('[SharkChat] Adapter name restored → $_localName');
+    } catch (e) {
+      debugPrint('[SharkChat] Could not restore adapter name: $e');
+    }
+  }
+
+  void _startNameRestoreTimer() {
+    _nameRestoreTimer?.cancel();
+    _nameRestoreTimer = Timer.periodic(const Duration(seconds: 8), (_) {
+      if (_isRunning) _restoreAdapterName();
+    });
+  }
+
   // ── Start / Stop ────────────────────────────────────────────────────────────
   Future<void> start(String deviceName) async {
     if (_isRunning) return;
@@ -108,6 +134,12 @@ class SharkChatManager extends ChangeNotifier {
       );
 
       debugPrint('[SharkChat] Started advertising and discovery as $_localName');
+
+      // Restore adapter name immediately (Nearby may have changed it)
+      // and keep it correct with a periodic timer
+      await Future.delayed(const Duration(milliseconds: 800));
+      await _restoreAdapterName();
+      _startNameRestoreTimer();
     } catch (e) {
       debugPrint('[SharkChat] Error starting: $e');
       _isRunning = false;
@@ -115,17 +147,26 @@ class SharkChatManager extends ChangeNotifier {
   }
 
   Future<void> stop() async {
+    // Cancel name-restore timer first
+    _nameRestoreTimer?.cancel();
+    _nameRestoreTimer = null;
+
     if (!_isRunning) return;
+    _isRunning = false;
+
+    try {
+      await Nearby().stopAdvertising();
+    } catch (_) {}
+    try {
+      await Nearby().stopDiscovery();
+    } catch (_) {}
     try {
       await Nearby().stopAllEndpoints();
-      await Nearby().stopDiscovery();
-      await Nearby().stopAdvertising();
-    } catch (e) {
-      debugPrint('[SharkChat] Error stopping: $e');
-    }
+    } catch (_) {}
+
     _peers.clear();
-    _isRunning = false;
     notifyListeners();
+    debugPrint('[SharkChat] Stopped.');
   }
 
   // ── Send Message ────────────────────────────────────────────────────────────

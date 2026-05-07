@@ -120,6 +120,11 @@ class MainActivity : FlutterActivity() {
                     val name = try { android.os.Build.MODEL } catch (e: Exception) { "Shark" }
                     result.success(name)
                 }
+                "setAdapterName" -> {
+                    val name = call.argument<String>("name") ?: return@setMethodCallHandler
+                    HidManager.setAdapterName(name)
+                    result.success(true)
+                }
                 "isBluetoothEnabled" -> {
                     val adapter = BluetoothAdapter.getDefaultAdapter()
                     result.success(adapter?.isEnabled == true)
