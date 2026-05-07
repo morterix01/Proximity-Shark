@@ -2,8 +2,8 @@ name: 🦈 Build ProximityShark APKs
 
 on:
   push:
-    branches: [ main ]
-    tags: [ 'v*' ]
+    tags:
+      - 'v*'
   workflow_dispatch:   # allow manual trigger from GitHub UI
 
 jobs:
