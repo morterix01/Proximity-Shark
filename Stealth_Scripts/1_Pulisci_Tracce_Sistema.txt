@@ -1,0 +1,6 @@
+REM --- PULIZIA TOTALE TRACCE WINDOWS ---
+REM Pulisce cronologia PowerShell, RunMRU, TypedPaths e File Recenti.
+GUI r
+DELAY 200
+STRING powershell -w h -c "rm (gp psrl).HistorySavePath -ea 0; rp 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU' '*' -ea 0; rp 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\TypedPaths' '*' -ea 0; rm \"$env:APPDATA\Microsoft\Windows\Recent\*\" -f -ea 0"
+ENTER

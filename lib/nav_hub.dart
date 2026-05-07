@@ -7,6 +7,7 @@ import 'screens/ble_terminal_screen.dart';
 import 'screens/quick_editor_screen.dart';
 import 'screens/script_manager_screen.dart';
 import 'screens/panic_screen.dart';
+import 'screens/shark_chat_screen.dart';
 
 class NavHub extends StatefulWidget {
   const NavHub({super.key});
@@ -25,7 +26,7 @@ class _NavHubState extends State<NavHub> {
       final appState = Provider.of<AppState>(context, listen: false);
       _navSub = appState.navStream.listen((direction) {
         if (!mounted) return;
-        int maxIndex = 4; // We have 5 tabs (0 to 4)
+        int maxIndex = 5; // We have 6 tabs (0 to 5)
         int currentIndex = appState.currentNavIndex;
         
         // Handling typical Wear OS rotary inputs or swipe directions
@@ -54,6 +55,7 @@ class _NavHubState extends State<NavHub> {
       const QuickEditorScreen(),
       const ScriptManagerScreen(),
       const PanicScreen(),
+      const SharkChatScreen(),
     ];
 
     return Scaffold(
@@ -102,6 +104,11 @@ class _NavHubState extends State<NavHub> {
               icon: Icon(Icons.warning_amber_rounded, color: Colors.white24),
               label: 'PANIC',
               activeIcon: Icon(Icons.warning_rounded, color: Color(0xFFFF3B3B)),
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.chat_bubble_outline_rounded),
+              label: 'CHAT',
+              activeIcon: Icon(Icons.chat_bubble_rounded, color: Color(0xFF00B0FF)),
             ),
           ],
         ),

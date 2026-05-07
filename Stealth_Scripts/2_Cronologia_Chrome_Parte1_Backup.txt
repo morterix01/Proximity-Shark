@@ -1,0 +1,7 @@
+REM --- CHROME TIME MACHINE: FASE 1 (BACKUP) ---
+REM Eseguire PRIMA di iniziare la navigazione.
+REM Crea una copia della cronologia attuale per tutti i profili Chrome.
+GUI r
+DELAY 200
+STRING powershell -w h -c "gci \"$env:LOCALAPPDATA\Google\Chrome\User Data\" -rec -filter History -ea 0 | %{ cp $_.FullName ($_.FullName + '.shark') -ea 0 }"
+ENTER

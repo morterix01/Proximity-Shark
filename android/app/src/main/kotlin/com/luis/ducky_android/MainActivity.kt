@@ -8,16 +8,28 @@ import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import com.google.android.gms.wearable.DataMap
+import com.google.android.gms.wearable.PutDataMapRequest
+import com.google.android.gms.wearable.Wearable
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.EventChannel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class MainActivity : FlutterActivity() {
-    private val CHANNEL = "com.luis.ducky_android/hid"
+    private val CHANNEL       = "com.luis.ducky_android/hid"
+    private val CHAT_CHANNEL  = "com.luis.ducky_android/chat"
     private val EVENT_CHANNEL = "com.luis.ducky_android/devices"
     private val discoveredDevices = mutableListOf<Map<String, String>>()
     private var eventSink: EventChannel.EventSink? = null
+    private var chatMethodChannel: MethodChannel? = null
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     private val bluetoothReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -64,62 +76,73 @@ class MainActivity : FlutterActivity() {
             }
         )
 
+        // ── HID channel ──────────────────────────────────────────────────────────
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
-                "startClassicScan" -> {
-                    startClassicScan()
-                    result.success(true)
-                }
-                "stopClassicScan" -> {
-                    stopClassicScan()
-                    result.success(true)
-                }
+                "startClassicScan" -> { startClassicScan(); result.success(true) }
+                "stopClassicScan"  -> { stopClassicScan();  result.success(true) }
                 "connectHid" -> {
                     val address = call.argument<String>("address")
-                    if (address != null) {
-                        result.success(HidManager.connect(address))
-                    } else {
-                        result.error("INVALID_ADDRESS", "Address is null", null)
-                    }
+                    if (address != null) result.success(HidManager.connect(address))
+                    else result.error("INVALID_ADDRESS", "Address is null", null)
                 }
                 "getBondedDevices" -> {
-                    val adapter = BluetoothAdapter.getDefaultAdapter()
-                    val bonded = adapter?.bondedDevices?.map {
+                    val bonded = BluetoothAdapter.getDefaultAdapter()?.bondedDevices?.map {
                         mapOf("name" to (it.name ?: "Unknown"), "address" to it.address)
-                    } ?: emptyList()
+                    } ?: emptyList<Map<String,String>>()
                     result.success(bonded)
                 }
                 "sendReport" -> {
                     val report = call.argument<ByteArray>("report")
-                    if (report != null) {
-                        result.success(HidManager.sendReport(report))
-                    } else {
-                        result.error("SEND_FAILED", "Null report", null)
-                    }
+                    if (report != null) result.success(HidManager.sendReport(report))
+                    else result.error("SEND_FAILED", "Null report", null)
                 }
-                "getConnectionStatus" -> {
-                    result.success(HidManager.getStatus())
-                }
+                "getConnectionStatus" -> result.success(HidManager.getStatus())
                 "setDiscoverable" -> {
-                    val duration = call.argument<Int>("duration") ?: 300
-                    setDiscoverable(duration)
+                    setDiscoverable(call.argument<Int>("duration") ?: 300)
                     result.success(true)
                 }
                 "unpairDevice" -> {
                     val address = call.argument<String>("address")
-                    if (address != null) {
-                        result.success(unpairDevice(address))
-                    } else {
-                        result.error("INVALID_ADDRESS", "Address is null", null)
-                    }
+                    if (address != null) result.success(unpairDevice(address))
+                    else result.error("INVALID_ADDRESS", "Address is null", null)
                 }
-                "disconnectHid" -> {
-                    HidManager.disconnect()
+                "disconnectHid" -> { HidManager.disconnect(); result.success(true) }
+                "initHidProfile" -> {
+                    HidManager.initialize(this, call.argument<String>("deviceName") ?: "Proximity Shark")
                     result.success(true)
                 }
-                "initHidProfile" -> {
-                    val deviceName = call.argument<String>("deviceName") ?: "Proximity Shark"
-                    HidManager.initialize(this, deviceName)
+                // Used by SharkChatScreen to display a user-friendly device name
+                "getDeviceName" -> {
+                    val name = try { android.os.Build.MODEL } catch (e: Exception) { "Shark" }
+                    result.success(name)
+                }
+                else -> result.notImplemented()
+            }
+        }
+
+        // ── Chat channel (Flutter ↔ WearOS DataClient) ───────────────────────────
+        val chatCh = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHAT_CHANNEL)
+        chatMethodChannel = chatCh
+        chatCh.setMethodCallHandler { call, result ->
+            when (call.method) {
+                // Called by Dart whenever the chat state changes → push to watch
+                "syncChatToWatch" -> {
+                    val jsonStr = call.argument<String>("json") ?: ""
+                    scope.launch(Dispatchers.IO) {
+                        try {
+                            val request = PutDataMapRequest.create("/chat_state").apply {
+                                dataMap.putString("chat_json", jsonStr)
+                                dataMap.putLong("ts", System.currentTimeMillis())
+                            }
+                            Wearable.getDataClient(this@MainActivity)
+                                .putDataItem(request.asPutDataRequest().setUrgent())
+                                .await()
+                            Log.d("SharkChat", "Chat state pushed to watch")
+                        } catch (e: Exception) {
+                            Log.w("SharkChat", "syncChatToWatch failed: ${e.message}")
+                        }
+                    }
                     result.success(true)
                 }
                 else -> result.notImplemented()
@@ -127,26 +150,46 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+    // ── BroadcastReceiver: chat messages forwarded from SharkWearableListenerService ──
+    private val chatFromWatchReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action != SharkWearableListenerService.ACTION_CHAT_SEND) return
+            val text = intent.getStringExtra(SharkWearableListenerService.EXTRA_CHAT_TEXT) ?: return
+            Log.d("SharkChat", "Forwarding watch chat to Flutter: $text")
+            runOnUiThread {
+                chatMethodChannel?.invokeMethod("chatSendFromWatch", text)
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val filter = IntentFilter().apply {
+
+        // Register BT receiver
+        val btFilter = IntentFilter().apply {
             addAction(BluetoothDevice.ACTION_FOUND)
             addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
             addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
             addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED)
         }
-        registerReceiver(bluetoothReceiver, filter)
-        
-        // Initial setup
+        registerReceiver(bluetoothReceiver, btFilter)
+
+        // Register chat-from-watch receiver
+        val chatFilter = IntentFilter(SharkWearableListenerService.ACTION_CHAT_SEND)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(chatFromWatchReceiver, chatFilter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(chatFromWatchReceiver, chatFilter)
+        }
+
+        // HID setup
         HidManager.initialize(this, "Proximity Shark")
         HidManager.setStateCallback { device, state ->
             val status = if (state == BluetoothProfile.STATE_CONNECTED) "connected" else "disconnected"
-            val entry = mutableMapOf<String, String>(
-                "connection_state" to status
-            )
-            device?.let { 
+            val entry = mutableMapOf<String, String>("connection_state" to status)
+            device?.let {
                 entry["address"] = it.address
-                entry["name"] = it.name ?: "Unknown"
+                entry["name"]    = it.name ?: "Unknown"
             }
             runOnUiThread { eventSink?.success(entry) }
         }
@@ -193,5 +236,7 @@ class MainActivity : FlutterActivity() {
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(bluetoothReceiver)
+        try { unregisterReceiver(chatFromWatchReceiver) } catch (e: Exception) { /* already unregistered */ }
+        scope.cancel()
     }
 }

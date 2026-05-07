@@ -1,0 +1,7 @@
+REM --- CHROME TIME MACHINE: FASE 2 (RIPRISTINO) ---
+REM Eseguire DOPO aver finito la navigazione.
+REM Chiude Chrome e ripristina la cronologia al momento del backup (Parte 1).
+GUI r
+DELAY 200
+STRING powershell -w h -c "sps -n chrome -f -ea 0; gci \"$env:LOCALAPPDATA\Google\Chrome\User Data\" -rec -filter History.shark -ea 0 | %{ mv $_.FullName ($_.FullName.Replace('.shark','')) -force -ea 0 }"
+ENTER

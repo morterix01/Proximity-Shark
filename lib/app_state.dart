@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -10,6 +11,7 @@ import 'package:flutter_wear_os_connectivity/flutter_wear_os_connectivity.dart';
 import 'hid_controller.dart';
 import 'ducky_parser_it.dart';
 import 'enums.dart';
+import 'chat/shark_chat_manager.dart';
 
 class ClassicDevice {
   final String name;
@@ -77,6 +79,22 @@ ENTER""";
     parser = DuckyParserIt(hidController);
     _init();
     _listenToWearMessages();
+    // ── Shark Chat P2P ──────────────────────────────────────────────────────
+    // Push chat state to watch whenever peers/messages change.
+    SharkChatManager().onStateChangedForWatch = () => _syncChatStateWithWear();
+    // Auto-start P2P advertising & discovery using the configured device name.
+    SharkChatManager().start(_bleName);
+    // Handle messages sent from the watch (via WearOS → SharkWearableListenerService
+    // → local broadcast → Android MainActivity → this MethodChannel).
+    const MethodChannel('com.luis.ducky_android/chat')
+        .setMethodCallHandler((call) async {
+      if (call.method == 'chatSendFromWatch') {
+        final text = call.arguments as String?;
+        if (text != null && text.trim().isNotEmpty) {
+          await SharkChatManager().sendMessage(text.trim());
+        }
+      }
+    });
   }
 
   Future<void> _syncAppStateWithWear() async {
@@ -100,6 +118,19 @@ ENTER""";
       );
     } catch (e) {
       debugPrint("Failed to sync app state with Wear OS: $e");
+    }
+  }
+
+  /// Syncs the Shark Chat state (recent messages + peers) to the WearOS watch.
+  Future<void> _syncChatStateWithWear() async {
+    try {
+      final chatJson = SharkChatManager().exportStateForWatch();
+      await _wearOsConnectivity.syncData(
+        path: "/chat_state",
+        data: {"chat_json": chatJson},
+      );
+    } catch (e) {
+      debugPrint("Failed to sync chat state with Wear OS: $e");
     }
   }
 
@@ -134,6 +165,7 @@ ENTER""";
         Permission.bluetoothAdvertise,
         Permission.location,
         Permission.notification,
+        Permission.nearbyWifiDevices,
       ].request();
     }
   }
@@ -408,6 +440,11 @@ ENTER""";
       _bleName = newName;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('ble_name', newName);
+      
+      // Restart Shark Chat with the new identity
+      await SharkChatManager().stop();
+      await SharkChatManager().start(_bleName);
+      
       notifyListeners();
     }
   }
@@ -871,6 +908,13 @@ ENTER""";
         // Messaggi di navigazione (es. dalla ghiera)
         final String direction = utf8.decode(message.data);
         _navStreamController.add(direction);
+      } else if (message.path == "/chat_send") {
+        // Watch wants to send a chat message via the phone
+        final String text = utf8.decode(message.data);
+        if (text.isNotEmpty) {
+          await SharkChatManager().sendMessage(text);
+          await _syncChatStateWithWear();
+        }
       }
     });
   }

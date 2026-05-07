@@ -9,8 +9,14 @@ import java.nio.charset.StandardCharsets
 
 class SharkWearableListenerService : WearableListenerService() {
 
+    companion object {
+        /** Action broadcast locally so MainActivity can forward to Flutter/SharkChatManager. */
+        const val ACTION_CHAT_SEND = "com.luis.ducky_android.CHAT_SEND_FROM_WATCH"
+        const val EXTRA_CHAT_TEXT  = "chat_text"
+    }
+
     override fun onMessageReceived(messageEvent: MessageEvent) {
-        val path = messageEvent.path
+        val path    = messageEvent.path
         val payload = String(messageEvent.data, StandardCharsets.UTF_8)
         Log.d("SharkWearListener", "Received message: $path")
 
@@ -21,19 +27,26 @@ class SharkWearableListenerService : WearableListenerService() {
             }
             "/panic" -> {
                 ensureServiceStarted()
-                // Send Ctrl+Alt+B (modifier 0x05, keycode 0x05)
-                val pressed = byteArrayOf(0x05.toByte(), 0x00, 0x05.toByte(), 0x00, 0x00, 0x00, 0x00, 0x00)
+                val pressed  = byteArrayOf(0x05.toByte(), 0x00, 0x05.toByte(), 0x00, 0x00, 0x00, 0x00, 0x00)
                 val released = byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
                 HidManager.sendReport(pressed)
                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                     HidManager.sendReport(released)
                 }, 50)
             }
-            "/taskkill" -> {
-                // Taskkill and Shutdown scripts are complex DuckyScripts handled in Dart.
-                // However, if the app is killed, we might need a native "fallback" or 
-                // just rely on the watch sending a simpler command.
-                // For now, we'll focus on connection stability which was the main complaint.
+            "/taskkill" -> { /* handled via DuckyScript in Dart */ }
+
+            // ── Shark Chat: watch → phone → Nearby peers ──────────────────────
+            "/chat_send" -> {
+                if (payload.isNotBlank()) {
+                    Log.d("SharkWearListener", "Chat from watch: $payload")
+                    // Broadcast locally so MainActivity can forward it to Flutter
+                    val bcast = Intent(ACTION_CHAT_SEND).apply {
+                        putExtra(EXTRA_CHAT_TEXT, payload)
+                        setPackage(packageName) // explicit package → not exported
+                    }
+                    sendBroadcast(bcast)
+                }
             }
         }
     }
@@ -45,7 +58,6 @@ class SharkWearableListenerService : WearableListenerService() {
         } else {
             startService(intent)
         }
-        // Ensure HidManager is initialized
         HidManager.initialize(this, "Proximity Shark")
     }
 }

@@ -44,20 +44,20 @@ jobs:
           flutter build apk \
             --release \
             --target-platform android-arm64 \
-            --build-name=1.0.9 \
-            --build-number=9
+            --build-name=1.1.0 \
+            --build-number=10
 
-      - name: Rename APK → Proximity-Shark-1.0.9-v5 (android).apk
+      - name: Rename APK → Proximity-Shark-1.1.0 (android).apk
         run: |
-          mkdir -p RELEASES/Proximity-Shark-1.0.9
+          mkdir -p RELEASES/Proximity-Shark-1.1.0
           cp build/app/outputs/flutter-apk/app-release.apk \
-             RELEASES/Proximity-Shark-1.0.9/"Proximity-Shark-1.0.9-v5 (android).apk"
+             RELEASES/Proximity-Shark-1.1.0/"Proximity-Shark-1.1.0 (android).apk"
 
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Proximity-Shark-1.0.9-v5 (android)
-          path: RELEASES/Proximity-Shark-1.0.9/*.apk
+          name: Proximity-Shark-1.1.0 (android)
+          path: RELEASES/Proximity-Shark-1.1.0/*.apk
           retention-days: 30
 
       # ── Auto-create GitHub Release on version tags ──────────────────────────
@@ -66,19 +66,18 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           prerelease: true
-          files: RELEASES/Proximity-Shark-1.0.9/"Proximity-Shark-1.0.9-v5 (android).apk"
-          name: "🦈 Proximity Shark ${{ github.ref_name }} — The Background Persistence Update"
+          files: RELEASES/Proximity-Shark-1.1.0/"Proximity-Shark-1.1.0 (android).apk"
+          name: "🦈 Proximity Shark ${{ github.ref_name }} — Shark Chat (P2P)"
           body: |
-            ## 🦈 Proximity Shark ${{ github.ref_name }} — The Background Persistence Update
+            ## 🦈 Proximity Shark ${{ github.ref_name }} — Shark Chat (P2P)
             
-            ### 🚀 Novità in questa release (v1.0.9):
-            - **🔙 Legacy 1.0.8 Speed**: Ripristinata l'esatta velocità della v1.0.8 (15ms per ciclo carattere).
-            - **🤝 Pairing Fix**: Forzatura del pairing nativo per risolvere problemi di accoppiamento.
-            - **📡 Native Wearable Listener**: Servizio nativo per svegliare il telefono dall'orologio in background.
-            - **🔗 Terminal Sync**: Risolto il bug grafico che non mostrava lo stato "Connesso" nel terminale.
-            - **💀 Taskkill Evoluto**: Nuovo comando `taskkill` potenziato.
+            ### 🚀 Novità in questa release (v1.1.0):
+            - **💬 Shark Chat P2P**: Nuova chat offline (Bluetooth + WiFi Direct).
+            - **⌚ Integrazione WearOS**: Leggi e rispondi ai messaggi direttamente dall'orologio.
+            - **⚡ Messaggi Veloci**: Risposte rapide preimpostate per la chat.
+            - **🔗 Nearby Connections**: Rilevamento automatico e comunicazione mesh tra dispositivi vicini senza internet.
 
             ### APK incluso:
-            - `Proximity-Shark-1.0.9-v5 (android).apk` — Build stabile con velocità classica 1.0.8.
+            - `Proximity-Shark-1.1.0 (android).apk` — Build stabile con Shark Chat.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
