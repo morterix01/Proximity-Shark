@@ -16,6 +16,7 @@ class DuckyAndroidApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AppState()),
+        ChangeNotifierProvider.value(value: SharkChatManager()),
       ],
       child: MaterialApp(
         title: 'Proximity Shark',
