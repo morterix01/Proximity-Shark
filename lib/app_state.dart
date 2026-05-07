@@ -11,6 +11,7 @@ import 'package:flutter_wear_os_connectivity/flutter_wear_os_connectivity.dart';
 import 'hid_controller.dart';
 import 'ducky_parser_it.dart';
 import 'enums.dart';
+import 'package:flutter/foundation.dart';
 import 'chat/shark_chat_manager.dart';
 
 class ClassicDevice {
